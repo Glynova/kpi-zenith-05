@@ -10,33 +10,375 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
+import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
+import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
+import { Route as AuthenticatedShellBillOfMaterialsRouteImport } from './routes/_authenticated/_shell/bill-of-materials'
+import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
+import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
+import { Route as AuthenticatedShellCustomersRouteImport } from './routes/_authenticated/_shell/customers'
+import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
+import { Route as AuthenticatedShellEmployeesRouteImport } from './routes/_authenticated/_shell/employees'
+import { Route as AuthenticatedShellExpensesRouteImport } from './routes/_authenticated/_shell/expenses'
+import { Route as AuthenticatedShellInventoryRouteImport } from './routes/_authenticated/_shell/inventory'
+import { Route as AuthenticatedShellInvoicesRouteImport } from './routes/_authenticated/_shell/invoices'
+import { Route as AuthenticatedShellNotificationsRouteImport } from './routes/_authenticated/_shell/notifications'
+import { Route as AuthenticatedShellPayablesRouteImport } from './routes/_authenticated/_shell/payables'
+import { Route as AuthenticatedShellPayrollRouteImport } from './routes/_authenticated/_shell/payroll'
+import { Route as AuthenticatedShellProductsRouteImport } from './routes/_authenticated/_shell/products'
+import { Route as AuthenticatedShellPurchaseOrdersRouteImport } from './routes/_authenticated/_shell/purchase-orders'
+import { Route as AuthenticatedShellReceivablesRouteImport } from './routes/_authenticated/_shell/receivables'
+import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
+import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authenticated/_shell/sales'
+import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
+import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedShellRouteRoute = AuthenticatedShellRouteRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedShellAnalyticsRoute =
+  AuthenticatedShellAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellAttendanceRoute =
+  AuthenticatedShellAttendanceRouteImport.update({
+    id: '/attendance',
+    path: '/attendance',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellAuditLogsRoute =
+  AuthenticatedShellAuditLogsRouteImport.update({
+    id: '/audit-logs',
+    path: '/audit-logs',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellBillOfMaterialsRoute =
+  AuthenticatedShellBillOfMaterialsRouteImport.update({
+    id: '/bill-of-materials',
+    path: '/bill-of-materials',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellCashFlowRoute =
+  AuthenticatedShellCashFlowRouteImport.update({
+    id: '/cash-flow',
+    path: '/cash-flow',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellCategoriesRoute =
+  AuthenticatedShellCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellCustomersRoute =
+  AuthenticatedShellCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellDashboardRoute =
+  AuthenticatedShellDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellEmployeesRoute =
+  AuthenticatedShellEmployeesRouteImport.update({
+    id: '/employees',
+    path: '/employees',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellExpensesRoute =
+  AuthenticatedShellExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellInventoryRoute =
+  AuthenticatedShellInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellInvoicesRoute =
+  AuthenticatedShellInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellNotificationsRoute =
+  AuthenticatedShellNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellPayablesRoute =
+  AuthenticatedShellPayablesRouteImport.update({
+    id: '/payables',
+    path: '/payables',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellPayrollRoute =
+  AuthenticatedShellPayrollRouteImport.update({
+    id: '/payroll',
+    path: '/payroll',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellProductsRoute =
+  AuthenticatedShellProductsRouteImport.update({
+    id: '/products',
+    path: '/products',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellPurchaseOrdersRoute =
+  AuthenticatedShellPurchaseOrdersRouteImport.update({
+    id: '/purchase-orders',
+    path: '/purchase-orders',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellReceivablesRoute =
+  AuthenticatedShellReceivablesRouteImport.update({
+    id: '/receivables',
+    path: '/receivables',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellReportsRoute =
+  AuthenticatedShellReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellSalesRoute = AuthenticatedShellSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AuthenticatedShellRouteRoute,
+} as any)
+const AuthenticatedShellSettingsRoute =
+  AuthenticatedShellSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellSuppliersRoute =
+  AuthenticatedShellSuppliersRouteImport.update({
+    id: '/suppliers',
+    path: '/suppliers',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/attendance': typeof AuthenticatedShellAttendanceRoute
+  '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
+  '/cash-flow': typeof AuthenticatedShellCashFlowRoute
+  '/categories': typeof AuthenticatedShellCategoriesRoute
+  '/customers': typeof AuthenticatedShellCustomersRoute
+  '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/employees': typeof AuthenticatedShellEmployeesRoute
+  '/expenses': typeof AuthenticatedShellExpensesRoute
+  '/inventory': typeof AuthenticatedShellInventoryRoute
+  '/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/notifications': typeof AuthenticatedShellNotificationsRoute
+  '/payables': typeof AuthenticatedShellPayablesRoute
+  '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/products': typeof AuthenticatedShellProductsRoute
+  '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
+  '/receivables': typeof AuthenticatedShellReceivablesRoute
+  '/reports': typeof AuthenticatedShellReportsRoute
+  '/sales': typeof AuthenticatedShellSalesRoute
+  '/settings': typeof AuthenticatedShellSettingsRoute
+  '/suppliers': typeof AuthenticatedShellSuppliersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/attendance': typeof AuthenticatedShellAttendanceRoute
+  '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
+  '/cash-flow': typeof AuthenticatedShellCashFlowRoute
+  '/categories': typeof AuthenticatedShellCategoriesRoute
+  '/customers': typeof AuthenticatedShellCustomersRoute
+  '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/employees': typeof AuthenticatedShellEmployeesRoute
+  '/expenses': typeof AuthenticatedShellExpensesRoute
+  '/inventory': typeof AuthenticatedShellInventoryRoute
+  '/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/notifications': typeof AuthenticatedShellNotificationsRoute
+  '/payables': typeof AuthenticatedShellPayablesRoute
+  '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/products': typeof AuthenticatedShellProductsRoute
+  '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
+  '/receivables': typeof AuthenticatedShellReceivablesRoute
+  '/reports': typeof AuthenticatedShellReportsRoute
+  '/sales': typeof AuthenticatedShellSalesRoute
+  '/settings': typeof AuthenticatedShellSettingsRoute
+  '/suppliers': typeof AuthenticatedShellSuppliersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
+  '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/_authenticated/_shell/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
+  '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
+  '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
+  '/_authenticated/_shell/customers': typeof AuthenticatedShellCustomersRoute
+  '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/employees': typeof AuthenticatedShellEmployeesRoute
+  '/_authenticated/_shell/expenses': typeof AuthenticatedShellExpensesRoute
+  '/_authenticated/_shell/inventory': typeof AuthenticatedShellInventoryRoute
+  '/_authenticated/_shell/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/_authenticated/_shell/notifications': typeof AuthenticatedShellNotificationsRoute
+  '/_authenticated/_shell/payables': typeof AuthenticatedShellPayablesRoute
+  '/_authenticated/_shell/payroll': typeof AuthenticatedShellPayrollRoute
+  '/_authenticated/_shell/products': typeof AuthenticatedShellProductsRoute
+  '/_authenticated/_shell/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
+  '/_authenticated/_shell/receivables': typeof AuthenticatedShellReceivablesRoute
+  '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
+  '/_authenticated/_shell/sales': typeof AuthenticatedShellSalesRoute
+  '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
+  '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/onboarding'
+    | '/analytics'
+    | '/attendance'
+    | '/audit-logs'
+    | '/bill-of-materials'
+    | '/cash-flow'
+    | '/categories'
+    | '/customers'
+    | '/dashboard'
+    | '/employees'
+    | '/expenses'
+    | '/inventory'
+    | '/invoices'
+    | '/notifications'
+    | '/payables'
+    | '/payroll'
+    | '/products'
+    | '/purchase-orders'
+    | '/receivables'
+    | '/reports'
+    | '/sales'
+    | '/settings'
+    | '/suppliers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/onboarding'
+    | '/analytics'
+    | '/attendance'
+    | '/audit-logs'
+    | '/bill-of-materials'
+    | '/cash-flow'
+    | '/categories'
+    | '/customers'
+    | '/dashboard'
+    | '/employees'
+    | '/expenses'
+    | '/inventory'
+    | '/invoices'
+    | '/notifications'
+    | '/payables'
+    | '/payroll'
+    | '/products'
+    | '/purchase-orders'
+    | '/receivables'
+    | '/reports'
+    | '/sales'
+    | '/settings'
+    | '/suppliers'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/_shell'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/_shell/analytics'
+    | '/_authenticated/_shell/attendance'
+    | '/_authenticated/_shell/audit-logs'
+    | '/_authenticated/_shell/bill-of-materials'
+    | '/_authenticated/_shell/cash-flow'
+    | '/_authenticated/_shell/categories'
+    | '/_authenticated/_shell/customers'
+    | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/employees'
+    | '/_authenticated/_shell/expenses'
+    | '/_authenticated/_shell/inventory'
+    | '/_authenticated/_shell/invoices'
+    | '/_authenticated/_shell/notifications'
+    | '/_authenticated/_shell/payables'
+    | '/_authenticated/_shell/payroll'
+    | '/_authenticated/_shell/products'
+    | '/_authenticated/_shell/purchase-orders'
+    | '/_authenticated/_shell/receivables'
+    | '/_authenticated/_shell/reports'
+    | '/_authenticated/_shell/sales'
+    | '/_authenticated/_shell/settings'
+    | '/_authenticated/_shell/suppliers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +390,274 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_shell': {
+      id: '/_authenticated/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedShellRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_shell/analytics': {
+      id: '/_authenticated/_shell/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AuthenticatedShellAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/attendance': {
+      id: '/_authenticated/_shell/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AuthenticatedShellAttendanceRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/audit-logs': {
+      id: '/_authenticated/_shell/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/audit-logs'
+      preLoaderRoute: typeof AuthenticatedShellAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/bill-of-materials': {
+      id: '/_authenticated/_shell/bill-of-materials'
+      path: '/bill-of-materials'
+      fullPath: '/bill-of-materials'
+      preLoaderRoute: typeof AuthenticatedShellBillOfMaterialsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/cash-flow': {
+      id: '/_authenticated/_shell/cash-flow'
+      path: '/cash-flow'
+      fullPath: '/cash-flow'
+      preLoaderRoute: typeof AuthenticatedShellCashFlowRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/categories': {
+      id: '/_authenticated/_shell/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthenticatedShellCategoriesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/customers': {
+      id: '/_authenticated/_shell/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AuthenticatedShellCustomersRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/dashboard': {
+      id: '/_authenticated/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedShellDashboardRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/employees': {
+      id: '/_authenticated/_shell/employees'
+      path: '/employees'
+      fullPath: '/employees'
+      preLoaderRoute: typeof AuthenticatedShellEmployeesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/expenses': {
+      id: '/_authenticated/_shell/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof AuthenticatedShellExpensesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/inventory': {
+      id: '/_authenticated/_shell/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AuthenticatedShellInventoryRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/invoices': {
+      id: '/_authenticated/_shell/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof AuthenticatedShellInvoicesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/notifications': {
+      id: '/_authenticated/_shell/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedShellNotificationsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/payables': {
+      id: '/_authenticated/_shell/payables'
+      path: '/payables'
+      fullPath: '/payables'
+      preLoaderRoute: typeof AuthenticatedShellPayablesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/payroll': {
+      id: '/_authenticated/_shell/payroll'
+      path: '/payroll'
+      fullPath: '/payroll'
+      preLoaderRoute: typeof AuthenticatedShellPayrollRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/products': {
+      id: '/_authenticated/_shell/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedShellProductsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/purchase-orders': {
+      id: '/_authenticated/_shell/purchase-orders'
+      path: '/purchase-orders'
+      fullPath: '/purchase-orders'
+      preLoaderRoute: typeof AuthenticatedShellPurchaseOrdersRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/receivables': {
+      id: '/_authenticated/_shell/receivables'
+      path: '/receivables'
+      fullPath: '/receivables'
+      preLoaderRoute: typeof AuthenticatedShellReceivablesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/reports': {
+      id: '/_authenticated/_shell/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedShellReportsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/sales': {
+      id: '/_authenticated/_shell/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthenticatedShellSalesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/settings': {
+      id: '/_authenticated/_shell/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedShellSettingsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/suppliers': {
+      id: '/_authenticated/_shell/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthenticatedShellSuppliersRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
   }
 }
 
+interface AuthenticatedShellRouteRouteChildren {
+  AuthenticatedShellAnalyticsRoute: typeof AuthenticatedShellAnalyticsRoute
+  AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
+  AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
+  AuthenticatedShellBillOfMaterialsRoute: typeof AuthenticatedShellBillOfMaterialsRoute
+  AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
+  AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
+  AuthenticatedShellCustomersRoute: typeof AuthenticatedShellCustomersRoute
+  AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellEmployeesRoute: typeof AuthenticatedShellEmployeesRoute
+  AuthenticatedShellExpensesRoute: typeof AuthenticatedShellExpensesRoute
+  AuthenticatedShellInventoryRoute: typeof AuthenticatedShellInventoryRoute
+  AuthenticatedShellInvoicesRoute: typeof AuthenticatedShellInvoicesRoute
+  AuthenticatedShellNotificationsRoute: typeof AuthenticatedShellNotificationsRoute
+  AuthenticatedShellPayablesRoute: typeof AuthenticatedShellPayablesRoute
+  AuthenticatedShellPayrollRoute: typeof AuthenticatedShellPayrollRoute
+  AuthenticatedShellProductsRoute: typeof AuthenticatedShellProductsRoute
+  AuthenticatedShellPurchaseOrdersRoute: typeof AuthenticatedShellPurchaseOrdersRoute
+  AuthenticatedShellReceivablesRoute: typeof AuthenticatedShellReceivablesRoute
+  AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
+  AuthenticatedShellSalesRoute: typeof AuthenticatedShellSalesRoute
+  AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
+  AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
+}
+
+const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
+  {
+    AuthenticatedShellAnalyticsRoute: AuthenticatedShellAnalyticsRoute,
+    AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
+    AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
+    AuthenticatedShellBillOfMaterialsRoute:
+      AuthenticatedShellBillOfMaterialsRoute,
+    AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
+    AuthenticatedShellCategoriesRoute: AuthenticatedShellCategoriesRoute,
+    AuthenticatedShellCustomersRoute: AuthenticatedShellCustomersRoute,
+    AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+    AuthenticatedShellEmployeesRoute: AuthenticatedShellEmployeesRoute,
+    AuthenticatedShellExpensesRoute: AuthenticatedShellExpensesRoute,
+    AuthenticatedShellInventoryRoute: AuthenticatedShellInventoryRoute,
+    AuthenticatedShellInvoicesRoute: AuthenticatedShellInvoicesRoute,
+    AuthenticatedShellNotificationsRoute: AuthenticatedShellNotificationsRoute,
+    AuthenticatedShellPayablesRoute: AuthenticatedShellPayablesRoute,
+    AuthenticatedShellPayrollRoute: AuthenticatedShellPayrollRoute,
+    AuthenticatedShellProductsRoute: AuthenticatedShellProductsRoute,
+    AuthenticatedShellPurchaseOrdersRoute:
+      AuthenticatedShellPurchaseOrdersRoute,
+    AuthenticatedShellReceivablesRoute: AuthenticatedShellReceivablesRoute,
+    AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
+    AuthenticatedShellSalesRoute: AuthenticatedShellSalesRoute,
+    AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
+    AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
+  }
+
+const AuthenticatedShellRouteRouteWithChildren =
+  AuthenticatedShellRouteRoute._addFileChildren(
+    AuthenticatedShellRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
