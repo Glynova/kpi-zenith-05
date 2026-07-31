@@ -74,6 +74,12 @@ type Props = {
   searchKeys?: string[];
   orderBy?: string;
   readOnly?: boolean;
+  /** Extra buttons rendered at the end of each row. */
+  rowActions?: (row: Row) => ReactNode;
+  /** Extra buttons rendered in the page header. */
+  toolbar?: ReactNode;
+  /** Disable CSV import (enabled by default for writable tables). */
+  enableImport?: boolean;
 };
 
 export function ResourcePage({
@@ -85,9 +91,13 @@ export function ResourcePage({
   searchKeys = ["name"],
   orderBy = "created_at",
   readOnly = false,
+  rowActions,
+  toolbar,
+  enableImport = true,
 }: Props) {
   const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
