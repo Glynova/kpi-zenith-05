@@ -394,7 +394,9 @@ export function ResourcePage({
                 {columns.map((c) => (
                   <TableHead key={c.key}>{c.label}</TableHead>
                 ))}
-                {editable && <TableHead className="w-24 text-right">Actions</TableHead>}
+                {(editable || rowActions) && (
+                  <TableHead className="w-24 text-right">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -405,14 +407,19 @@ export function ResourcePage({
                       {renderCell(row, c)}
                     </TableCell>
                   ))}
-                  {editable && (
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteRow(row)}>
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
+                  {(editable || rowActions) && (
+                    <TableCell className="whitespace-nowrap text-right">
+                      {rowActions?.(row)}
+                      {editable && (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteRow(row)}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   )}
                 </TableRow>
