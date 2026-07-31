@@ -235,6 +235,75 @@ export function ResourcePage({
     URL.revokeObjectURL(url);
   }
 
+  function parseCsv(text: string): string[][] {
+    const rowsOut: string[][] = [];
+    let cell = "";
+    let row: string[] = [];
+    let quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (quoted) {
+        if (ch === '"' && text[i + 1] === '"') {
+          cell += '"';
+          i++;
+        } else if (ch === '"') quoted = false;
+        else cell += ch;
+      } else if (ch === '"') quoted = true;
+      else if (ch === ",") {
+        row.push(cell);
+        cell = "";
+      } else if (ch === "\n") {
+        row.push(cell.replace(/\r$/, ""));
+        rowsOut.push(row);
+        row = [];
+        cell = "";
+      } else cell += ch;
+    }
+    if (cell || row.length) {
+      row.push(cell.replace(/\r$/, ""));
+      rowsOut.push(row);
+    }
+    return rowsOut.filter((r) => r.some((c) => c.trim() !== ""));
+  }
+
+  const importCsv = useMutation({
+    mutationFn: async (file: File) => {
+      const parsed = parseCsv(await file.text());
+      if (parsed.length < 2) throw new Error("The file has no data rows");
+      const header = parsed[0].map((h) => h.trim().toLowerCase());
+      const map = header.map((h) => {
+        const field = fields.find(
+          (f) => f.key.toLowerCase() === h || f.label.toLowerCase() === h,
+        );
+        return field ?? null;
+      });
+      if (!map.some(Boolean)) {
+        throw new Error(`No matching columns. Expected headers like: ${fields.map((f) => f.label).join(", ")}`);
+      }
+      const payload = parsed.slice(1).map((line) => {
+        const record: Row = { business_id: businessId };
+        map.forEach((field, i) => {
+          if (!field) return;
+          const raw = (line[i] ?? "").trim();
+          if (raw === "") return;
+          record[field.key] = field.type === "number" ? Number(raw) : raw;
+        });
+        fields.forEach((f) => {
+          if (record[f.key] === undefined && f.default !== undefined) record[f.key] = f.default;
+        });
+        return record;
+      });
+      const { error } = await db.from(table).insert(payload);
+      if (error) throw error;
+      return payload.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`Imported ${count} record${count === 1 ? "" : "s"}`);
+      queryClient.invalidateQueries({ queryKey: ["resource", table, businessId] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Import failed"),
+  });
+
   function renderCell(row: Row, col: Column) {
     const value = row[col.key];
     if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
