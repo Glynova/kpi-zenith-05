@@ -328,9 +328,33 @@ export function ResourcePage({
         description={description}
         actions={
           <>
+            {toolbar}
             <Button variant="outline" size="sm" onClick={exportCsv}>
               <Download className="size-4" /> Export
             </Button>
+            {editable && enableImport && (
+              <>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) importCsv.mutate(file);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={importCsv.isPending}
+                >
+                  <Upload className="size-4" /> {importCsv.isPending ? "Importing..." : "Import"}
+                </Button>
+              </>
+            )}
             {editable && (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="size-4" /> New
