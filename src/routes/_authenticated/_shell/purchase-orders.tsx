@@ -396,17 +396,42 @@ function PurchaseOrdersPage() {
                     <Button variant="ghost" size="icon" onClick={() => printPo(row)} aria-label="Print">
                       <Printer className="size-4" />
                     </Button>
+                    {canWrite && !canApprove && row.status === "draft" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setStatus.mutate({ po: row, status: "pending_approval" })}
+                        aria-label="Submit for approval"
+                        title="Submit for owner approval"
+                      >
+                        <Send className="size-4" />
+                      </Button>
+                    )}
+                    {canApprove && ["draft", "pending_approval"].includes(String(row.status)) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setStatus.mutate({ po: row, status: "approved" })}
+                        aria-label="Approve order"
+                        title="Approve purchase order"
+                      >
+                        <CheckCircle2 className="size-4 text-primary" />
+                      </Button>
+                    )}
                     {canWrite && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={row.status === "received"}
-                          onClick={() => setReceiving(row)}
-                          aria-label="Receive stock"
-                        >
-                          <PackageCheck className="size-4" />
-                        </Button>
+                        {canApprove && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={row.status === "received" || row.status === "draft"}
+                            onClick={() => setReceiving(row)}
+                            aria-label="Receive stock"
+                            title="Receive stock"
+                          >
+                            <PackageCheck className="size-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
