@@ -1526,6 +1526,7 @@ export type Database = {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      can_manage_sensitive: { Args: { _business_id: string }; Returns: boolean }
       can_write_business: { Args: { _business_id: string }; Returns: boolean }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
