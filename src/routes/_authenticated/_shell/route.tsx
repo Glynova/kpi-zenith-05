@@ -20,6 +20,7 @@ import { useBusiness } from "@/lib/business-context";
 import { useTheme } from "@/lib/theme";
 import { supabase } from "@/integrations/supabase/client";
 import { titleCase } from "@/lib/format";
+import { canAccessRoute } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
@@ -30,6 +31,8 @@ function Shell() {
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const allowed = canAccessRoute(role, pathname);
 
   useEffect(() => {
     if (!loading && memberships.length === 0) {
