@@ -36,6 +36,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useBusiness } from "@/lib/business-context";
+import { canAccessRoute } from "@/lib/permissions";
 
 const groups = [
   {
