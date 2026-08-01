@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, titleCase, todayISO } from "@/lib/format";
+import { APPROVAL_STATUSES, canApprovePurchaseOrders } from "@/lib/permissions";
 import { printDocument } from "@/lib/print";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import {
