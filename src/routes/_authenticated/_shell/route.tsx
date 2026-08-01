@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { Moon, Sun, LogOut, Building2, Plus } from "lucide-react";
+import { Moon, Sun, LogOut, Building2, Plus, ShieldAlert } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { AppSidebar } from "@/components/app-sidebar";
