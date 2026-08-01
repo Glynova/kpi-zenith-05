@@ -251,6 +251,21 @@ function PurchaseOrdersPage() {
     onError: (e: any) => toast.error(e.message ?? "Could not receive the order"),
   });
 
+  const setStatus = useMutation({
+    mutationFn: async ({ po, status }: { po: Row; status: string }) => {
+      const { error } = await db.from("purchase_orders").update({ status }).eq("id", po.id);
+      if (error) throw error;
+      return status;
+    },
+    onSuccess: (status) => {
+      toast.success(
+        status === "approved" ? "Purchase order approved" : "Sent to the owner for approval",
+      );
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders", businessId] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Could not update the order status"),
+  });
+
   const remove = useMutation({
     mutationFn: async (row: Row) => {
       const { error } = await db.from("purchase_orders").delete().eq("id", row.id);
