@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { Moon, Sun, LogOut, Building2, Plus } from "lucide-react";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Moon, Sun, LogOut, Building2, Plus, ShieldAlert } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { AppSidebar } from "@/components/app-sidebar";
@@ -20,6 +20,7 @@ import { useBusiness } from "@/lib/business-context";
 import { useTheme } from "@/lib/theme";
 import { supabase } from "@/integrations/supabase/client";
 import { titleCase } from "@/lib/format";
+import { canAccessRoute } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
@@ -30,6 +31,8 @@ function Shell() {
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const allowed = canAccessRoute(role, pathname);
 
   useEffect(() => {
     if (!loading && memberships.length === 0) {
@@ -100,7 +103,21 @@ function Shell() {
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            <Outlet />
+            {allowed ? (
+              <Outlet />
+            ) : (
+              <div className="mx-auto max-w-md space-y-3 py-16 text-center">
+                <ShieldAlert className="mx-auto size-10 text-muted-foreground" />
+                <h1 className="font-display text-xl font-semibold">No access to this module</h1>
+                <p className="text-sm text-muted-foreground">
+                  Your role ({role ? titleCase(role) : "—"}) doesn&apos;t include this area. Ask a
+                  business owner or admin to update your access in Settings.
+                </p>
+                <Button variant="outline" onClick={() => navigate({ to: "/settings" })}>
+                  Go to settings
+                </Button>
+              </div>
+            )}
           </main>
         </div>
       </div>

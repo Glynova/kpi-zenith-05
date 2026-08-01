@@ -2,12 +2,13 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2, Eye, PackageCheck, Printer } from "lucide-react";
+import { Plus, Search, Trash2, Eye, PackageCheck, Printer, CheckCircle2, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, titleCase, todayISO } from "@/lib/format";
+import { APPROVAL_STATUSES, canApprovePurchaseOrders } from "@/lib/permissions";
 import { printDocument } from "@/lib/print";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import {
@@ -69,7 +70,11 @@ const STATUSES = [
 ];
 
 function PurchaseOrdersPage() {
-  const { businessId, business, currency, canWrite, userId } = useBusiness();
+  const { businessId, business, currency, canWrite, userId, role } = useBusiness();
+  const canApprove = canApprovePurchaseOrders(role);
+  const selectableStatuses = canApprove
+    ? STATUSES
+    : STATUSES.filter((s) => !APPROVAL_STATUSES.includes(s));
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -246,6 +251,21 @@ function PurchaseOrdersPage() {
     onError: (e: any) => toast.error(e.message ?? "Could not receive the order"),
   });
 
+  const setStatus = useMutation({
+    mutationFn: async ({ po, status }: { po: Row; status: string }) => {
+      const { error } = await db.from("purchase_orders").update({ status }).eq("id", po.id);
+      if (error) throw error;
+      return status;
+    },
+    onSuccess: (status) => {
+      toast.success(
+        status === "approved" ? "Purchase order approved" : "Sent to the owner for approval",
+      );
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders", businessId] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Could not update the order status"),
+  });
+
   const remove = useMutation({
     mutationFn: async (row: Row) => {
       const { error } = await db.from("purchase_orders").delete().eq("id", row.id);
@@ -376,17 +396,42 @@ function PurchaseOrdersPage() {
                     <Button variant="ghost" size="icon" onClick={() => printPo(row)} aria-label="Print">
                       <Printer className="size-4" />
                     </Button>
+                    {canWrite && !canApprove && row.status === "draft" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setStatus.mutate({ po: row, status: "pending_approval" })}
+                        aria-label="Submit for approval"
+                        title="Submit for owner approval"
+                      >
+                        <Send className="size-4" />
+                      </Button>
+                    )}
+                    {canApprove && ["draft", "pending_approval"].includes(String(row.status)) && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setStatus.mutate({ po: row, status: "approved" })}
+                        aria-label="Approve order"
+                        title="Approve purchase order"
+                      >
+                        <CheckCircle2 className="size-4 text-primary" />
+                      </Button>
+                    )}
                     {canWrite && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={row.status === "received"}
-                          onClick={() => setReceiving(row)}
-                          aria-label="Receive stock"
-                        >
-                          <PackageCheck className="size-4" />
-                        </Button>
+                        {canApprove && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={row.status === "received" || row.status === "draft"}
+                            onClick={() => setReceiving(row)}
+                            aria-label="Receive stock"
+                            title="Receive stock"
+                          >
+                            <PackageCheck className="size-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -447,7 +492,7 @@ function PurchaseOrdersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUSES.map((s) => (
+                  {selectableStatuses.map((s) => (
                     <SelectItem key={s} value={s}>
                       {titleCase(s)}
                     </SelectItem>

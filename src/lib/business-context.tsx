@@ -5,16 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { db, type Row } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole =
-  | "owner"
-  | "admin"
-  | "manager"
-  | "accountant"
-  | "cashier"
-  | "inventory_staff"
-  | "warehouse_staff"
-  | "employee"
-  | "auditor";
+export type { AppRole } from "@/lib/permissions";
+import type { AppRole } from "@/lib/permissions";
 
 export type Membership = {
   id: string;

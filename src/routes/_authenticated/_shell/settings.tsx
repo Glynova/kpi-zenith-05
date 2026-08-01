@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { titleCase } from "@/lib/format";
 import { useTheme } from "@/lib/theme";
 import { Switch } from "@/components/ui/switch";
+import { TeamAccess } from "@/components/team-access";
 
 export const Route = createFileRoute("/_authenticated/_shell/settings")({
   head: () => ({
@@ -119,7 +120,7 @@ function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Access</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-5">
           <div className="flex items-center justify-between gap-3 text-sm">
             <span>Your role in this business</span>
             <Badge variant="secondary">{role ? titleCase(role) : "—"}</Badge>
@@ -128,10 +129,7 @@ function SettingsPage() {
             <span>Businesses you belong to</span>
             <span className="font-medium">{memberships.length}</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Auditors have read-only access everywhere. Only owners and admins can change business
-            settings and manage members.
-          </p>
+          {businessId && <TeamAccess businessId={businessId} canManage={isAdmin} />}
         </CardContent>
       </Card>
     </div>
