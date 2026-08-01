@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { titleCase } from "@/lib/format";
 import { useTheme } from "@/lib/theme";
 import { Switch } from "@/components/ui/switch";
+import { TeamAccess } from "@/components/team-access";
 
 export const Route = createFileRoute("/_authenticated/_shell/settings")({
   head: () => ({
