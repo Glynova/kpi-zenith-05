@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Moon, Sun, LogOut, Building2, Plus, ShieldAlert } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
