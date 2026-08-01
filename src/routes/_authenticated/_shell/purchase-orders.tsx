@@ -452,7 +452,7 @@ function PurchaseOrdersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {STATUSES.map((s) => (
+                  {selectableStatuses.map((s) => (
                     <SelectItem key={s} value={s}>
                       {titleCase(s)}
                     </SelectItem>
