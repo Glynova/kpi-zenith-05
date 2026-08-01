@@ -69,7 +69,11 @@ const STATUSES = [
 ];
 
 function PurchaseOrdersPage() {
-  const { businessId, business, currency, canWrite, userId } = useBusiness();
+  const { businessId, business, currency, canWrite, userId, role } = useBusiness();
+  const canApprove = canApprovePurchaseOrders(role);
+  const selectableStatuses = canApprove
+    ? STATUSES
+    : STATUSES.filter((s) => !APPROVAL_STATUSES.includes(s));
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
