@@ -96,6 +96,11 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const { role } = useBusiness();
+
+  const visibleGroups = groups
+    .map((g) => ({ ...g, items: g.items.filter((i) => canAccessRoute(role, i.url)) }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <Sidebar collapsible="icon">
@@ -115,7 +120,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {groups.map((group) => (
+        {visibleGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
