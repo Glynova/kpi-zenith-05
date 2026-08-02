@@ -57,13 +57,14 @@ export type Column = {
 export type Field = {
   key: string;
   label: string;
-  type: "text" | "number" | "textarea" | "date" | "select" | "relation";
+  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean";
   options?: string[];
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
   placeholder?: string;
 };
+
 
 type Props = {
   table: string;
