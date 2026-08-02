@@ -451,12 +451,21 @@ export function ResourcePage({
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "textarea" ? (
+                {field.type === "boolean" ? (
+                  <div className="flex h-9 items-center">
+                    <Switch
+                      id={field.key}
+                      checked={form[field.key] === true || form[field.key] === "true"}
+                      onCheckedChange={(v) => setForm({ ...form, [field.key]: v })}
+                    />
+                  </div>
+                ) : field.type === "textarea" ? (
                   <Textarea
                     id={field.key}
                     value={form[field.key] ?? ""}
                     onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                   />
+
                 ) : field.type === "select" ? (
                   <Select
                     value={form[field.key] ? String(form[field.key]) : undefined}
