@@ -37,6 +37,7 @@ import { Route as AuthenticatedShellPurchaseOrdersRouteImport } from './routes/_
 import { Route as AuthenticatedShellReceivablesRouteImport } from './routes/_authenticated/_shell/receivables'
 import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
 import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authenticated/_shell/sales'
+import { Route as AuthenticatedShellSerialsRouteImport } from './routes/_authenticated/_shell/serials'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
@@ -201,6 +202,12 @@ const AuthenticatedShellSalesRoute = AuthenticatedShellSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AuthenticatedShellRouteRoute,
 } as any)
+const AuthenticatedShellSerialsRoute =
+  AuthenticatedShellSerialsRouteImport.update({
+    id: '/serials',
+    path: '/serials',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellSettingsRoute =
   AuthenticatedShellSettingsRouteImport.update({
     id: '/settings',
@@ -252,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/receivables': typeof AuthenticatedShellReceivablesRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/sales': typeof AuthenticatedShellSalesRoute
+  '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
@@ -284,6 +292,7 @@ export interface FileRoutesByTo {
   '/receivables': typeof AuthenticatedShellReceivablesRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/sales': typeof AuthenticatedShellSalesRoute
+  '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
@@ -319,6 +328,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/receivables': typeof AuthenticatedShellReceivablesRoute
   '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
   '/_authenticated/_shell/sales': typeof AuthenticatedShellSalesRoute
+  '/_authenticated/_shell/serials': typeof AuthenticatedShellSerialsRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/receivables'
     | '/reports'
     | '/sales'
+    | '/serials'
     | '/settings'
     | '/suppliers'
     | '/units'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/receivables'
     | '/reports'
     | '/sales'
+    | '/serials'
     | '/settings'
     | '/suppliers'
     | '/units'
@@ -419,6 +431,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/receivables'
     | '/_authenticated/_shell/reports'
     | '/_authenticated/_shell/sales'
+    | '/_authenticated/_shell/serials'
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/suppliers'
     | '/_authenticated/_shell/units'
@@ -630,6 +643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSalesRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/serials': {
+      id: '/_authenticated/_shell/serials'
+      path: '/serials'
+      fullPath: '/serials'
+      preLoaderRoute: typeof AuthenticatedShellSerialsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/settings': {
       id: '/_authenticated/_shell/settings'
       path: '/settings'
@@ -684,6 +704,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellReceivablesRoute: typeof AuthenticatedShellReceivablesRoute
   AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
   AuthenticatedShellSalesRoute: typeof AuthenticatedShellSalesRoute
+  AuthenticatedShellSerialsRoute: typeof AuthenticatedShellSerialsRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
@@ -716,6 +737,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellReceivablesRoute: AuthenticatedShellReceivablesRoute,
     AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
     AuthenticatedShellSalesRoute: AuthenticatedShellSalesRoute,
+    AuthenticatedShellSerialsRoute: AuthenticatedShellSerialsRoute,
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
