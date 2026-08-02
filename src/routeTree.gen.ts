@@ -18,6 +18,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
+import { Route as AuthenticatedShellBatchesRouteImport } from './routes/_authenticated/_shell/batches'
 import { Route as AuthenticatedShellBillOfMaterialsRouteImport } from './routes/_authenticated/_shell/bill-of-materials'
 import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
 import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedShellEmployeesRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellExpensesRouteImport } from './routes/_authenticated/_shell/expenses'
 import { Route as AuthenticatedShellInventoryRouteImport } from './routes/_authenticated/_shell/inventory'
 import { Route as AuthenticatedShellInvoicesRouteImport } from './routes/_authenticated/_shell/invoices'
+import { Route as AuthenticatedShellLocationsRouteImport } from './routes/_authenticated/_shell/locations'
 import { Route as AuthenticatedShellNotificationsRouteImport } from './routes/_authenticated/_shell/notifications'
 import { Route as AuthenticatedShellPayablesRouteImport } from './routes/_authenticated/_shell/payables'
 import { Route as AuthenticatedShellPayrollRouteImport } from './routes/_authenticated/_shell/payroll'
@@ -35,8 +37,12 @@ import { Route as AuthenticatedShellPurchaseOrdersRouteImport } from './routes/_
 import { Route as AuthenticatedShellReceivablesRouteImport } from './routes/_authenticated/_shell/receivables'
 import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authenticated/_shell/reports'
 import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authenticated/_shell/sales'
+import { Route as AuthenticatedShellSerialsRouteImport } from './routes/_authenticated/_shell/serials'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
+import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
+import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
+import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +88,12 @@ const AuthenticatedShellAuditLogsRoute =
   AuthenticatedShellAuditLogsRouteImport.update({
     id: '/audit-logs',
     path: '/audit-logs',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellBatchesRoute =
+  AuthenticatedShellBatchesRouteImport.update({
+    id: '/batches',
+    path: '/batches',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellBillOfMaterialsRoute =
@@ -138,6 +150,12 @@ const AuthenticatedShellInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellLocationsRoute =
+  AuthenticatedShellLocationsRouteImport.update({
+    id: '/locations',
+    path: '/locations',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellNotificationsRoute =
   AuthenticatedShellNotificationsRouteImport.update({
     id: '/notifications',
@@ -185,6 +203,12 @@ const AuthenticatedShellSalesRoute = AuthenticatedShellSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AuthenticatedShellRouteRoute,
 } as any)
+const AuthenticatedShellSerialsRoute =
+  AuthenticatedShellSerialsRouteImport.update({
+    id: '/serials',
+    path: '/serials',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellSettingsRoute =
   AuthenticatedShellSettingsRouteImport.update({
     id: '/settings',
@@ -197,6 +221,23 @@ const AuthenticatedShellSuppliersRoute =
     path: '/suppliers',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellTransfersRoute =
+  AuthenticatedShellTransfersRouteImport.update({
+    id: '/transfers',
+    path: '/transfers',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellUnitsRoute = AuthenticatedShellUnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => AuthenticatedShellRouteRoute,
+} as any)
+const AuthenticatedShellVariantsRoute =
+  AuthenticatedShellVariantsRouteImport.update({
+    id: '/variants',
+    path: '/variants',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -206,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/batches': typeof AuthenticatedShellBatchesRoute
   '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
@@ -215,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/expenses': typeof AuthenticatedShellExpensesRoute
   '/inventory': typeof AuthenticatedShellInventoryRoute
   '/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/locations': typeof AuthenticatedShellLocationsRoute
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
@@ -223,8 +266,12 @@ export interface FileRoutesByFullPath {
   '/receivables': typeof AuthenticatedShellReceivablesRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/sales': typeof AuthenticatedShellSalesRoute
+  '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/transfers': typeof AuthenticatedShellTransfersRoute
+  '/units': typeof AuthenticatedShellUnitsRoute
+  '/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -234,6 +281,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/batches': typeof AuthenticatedShellBatchesRoute
   '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
@@ -243,6 +291,7 @@ export interface FileRoutesByTo {
   '/expenses': typeof AuthenticatedShellExpensesRoute
   '/inventory': typeof AuthenticatedShellInventoryRoute
   '/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/locations': typeof AuthenticatedShellLocationsRoute
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
@@ -251,8 +300,12 @@ export interface FileRoutesByTo {
   '/receivables': typeof AuthenticatedShellReceivablesRoute
   '/reports': typeof AuthenticatedShellReportsRoute
   '/sales': typeof AuthenticatedShellSalesRoute
+  '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/transfers': typeof AuthenticatedShellTransfersRoute
+  '/units': typeof AuthenticatedShellUnitsRoute
+  '/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -265,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/_authenticated/_shell/batches': typeof AuthenticatedShellBatchesRoute
   '/_authenticated/_shell/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
@@ -274,6 +328,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/expenses': typeof AuthenticatedShellExpensesRoute
   '/_authenticated/_shell/inventory': typeof AuthenticatedShellInventoryRoute
   '/_authenticated/_shell/invoices': typeof AuthenticatedShellInvoicesRoute
+  '/_authenticated/_shell/locations': typeof AuthenticatedShellLocationsRoute
   '/_authenticated/_shell/notifications': typeof AuthenticatedShellNotificationsRoute
   '/_authenticated/_shell/payables': typeof AuthenticatedShellPayablesRoute
   '/_authenticated/_shell/payroll': typeof AuthenticatedShellPayrollRoute
@@ -282,8 +337,12 @@ export interface FileRoutesById {
   '/_authenticated/_shell/receivables': typeof AuthenticatedShellReceivablesRoute
   '/_authenticated/_shell/reports': typeof AuthenticatedShellReportsRoute
   '/_authenticated/_shell/sales': typeof AuthenticatedShellSalesRoute
+  '/_authenticated/_shell/serials': typeof AuthenticatedShellSerialsRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
+  '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
+  '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -295,6 +354,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
+    | '/batches'
     | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
@@ -304,6 +364,7 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/inventory'
     | '/invoices'
+    | '/locations'
     | '/notifications'
     | '/payables'
     | '/payroll'
@@ -312,8 +373,12 @@ export interface FileRouteTypes {
     | '/receivables'
     | '/reports'
     | '/sales'
+    | '/serials'
     | '/settings'
     | '/suppliers'
+    | '/transfers'
+    | '/units'
+    | '/variants'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -323,6 +388,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
+    | '/batches'
     | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
@@ -332,6 +398,7 @@ export interface FileRouteTypes {
     | '/expenses'
     | '/inventory'
     | '/invoices'
+    | '/locations'
     | '/notifications'
     | '/payables'
     | '/payroll'
@@ -340,8 +407,12 @@ export interface FileRouteTypes {
     | '/receivables'
     | '/reports'
     | '/sales'
+    | '/serials'
     | '/settings'
     | '/suppliers'
+    | '/transfers'
+    | '/units'
+    | '/variants'
   id:
     | '__root__'
     | '/'
@@ -353,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
+    | '/_authenticated/_shell/batches'
     | '/_authenticated/_shell/bill-of-materials'
     | '/_authenticated/_shell/cash-flow'
     | '/_authenticated/_shell/categories'
@@ -362,6 +434,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/expenses'
     | '/_authenticated/_shell/inventory'
     | '/_authenticated/_shell/invoices'
+    | '/_authenticated/_shell/locations'
     | '/_authenticated/_shell/notifications'
     | '/_authenticated/_shell/payables'
     | '/_authenticated/_shell/payroll'
@@ -370,8 +443,12 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/receivables'
     | '/_authenticated/_shell/reports'
     | '/_authenticated/_shell/sales'
+    | '/_authenticated/_shell/serials'
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/suppliers'
+    | '/_authenticated/_shell/transfers'
+    | '/_authenticated/_shell/units'
+    | '/_authenticated/_shell/variants'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -446,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellAuditLogsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/batches': {
+      id: '/_authenticated/_shell/batches'
+      path: '/batches'
+      fullPath: '/batches'
+      preLoaderRoute: typeof AuthenticatedShellBatchesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/bill-of-materials': {
       id: '/_authenticated/_shell/bill-of-materials'
       path: '/bill-of-materials'
@@ -509,6 +593,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellInvoicesRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/locations': {
+      id: '/_authenticated/_shell/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof AuthenticatedShellLocationsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/notifications': {
       id: '/_authenticated/_shell/notifications'
       path: '/notifications'
@@ -565,6 +656,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSalesRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/serials': {
+      id: '/_authenticated/_shell/serials'
+      path: '/serials'
+      fullPath: '/serials'
+      preLoaderRoute: typeof AuthenticatedShellSerialsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/settings': {
       id: '/_authenticated/_shell/settings'
       path: '/settings'
@@ -579,6 +677,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSuppliersRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/transfers': {
+      id: '/_authenticated/_shell/transfers'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof AuthenticatedShellTransfersRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/units': {
+      id: '/_authenticated/_shell/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof AuthenticatedShellUnitsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/variants': {
+      id: '/_authenticated/_shell/variants'
+      path: '/variants'
+      fullPath: '/variants'
+      preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
   }
 }
 
@@ -586,6 +705,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellAnalyticsRoute: typeof AuthenticatedShellAnalyticsRoute
   AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
   AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
+  AuthenticatedShellBatchesRoute: typeof AuthenticatedShellBatchesRoute
   AuthenticatedShellBillOfMaterialsRoute: typeof AuthenticatedShellBillOfMaterialsRoute
   AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
   AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
@@ -595,6 +715,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellExpensesRoute: typeof AuthenticatedShellExpensesRoute
   AuthenticatedShellInventoryRoute: typeof AuthenticatedShellInventoryRoute
   AuthenticatedShellInvoicesRoute: typeof AuthenticatedShellInvoicesRoute
+  AuthenticatedShellLocationsRoute: typeof AuthenticatedShellLocationsRoute
   AuthenticatedShellNotificationsRoute: typeof AuthenticatedShellNotificationsRoute
   AuthenticatedShellPayablesRoute: typeof AuthenticatedShellPayablesRoute
   AuthenticatedShellPayrollRoute: typeof AuthenticatedShellPayrollRoute
@@ -603,8 +724,12 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellReceivablesRoute: typeof AuthenticatedShellReceivablesRoute
   AuthenticatedShellReportsRoute: typeof AuthenticatedShellReportsRoute
   AuthenticatedShellSalesRoute: typeof AuthenticatedShellSalesRoute
+  AuthenticatedShellSerialsRoute: typeof AuthenticatedShellSerialsRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
+  AuthenticatedShellTransfersRoute: typeof AuthenticatedShellTransfersRoute
+  AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
+  AuthenticatedShellVariantsRoute: typeof AuthenticatedShellVariantsRoute
 }
 
 const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
@@ -612,6 +737,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellAnalyticsRoute: AuthenticatedShellAnalyticsRoute,
     AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
     AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
+    AuthenticatedShellBatchesRoute: AuthenticatedShellBatchesRoute,
     AuthenticatedShellBillOfMaterialsRoute:
       AuthenticatedShellBillOfMaterialsRoute,
     AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
@@ -622,6 +748,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellExpensesRoute: AuthenticatedShellExpensesRoute,
     AuthenticatedShellInventoryRoute: AuthenticatedShellInventoryRoute,
     AuthenticatedShellInvoicesRoute: AuthenticatedShellInvoicesRoute,
+    AuthenticatedShellLocationsRoute: AuthenticatedShellLocationsRoute,
     AuthenticatedShellNotificationsRoute: AuthenticatedShellNotificationsRoute,
     AuthenticatedShellPayablesRoute: AuthenticatedShellPayablesRoute,
     AuthenticatedShellPayrollRoute: AuthenticatedShellPayrollRoute,
@@ -631,8 +758,12 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellReceivablesRoute: AuthenticatedShellReceivablesRoute,
     AuthenticatedShellReportsRoute: AuthenticatedShellReportsRoute,
     AuthenticatedShellSalesRoute: AuthenticatedShellSalesRoute,
+    AuthenticatedShellSerialsRoute: AuthenticatedShellSerialsRoute,
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
+    AuthenticatedShellTransfersRoute: AuthenticatedShellTransfersRoute,
+    AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
+    AuthenticatedShellVariantsRoute: AuthenticatedShellVariantsRoute,
   }
 
 const AuthenticatedShellRouteRouteWithChildren =

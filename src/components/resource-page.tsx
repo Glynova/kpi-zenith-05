@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -51,19 +53,20 @@ import {
 export type Column = {
   key: string;
   label: string;
-  format?: "currency" | "number" | "date" | "badge" | "text";
+  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean";
 };
 
 export type Field = {
   key: string;
   label: string;
-  type: "text" | "number" | "textarea" | "date" | "select" | "relation";
+  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean";
   options?: string[];
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
   placeholder?: string;
 };
+
 
 type Props = {
   table: string;
@@ -204,7 +207,9 @@ export function ResourcePage({
   }
 
   function submit() {
-    const missing = fields.filter((f) => f.required && !String(form[f.key] ?? "").trim());
+    const missing = fields.filter(
+      (f) => f.required && f.type !== "boolean" && !String(form[f.key] ?? "").trim(),
+    );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
       return;
@@ -212,7 +217,9 @@ export function ResourcePage({
     const payload: Row = {};
     fields.forEach((f) => {
       const raw = form[f.key];
-      if (raw === "" || raw === undefined || raw === null) {
+      if (f.type === "boolean") {
+        payload[f.key] = raw === true || raw === "true";
+      } else if (raw === "" || raw === undefined || raw === null) {
         payload[f.key] = f.type === "number" ? 0 : null;
       } else {
         payload[f.key] = f.type === "number" ? Number(raw) : raw;
@@ -220,6 +227,7 @@ export function ResourcePage({
     });
     save.mutate(payload);
   }
+
 
   function exportCsv() {
     const header = columns.map((c) => c.label).join(",");
@@ -306,6 +314,8 @@ export function ResourcePage({
 
   function renderCell(row: Row, col: Column) {
     const value = row[col.key];
+    if (col.format === "boolean")
+      return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
     if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
     switch (col.format) {
       case "currency":
@@ -445,12 +455,21 @@ export function ResourcePage({
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "textarea" ? (
+                {field.type === "boolean" ? (
+                  <div className="flex h-9 items-center">
+                    <Switch
+                      id={field.key}
+                      checked={form[field.key] === true || form[field.key] === "true"}
+                      onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
+                    />
+                  </div>
+                ) : field.type === "textarea" ? (
                   <Textarea
                     id={field.key}
                     value={form[field.key] ?? ""}
                     onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                   />
+
                 ) : field.type === "select" ? (
                   <Select
                     value={form[field.key] ? String(form[field.key]) : undefined}
