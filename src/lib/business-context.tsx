@@ -4,6 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 
 import { db, type Row } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DEFAULT_SETTINGS,
+  defaultsForType,
+  type BusinessSettings,
+  type FeatureKey,
+} from "@/lib/business-config";
 
 export type { AppRole } from "@/lib/permissions";
 import type { AppRole } from "@/lib/permissions";
@@ -25,8 +31,13 @@ type Ctx = {
   isAdmin: boolean;
   currency: string;
   userId: string | null;
+  /** Resolved inventory configuration for the active business. */
+  settings: BusinessSettings;
+  /** Shorthand: is a capability enabled for the active business? */
+  feature: (key: FeatureKey) => boolean;
   switchBusiness: (id: string) => void;
   refresh: () => void;
+  refreshSettings: () => void;
 };
 
 const BusinessContext = createContext<Ctx>({
@@ -39,8 +50,11 @@ const BusinessContext = createContext<Ctx>({
   isAdmin: false,
   currency: "USD",
   userId: null,
+  settings: DEFAULT_SETTINGS,
+  feature: () => false,
   switchBusiness: () => {},
   refresh: () => {},
+  refreshSettings: () => {},
 });
 
 const STORAGE_KEY = "kpioptiva-business";
@@ -74,24 +88,54 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     return memberships.find((m) => m.business_id === selected) ?? memberships[0];
   }, [memberships, selected]);
 
+  const businessId = active?.business_id ?? null;
+
+  const { data: settingsRow, refetch: refetchSettings } = useQuery({
+    queryKey: ["business-settings", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("business_settings")
+        .select("*")
+        .eq("business_id", businessId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as Row | null;
+    },
+  });
+
+  const settings = useMemo<BusinessSettings>(() => {
+    // Fall back to the recommended defaults for the business type until the
+    // owner saves an explicit configuration.
+    const base = {
+      ...DEFAULT_SETTINGS,
+      ...defaultsForType(active?.businesses?.type ?? "other"),
+    } as BusinessSettings;
+    return settingsRow ? ({ ...base, ...settingsRow } as BusinessSettings) : base;
+  }, [settingsRow, active]);
+
   const value: Ctx = {
     loading: isLoading || !userId,
     memberships,
     business: active?.businesses ?? null,
-    businessId: active?.business_id ?? null,
+    businessId,
     role: active?.role ?? null,
     canWrite: !!active && active.role !== "auditor",
     isAdmin: active?.role === "owner" || active?.role === "admin",
     currency: active?.businesses?.currency ?? "USD",
     userId,
+    settings,
+    feature: (key: FeatureKey) => !!settings[key],
     switchBusiness: (id: string) => {
       window.localStorage.setItem(STORAGE_KEY, id);
       setSelected(id);
     },
     refresh: () => void refetch(),
+    refreshSettings: () => void refetchSettings(),
   };
 
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
 }
 
 export const useBusiness = () => useContext(BusinessContext);
+
