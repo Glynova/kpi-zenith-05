@@ -15,6 +15,7 @@ import { titleCase } from "@/lib/format";
 import { useTheme } from "@/lib/theme";
 import { Switch } from "@/components/ui/switch";
 import { TeamAccess } from "@/components/team-access";
+import { InventorySettings } from "@/components/inventory-settings";
 
 export const Route = createFileRoute("/_authenticated/_shell/settings")({
   head: () => ({
@@ -102,6 +103,8 @@ function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <InventorySettings />
 
       <Card>
         <CardHeader>

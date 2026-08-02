@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -22,6 +23,11 @@ import {
   LineChart,
   Settings,
   ScrollText,
+  Palette,
+  Ruler,
+  Warehouse,
+  Barcode,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import {
@@ -38,8 +44,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useBusiness } from "@/lib/business-context";
 import { canAccessRoute } from "@/lib/permissions";
+import type { FeatureKey } from "@/lib/business-config";
 
-const groups = [
+const groups: { label: string; items: { title: string; url: string; icon: any; feature?: FeatureKey }[] }[] = [
   {
     label: "Overview",
     items: [
@@ -55,13 +62,19 @@ const groups = [
       { title: "Categories", url: "/categories", icon: Tags },
       { title: "Suppliers", url: "/suppliers", icon: Truck },
       { title: "Customers", url: "/customers", icon: Users },
-      { title: "Bill of Materials", url: "/bill-of-materials", icon: Layers },
+      { title: "Bill of Materials", url: "/bill-of-materials", icon: Layers, feature: "enable_bom" },
+      { title: "Variants", url: "/variants", icon: Palette, feature: "track_variants" },
+      { title: "Batches", url: "/batches", icon: Boxes, feature: "track_batch" },
+      { title: "Serial Numbers", url: "/serials", icon: Barcode, feature: "track_serial" },
+      { title: "Units", url: "/units", icon: Ruler },
+      { title: "Locations", url: "/locations", icon: Warehouse },
     ],
   },
   {
     label: "Operations",
     items: [
       { title: "Inventory", url: "/inventory", icon: Boxes },
+      { title: "Transfers", url: "/transfers", icon: ArrowLeftRight, feature: "track_locations" },
       { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
       { title: "Sales", url: "/sales", icon: ShoppingCart },
       { title: "Invoices", url: "/invoices", icon: FileText },
@@ -98,10 +111,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const { role } = useBusiness();
+  const { role, feature } = useBusiness();
 
   const visibleGroups = groups
-    .map((g) => ({ ...g, items: g.items.filter((i) => canAccessRoute(role, i.url)) }))
+    .map((g) => ({ ...g, items: g.items.filter((i) => canAccessRoute(role, i.url) && (!i.feature || feature(i.feature))) }))
     .filter((g) => g.items.length > 0);
 
   return (
