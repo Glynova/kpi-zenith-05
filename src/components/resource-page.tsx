@@ -53,7 +53,7 @@ import {
 export type Column = {
   key: string;
   label: string;
-  format?: "currency" | "number" | "date" | "badge" | "text";
+  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean";
 };
 
 export type Field = {
@@ -314,6 +314,8 @@ export function ResourcePage({
 
   function renderCell(row: Row, col: Column) {
     const value = row[col.key];
+    if (col.format === "boolean")
+      return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
     if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
     switch (col.format) {
       case "currency":
