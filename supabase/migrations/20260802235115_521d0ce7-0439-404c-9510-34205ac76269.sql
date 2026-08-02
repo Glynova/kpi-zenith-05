@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.seed_business_defaults(uuid) FROM PUBLIC, anon, authenticated;
