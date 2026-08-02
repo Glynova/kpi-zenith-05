@@ -39,6 +39,7 @@ import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
+import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -210,6 +211,12 @@ const AuthenticatedShellUnitsRoute = AuthenticatedShellUnitsRouteImport.update({
   path: '/units',
   getParentRoute: () => AuthenticatedShellRouteRoute,
 } as any)
+const AuthenticatedShellVariantsRoute =
+  AuthenticatedShellVariantsRouteImport.update({
+    id: '/variants',
+    path: '/variants',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
+  '/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -270,6 +278,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
+  '/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -303,6 +312,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
+  '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suppliers'
     | '/units'
+    | '/variants'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suppliers'
     | '/units'
+    | '/variants'
   id:
     | '__root__'
     | '/'
@@ -397,6 +409,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/suppliers'
     | '/_authenticated/_shell/units'
+    | '/_authenticated/_shell/variants'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -618,6 +631,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellUnitsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/variants': {
+      id: '/_authenticated/_shell/variants'
+      path: '/variants'
+      fullPath: '/variants'
+      preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
   }
 }
 
@@ -646,6 +666,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
+  AuthenticatedShellVariantsRoute: typeof AuthenticatedShellVariantsRoute
 }
 
 const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
@@ -676,6 +697,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
+    AuthenticatedShellVariantsRoute: AuthenticatedShellVariantsRoute,
   }
 
 const AuthenticatedShellRouteRouteWithChildren =
