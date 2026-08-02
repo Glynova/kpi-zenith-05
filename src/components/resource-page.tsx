@@ -458,7 +458,7 @@ export function ResourcePage({
                     <Switch
                       id={field.key}
                       checked={form[field.key] === true || form[field.key] === "true"}
-                      onCheckedChange={(v) => setForm({ ...form, [field.key]: v })}
+                      onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
                     />
                   </div>
                 ) : field.type === "textarea" ? (
