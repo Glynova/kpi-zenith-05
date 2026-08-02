@@ -205,7 +205,9 @@ export function ResourcePage({
   }
 
   function submit() {
-    const missing = fields.filter((f) => f.required && !String(form[f.key] ?? "").trim());
+    const missing = fields.filter(
+      (f) => f.required && f.type !== "boolean" && !String(form[f.key] ?? "").trim(),
+    );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
       return;
@@ -213,7 +215,9 @@ export function ResourcePage({
     const payload: Row = {};
     fields.forEach((f) => {
       const raw = form[f.key];
-      if (raw === "" || raw === undefined || raw === null) {
+      if (f.type === "boolean") {
+        payload[f.key] = raw === true || raw === "true";
+      } else if (raw === "" || raw === undefined || raw === null) {
         payload[f.key] = f.type === "number" ? 0 : null;
       } else {
         payload[f.key] = f.type === "number" ? Number(raw) : raw;
@@ -221,6 +225,7 @@ export function ResourcePage({
     });
     save.mutate(payload);
   }
+
 
   function exportCsv() {
     const header = columns.map((c) => c.label).join(",");
