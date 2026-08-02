@@ -38,6 +38,7 @@ import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authent
 import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authenticated/_shell/sales'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
+import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -204,6 +205,11 @@ const AuthenticatedShellSuppliersRoute =
     path: '/suppliers',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellUnitsRoute = AuthenticatedShellUnitsRouteImport.update({
+  id: '/units',
+  path: '/units',
+  getParentRoute: () => AuthenticatedShellRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/sales': typeof AuthenticatedShellSalesRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/units': typeof AuthenticatedShellUnitsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/sales': typeof AuthenticatedShellSalesRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/units': typeof AuthenticatedShellUnitsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/sales': typeof AuthenticatedShellSalesRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/suppliers'
+    | '/units'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/sales'
     | '/settings'
     | '/suppliers'
+    | '/units'
   id:
     | '__root__'
     | '/'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/sales'
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/suppliers'
+    | '/_authenticated/_shell/units'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -599,6 +611,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSuppliersRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/units': {
+      id: '/_authenticated/_shell/units'
+      path: '/units'
+      fullPath: '/units'
+      preLoaderRoute: typeof AuthenticatedShellUnitsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
   }
 }
 
@@ -626,6 +645,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellSalesRoute: typeof AuthenticatedShellSalesRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
+  AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
 }
 
 const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
@@ -655,6 +675,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellSalesRoute: AuthenticatedShellSalesRoute,
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
+    AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
   }
 
 const AuthenticatedShellRouteRouteWithChildren =
