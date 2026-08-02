@@ -18,6 +18,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
+import { Route as AuthenticatedShellBatchesRouteImport } from './routes/_authenticated/_shell/batches'
 import { Route as AuthenticatedShellBillOfMaterialsRouteImport } from './routes/_authenticated/_shell/bill-of-materials'
 import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
 import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
@@ -85,6 +86,12 @@ const AuthenticatedShellAuditLogsRoute =
   AuthenticatedShellAuditLogsRouteImport.update({
     id: '/audit-logs',
     path: '/audit-logs',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellBatchesRoute =
+  AuthenticatedShellBatchesRouteImport.update({
+    id: '/batches',
+    path: '/batches',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellBillOfMaterialsRoute =
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/batches': typeof AuthenticatedShellBatchesRoute
   '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
@@ -257,6 +265,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/batches': typeof AuthenticatedShellBatchesRoute
   '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
@@ -291,6 +300,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
+  '/_authenticated/_shell/batches': typeof AuthenticatedShellBatchesRoute
   '/_authenticated/_shell/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
+    | '/batches'
     | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
+    | '/batches'
     | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
@@ -388,6 +400,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
+    | '/_authenticated/_shell/batches'
     | '/_authenticated/_shell/bill-of-materials'
     | '/_authenticated/_shell/cash-flow'
     | '/_authenticated/_shell/categories'
@@ -482,6 +495,13 @@ declare module '@tanstack/react-router' {
       path: '/audit-logs'
       fullPath: '/audit-logs'
       preLoaderRoute: typeof AuthenticatedShellAuditLogsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/batches': {
+      id: '/_authenticated/_shell/batches'
+      path: '/batches'
+      fullPath: '/batches'
+      preLoaderRoute: typeof AuthenticatedShellBatchesRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
     '/_authenticated/_shell/bill-of-materials': {
@@ -645,6 +665,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellAnalyticsRoute: typeof AuthenticatedShellAnalyticsRoute
   AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
   AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
+  AuthenticatedShellBatchesRoute: typeof AuthenticatedShellBatchesRoute
   AuthenticatedShellBillOfMaterialsRoute: typeof AuthenticatedShellBillOfMaterialsRoute
   AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
   AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
@@ -674,6 +695,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellAnalyticsRoute: AuthenticatedShellAnalyticsRoute,
     AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
     AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
+    AuthenticatedShellBatchesRoute: AuthenticatedShellBatchesRoute,
     AuthenticatedShellBillOfMaterialsRoute:
       AuthenticatedShellBillOfMaterialsRoute,
     AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
