@@ -367,3 +367,104 @@ export function movementSign(type: string): number {
 }
 
 export const UNIT_CATEGORIES = ["count", "weight", "volume", "length", "time"];
+
+/** Countries with their default currency and timezone (wizard step 1). */
+export const COUNTRIES: { code: string; name: string; currency: string; timezone: string }[] = [
+  { code: "PH", name: "Philippines", currency: "PHP", timezone: "Asia/Manila" },
+  { code: "US", name: "United States", currency: "USD", timezone: "America/New_York" },
+  { code: "CA", name: "Canada", currency: "CAD", timezone: "America/Toronto" },
+  { code: "GB", name: "United Kingdom", currency: "GBP", timezone: "Europe/London" },
+  { code: "AU", name: "Australia", currency: "AUD", timezone: "Australia/Sydney" },
+  { code: "NZ", name: "New Zealand", currency: "NZD", timezone: "Pacific/Auckland" },
+  { code: "SG", name: "Singapore", currency: "SGD", timezone: "Asia/Singapore" },
+  { code: "MY", name: "Malaysia", currency: "MYR", timezone: "Asia/Kuala_Lumpur" },
+  { code: "ID", name: "Indonesia", currency: "IDR", timezone: "Asia/Jakarta" },
+  { code: "TH", name: "Thailand", currency: "THB", timezone: "Asia/Bangkok" },
+  { code: "VN", name: "Vietnam", currency: "VND", timezone: "Asia/Ho_Chi_Minh" },
+  { code: "IN", name: "India", currency: "INR", timezone: "Asia/Kolkata" },
+  { code: "AE", name: "United Arab Emirates", currency: "AED", timezone: "Asia/Dubai" },
+  { code: "SA", name: "Saudi Arabia", currency: "SAR", timezone: "Asia/Riyadh" },
+  { code: "ZA", name: "South Africa", currency: "ZAR", timezone: "Africa/Johannesburg" },
+  { code: "NG", name: "Nigeria", currency: "NGN", timezone: "Africa/Lagos" },
+  { code: "KE", name: "Kenya", currency: "KES", timezone: "Africa/Nairobi" },
+  { code: "DE", name: "Germany", currency: "EUR", timezone: "Europe/Berlin" },
+  { code: "FR", name: "France", currency: "EUR", timezone: "Europe/Paris" },
+  { code: "ES", name: "Spain", currency: "EUR", timezone: "Europe/Madrid" },
+  { code: "IT", name: "Italy", currency: "EUR", timezone: "Europe/Rome" },
+  { code: "NL", name: "Netherlands", currency: "EUR", timezone: "Europe/Amsterdam" },
+  { code: "JP", name: "Japan", currency: "JPY", timezone: "Asia/Tokyo" },
+  { code: "MX", name: "Mexico", currency: "MXN", timezone: "America/Mexico_City" },
+  { code: "BR", name: "Brazil", currency: "BRL", timezone: "America/Sao_Paulo" },
+];
+
+export const CURRENCIES = Array.from(new Set(COUNTRIES.map((c) => c.currency))).sort();
+
+/**
+ * "What do you need to track?" cards (wizard step 2). Each selection turns on
+ * one or more capability flags — nothing here is business-type specific.
+ */
+export const TRACK_ITEMS: {
+  key: string;
+  label: string;
+  hint: string;
+  features: FeatureKey[];
+}[] = [
+  { key: "products", label: "Products", hint: "Physical items you buy, hold and sell.", features: ["track_quantity", "track_cost"] },
+  { key: "services", label: "Services", hint: "Work you sell that holds no stock.", features: ["enable_services", "enable_sales"] },
+  { key: "raw_materials", label: "Raw materials", hint: "Inputs consumed to make other items.", features: ["track_quantity", "enable_purchasing"] },
+  { key: "finished_products", label: "Finished products", hint: "Items produced in-house and ready to sell.", features: ["enable_production"] },
+  { key: "consumables", label: "Consumables", hint: "Supplies used up in daily operations.", features: ["track_quantity"] },
+  { key: "equipment", label: "Equipment / assets", hint: "Tools and machines you keep track of.", features: ["enable_assets"] },
+  { key: "packaging", label: "Packaging", hint: "Boxes, bags and containers you stock.", features: ["track_quantity"] },
+  { key: "ingredients", label: "Ingredients", hint: "Food or chemical inputs measured by weight or volume.", features: ["enable_unit_conversion", "enable_food_costing"] },
+  { key: "variants", label: "Product variants", hint: "Sizes, colours, models or specs under one product.", features: ["track_variants"] },
+  { key: "batches", label: "Batches / lots", hint: "Group stock by production or delivery batch.", features: ["track_batch", "track_lot"] },
+  { key: "expiry", label: "Expiration dates", hint: "Know what expires and when.", features: ["track_expiry"] },
+  { key: "serials", label: "Serial numbers", hint: "One record per physical unit.", features: ["track_serial"] },
+  { key: "bom", label: "Recipes & components", hint: "Build items from other items and cost them automatically.", features: ["enable_bom"] },
+  { key: "production", label: "Production", hint: "Production runs that consume inputs and create output.", features: ["enable_production", "enable_bom"] },
+  { key: "locations", label: "Multiple locations", hint: "Stores, warehouses, kitchens or sites.", features: ["track_locations", "enable_stock_transfers"] },
+];
+
+/** Location types offered in the wizard. */
+export const WIZARD_LOCATION_TYPES = [
+  { value: "store", label: "Store" },
+  { value: "warehouse", label: "Warehouse" },
+  { value: "branch", label: "Branch" },
+  { value: "kitchen", label: "Kitchen" },
+  { value: "production", label: "Factory" },
+  { value: "site", label: "Office" },
+  { value: "storage", label: "Other" },
+];
+
+/** Plain-language names shown in the wizard for costing methods. */
+export const COSTING_PLAIN: Record<CostingMethod, { label: string; hint: string }> = {
+  weighted_average: {
+    label: "Automatic average cost",
+    hint: "Automatically calculates average inventory cost as purchases arrive.",
+  },
+  fifo: { label: "Oldest stock first (FIFO)", hint: "Uses the cost of the oldest inventory first." },
+  standard: { label: "Fixed standard cost", hint: "Uses a predefined standard cost for products." },
+};
+
+/** Starter units suggested for every business, plus their conversions. */
+export const STARTER_UNITS: { code: string; name: string; category: string; is_base: boolean }[] = [
+  { code: "pcs", name: "Piece", category: "count", is_base: true },
+  { code: "g", name: "Gram", category: "weight", is_base: true },
+  { code: "kg", name: "Kilogram", category: "weight", is_base: false },
+  { code: "ml", name: "Milliliter", category: "volume", is_base: true },
+  { code: "l", name: "Liter", category: "volume", is_base: false },
+  { code: "box", name: "Box", category: "count", is_base: false },
+  { code: "pack", name: "Pack", category: "count", is_base: false },
+  { code: "case", name: "Case", category: "count", is_base: false },
+  { code: "bottle", name: "Bottle", category: "count", is_base: false },
+  { code: "bag", name: "Bag", category: "count", is_base: false },
+  { code: "dozen", name: "Dozen", category: "count", is_base: false },
+];
+
+export const STARTER_CONVERSIONS: { from_unit: string; to_unit: string; factor: number }[] = [
+  { from_unit: "kg", to_unit: "g", factor: 1000 },
+  { from_unit: "l", to_unit: "ml", factor: 1000 },
+  { from_unit: "case", to_unit: "pcs", factor: 24 },
+  { from_unit: "dozen", to_unit: "pcs", factor: 12 },
+];
