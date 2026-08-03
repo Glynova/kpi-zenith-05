@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
@@ -70,6 +71,11 @@ const AuthenticatedShellRouteRoute = AuthenticatedShellRouteRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedShellAnalyticsRoute =
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/setup': typeof AuthenticatedSetupRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/onboarding'
+    | '/setup'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -385,6 +395,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/onboarding'
+    | '/setup'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -421,6 +432,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/_shell'
     | '/_authenticated/onboarding'
+    | '/_authenticated/setup'
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
@@ -500,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/setup': {
+      id: '/_authenticated/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/_shell/analytics': {
@@ -774,11 +793,13 @@ const AuthenticatedShellRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedSetupRoute: AuthenticatedSetupRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
