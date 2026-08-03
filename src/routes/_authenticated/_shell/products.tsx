@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
+import { useBusiness } from "@/lib/business-context";
+
 
 const columns: Column[] = [
   {
