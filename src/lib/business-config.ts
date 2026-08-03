@@ -103,6 +103,9 @@ export const FEATURE_GROUPS: {
       { key: "track_quantity", label: "Quantity", hint: "Track stock levels per product." },
       { key: "track_cost", label: "Cost", hint: "Track purchase cost and inventory value." },
       { key: "track_locations", label: "Locations", hint: "Branches, warehouses, kitchens." },
+      { key: "enable_stock_transfers", label: "Stock transfers", hint: "Move stock between locations." },
+      { key: "enable_stock_counts", label: "Stock counts", hint: "Physical counts that set actual stock." },
+      { key: "enable_low_stock_alerts", label: "Low stock alerts", hint: "Warn when stock runs low." },
       { key: "track_batch", label: "Batch", hint: "Batch numbers on receipts and issues." },
       { key: "track_lot", label: "Lot number", hint: "Lot references alongside batches." },
       { key: "track_expiry", label: "Expiry", hint: "Expiry dates and expiring-soon alerts." },
@@ -115,10 +118,12 @@ export const FEATURE_GROUPS: {
     items: [
       { key: "enable_bom", label: "Recipes / BOM", hint: "Build products from components." },
       { key: "enable_production", label: "Production", hint: "Production orders and WIP." },
+      { key: "enable_food_costing", label: "Food costing", hint: "Cost per recipe and per serving." },
       { key: "enable_waste", label: "Waste", hint: "Record waste and spoilage separately." },
       { key: "enable_unit_conversion", label: "Unit conversion", hint: "1 case = 24 pcs, 1 kg = 1000 g." },
       { key: "enable_purchasing", label: "Purchasing", hint: "Suppliers and purchase orders." },
       { key: "enable_sales", label: "Sales", hint: "Sales, invoices and receivables." },
+      { key: "enable_services", label: "Services", hint: "Sell services that hold no stock." },
       { key: "enable_returns", label: "Returns", hint: "Customer and supplier returns." },
       { key: "enable_barcode", label: "Barcode", hint: "Barcodes on products and variants." },
       { key: "enable_projects", label: "Projects / jobs", hint: "Allocate stock to jobs or sites." },
@@ -142,7 +147,10 @@ const BASE: FeatureKey[] = [
   "enable_sales",
   "enable_returns",
   "enable_barcode",
+  "enable_low_stock_alerts",
+  "enable_stock_counts",
 ];
+
 
 export type BusinessType = {
   value: string;
