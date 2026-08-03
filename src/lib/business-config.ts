@@ -27,7 +27,41 @@ export type FeatureKey =
   | "enable_sales"
   | "enable_barcode"
   | "enable_projects"
-  | "enable_assets";
+  | "enable_assets"
+  | "enable_services"
+  | "enable_low_stock_alerts"
+  | "enable_stock_counts"
+  | "enable_stock_transfers"
+  | "enable_food_costing";
+
+/** Optional product fields the owner can switch on or off. */
+export type ProductCapability =
+  | "sku"
+  | "barcode"
+  | "selling_price"
+  | "cost_price"
+  | "reorder_level"
+  | "brand"
+  | "warranty";
+
+export const PRODUCT_CAPABILITIES: {
+  key: ProductCapability;
+  label: string;
+  hint: string;
+  recommended: boolean;
+}[] = [
+  { key: "sku", label: "SKU", hint: "Your own item code.", recommended: true },
+  { key: "barcode", label: "Barcode", hint: "Scannable code on the item.", recommended: true },
+  { key: "selling_price", label: "Selling price", hint: "What customers pay.", recommended: true },
+  { key: "cost_price", label: "Purchase cost", hint: "What you pay suppliers.", recommended: true },
+  { key: "reorder_level", label: "Reorder level", hint: "When to restock.", recommended: true },
+  { key: "brand", label: "Brand", hint: "Manufacturer or brand name.", recommended: false },
+  { key: "warranty", label: "Warranty", hint: "Warranty period per item.", recommended: false },
+];
+
+export const DEFAULT_PRODUCT_CAPABILITIES: Record<ProductCapability, boolean> = Object.fromEntries(
+  PRODUCT_CAPABILITIES.map((c) => [c.key, c.recommended]),
+) as Record<ProductCapability, boolean>;
 
 export type BusinessSettings = Record<FeatureKey, boolean> & {
   id?: string;
@@ -35,7 +69,9 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   costing_method: CostingMethod;
   low_stock_rule: string;
   expiry_alert_days: number;
+  extra?: Record<string, unknown>;
 };
+
 
 export type CostingMethod = "weighted_average" | "fifo" | "standard";
 
