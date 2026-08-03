@@ -55,7 +55,8 @@ function Onboarding() {
     switchBusiness(data.id);
     refresh();
     toast.success("Business created");
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/setup", replace: true });
+
   }
 
   return (
