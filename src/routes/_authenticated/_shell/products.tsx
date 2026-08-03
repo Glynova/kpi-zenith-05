@@ -161,25 +161,65 @@ const fields: Field[] = [
   }
 ];
 
+const description = "Your catalog. The form shows only the fields your business actually uses.";
+
+/** Product form + table adapt to the business configuration from the setup wizard. */
+function ProductsPage() {
+  const { capability, feature } = useBusiness();
+
+  const keep = (key: string) => {
+    switch (key) {
+      case "sku":
+      case "barcode":
+      case "brand":
+        return capability(key as never);
+      case "cost_price":
+        return capability("cost_price" as never) && feature("track_cost");
+      case "selling_price":
+        return capability("selling_price" as never) && feature("enable_sales");
+      case "reorder_level":
+        return capability("reorder_level" as never) && feature("enable_low_stock_alerts");
+      case "stock":
+        return feature("track_quantity");
+      case "batch_number":
+        return feature("track_batch");
+      case "serial_number":
+        return feature("track_serial");
+      case "expiration_date":
+        return feature("track_expiry");
+      case "supplier_id":
+        return feature("enable_purchasing");
+      case "unit":
+        return feature("enable_unit_conversion") || feature("track_quantity");
+      default:
+        return true;
+    }
+  };
+
+  return (
+    <ResourcePage
+      table="products"
+      title="Products"
+      description={description}
+      columns={columns.filter((c) => keep(c.key))}
+      fields={fields.filter((f) => keep(f.key))}
+      searchKeys={["name", "sku", "barcode", "brand"]}
+      orderBy="created_at"
+    />
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/_shell/products")({
   head: () => ({
     meta: [
       { title: "Products — KPIOptiva" },
-      { name: "description", content: "Full catalog with SKU, pricing, stock and expiry tracking." },
+      { name: "description", content: description },
       { property: "og:title", content: "Products — KPIOptiva" },
-      { property: "og:description", content: "Full catalog with SKU, pricing, stock and expiry tracking." },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => (
-    <ResourcePage
-      table="products"
-      title="Products"
-      description={"Full catalog with SKU, pricing, stock and expiry tracking."}
-      columns={columns}
-      fields={fields}
-      searchKeys={["name","sku","barcode","brand"]}
-      orderBy="created_at"
-      
-    />
-  ),
+  component: ProductsPage,
 });
+
