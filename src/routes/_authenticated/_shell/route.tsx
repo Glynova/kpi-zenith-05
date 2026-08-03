@@ -27,7 +27,8 @@ export const Route = createFileRoute("/_authenticated/_shell")({
 });
 
 function Shell() {
-  const { loading, memberships, business, role, switchBusiness } = useBusiness();
+  const { loading, memberships, business, role, switchBusiness, onboarding, onboardingLoaded, isAdmin } =
+    useBusiness();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -37,8 +38,13 @@ function Shell() {
   useEffect(() => {
     if (!loading && memberships.length === 0) {
       navigate({ to: "/onboarding", replace: true });
+      return;
     }
-  }, [loading, memberships.length, navigate]);
+    if (!loading && onboardingLoaded && isAdmin && !onboarding?.completed) {
+      navigate({ to: "/setup", replace: true });
+    }
+  }, [loading, memberships.length, navigate, onboardingLoaded, onboarding?.completed, isAdmin]);
+
 
   async function signOut() {
     await queryClient.cancelQueries();

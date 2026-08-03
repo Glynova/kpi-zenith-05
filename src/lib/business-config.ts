@@ -27,7 +27,41 @@ export type FeatureKey =
   | "enable_sales"
   | "enable_barcode"
   | "enable_projects"
-  | "enable_assets";
+  | "enable_assets"
+  | "enable_services"
+  | "enable_low_stock_alerts"
+  | "enable_stock_counts"
+  | "enable_stock_transfers"
+  | "enable_food_costing";
+
+/** Optional product fields the owner can switch on or off. */
+export type ProductCapability =
+  | "sku"
+  | "barcode"
+  | "selling_price"
+  | "cost_price"
+  | "reorder_level"
+  | "brand"
+  | "warranty";
+
+export const PRODUCT_CAPABILITIES: {
+  key: ProductCapability;
+  label: string;
+  hint: string;
+  recommended: boolean;
+}[] = [
+  { key: "sku", label: "SKU", hint: "Your own item code.", recommended: true },
+  { key: "barcode", label: "Barcode", hint: "Scannable code on the item.", recommended: true },
+  { key: "selling_price", label: "Selling price", hint: "What customers pay.", recommended: true },
+  { key: "cost_price", label: "Purchase cost", hint: "What you pay suppliers.", recommended: true },
+  { key: "reorder_level", label: "Reorder level", hint: "When to restock.", recommended: true },
+  { key: "brand", label: "Brand", hint: "Manufacturer or brand name.", recommended: false },
+  { key: "warranty", label: "Warranty", hint: "Warranty period per item.", recommended: false },
+];
+
+export const DEFAULT_PRODUCT_CAPABILITIES: Record<ProductCapability, boolean> = Object.fromEntries(
+  PRODUCT_CAPABILITIES.map((c) => [c.key, c.recommended]),
+) as Record<ProductCapability, boolean>;
 
 export type BusinessSettings = Record<FeatureKey, boolean> & {
   id?: string;
@@ -35,7 +69,9 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   costing_method: CostingMethod;
   low_stock_rule: string;
   expiry_alert_days: number;
+  extra?: Record<string, unknown>;
 };
+
 
 export type CostingMethod = "weighted_average" | "fifo" | "standard";
 
@@ -67,6 +103,9 @@ export const FEATURE_GROUPS: {
       { key: "track_quantity", label: "Quantity", hint: "Track stock levels per product." },
       { key: "track_cost", label: "Cost", hint: "Track purchase cost and inventory value." },
       { key: "track_locations", label: "Locations", hint: "Branches, warehouses, kitchens." },
+      { key: "enable_stock_transfers", label: "Stock transfers", hint: "Move stock between locations." },
+      { key: "enable_stock_counts", label: "Stock counts", hint: "Physical counts that set actual stock." },
+      { key: "enable_low_stock_alerts", label: "Low stock alerts", hint: "Warn when stock runs low." },
       { key: "track_batch", label: "Batch", hint: "Batch numbers on receipts and issues." },
       { key: "track_lot", label: "Lot number", hint: "Lot references alongside batches." },
       { key: "track_expiry", label: "Expiry", hint: "Expiry dates and expiring-soon alerts." },
@@ -79,10 +118,12 @@ export const FEATURE_GROUPS: {
     items: [
       { key: "enable_bom", label: "Recipes / BOM", hint: "Build products from components." },
       { key: "enable_production", label: "Production", hint: "Production orders and WIP." },
+      { key: "enable_food_costing", label: "Food costing", hint: "Cost per recipe and per serving." },
       { key: "enable_waste", label: "Waste", hint: "Record waste and spoilage separately." },
       { key: "enable_unit_conversion", label: "Unit conversion", hint: "1 case = 24 pcs, 1 kg = 1000 g." },
       { key: "enable_purchasing", label: "Purchasing", hint: "Suppliers and purchase orders." },
       { key: "enable_sales", label: "Sales", hint: "Sales, invoices and receivables." },
+      { key: "enable_services", label: "Services", hint: "Sell services that hold no stock." },
       { key: "enable_returns", label: "Returns", hint: "Customer and supplier returns." },
       { key: "enable_barcode", label: "Barcode", hint: "Barcodes on products and variants." },
       { key: "enable_projects", label: "Projects / jobs", hint: "Allocate stock to jobs or sites." },
@@ -106,7 +147,10 @@ const BASE: FeatureKey[] = [
   "enable_sales",
   "enable_returns",
   "enable_barcode",
+  "enable_low_stock_alerts",
+  "enable_stock_counts",
 ];
+
 
 export type BusinessType = {
   value: string;
@@ -132,9 +176,11 @@ export const BUSINESS_TYPES: BusinessType[] = [
       "enable_production",
       "enable_waste",
       "enable_unit_conversion",
+      "enable_food_costing",
       "track_expiry",
       "track_batch",
       "track_locations",
+      "enable_stock_transfers",
     ]),
   },
   {
@@ -147,7 +193,7 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "wholesale",
     label: "Wholesale / Distribution",
     summary: "Cases, boxes, pieces, conversions, multiple warehouses.",
-    defaults: preset([...BASE, "enable_unit_conversion", "track_locations"]),
+    defaults: preset([...BASE, "enable_unit_conversion", "track_locations", "enable_stock_transfers"]),
   },
   {
     value: "manufacturing",
@@ -159,6 +205,7 @@ export const BUSINESS_TYPES: BusinessType[] = [
       "enable_production",
       "enable_waste",
       "track_locations",
+      "enable_stock_transfers",
       "track_batch",
       "enable_unit_conversion",
     ]),
@@ -167,7 +214,14 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "construction",
     label: "Construction",
     summary: "Consumables, equipment, transfers, job allocation.",
-    defaults: preset([...BASE, "track_locations", "enable_projects", "enable_assets", "track_serial"]),
+    defaults: preset([
+      ...BASE,
+      "track_locations",
+      "enable_stock_transfers",
+      "enable_projects",
+      "enable_assets",
+      "track_serial",
+    ]),
   },
   {
     value: "ecommerce",
@@ -216,13 +270,13 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "services",
     label: "Service Business",
     summary: "Inventory optional — services and non-stocked items.",
-    defaults: preset(["track_cost", "enable_sales", "enable_returns"]),
+    defaults: preset(["track_cost", "enable_sales", "enable_returns", "enable_services"]),
   },
   {
     value: "distribution",
     label: "Distribution",
     summary: "Multi-warehouse distribution with conversions.",
-    defaults: preset([...BASE, "track_locations", "enable_unit_conversion"]),
+    defaults: preset([...BASE, "track_locations", "enable_stock_transfers", "enable_unit_conversion"]),
   },
   {
     value: "other",
@@ -313,3 +367,104 @@ export function movementSign(type: string): number {
 }
 
 export const UNIT_CATEGORIES = ["count", "weight", "volume", "length", "time"];
+
+/** Countries with their default currency and timezone (wizard step 1). */
+export const COUNTRIES: { code: string; name: string; currency: string; timezone: string }[] = [
+  { code: "PH", name: "Philippines", currency: "PHP", timezone: "Asia/Manila" },
+  { code: "US", name: "United States", currency: "USD", timezone: "America/New_York" },
+  { code: "CA", name: "Canada", currency: "CAD", timezone: "America/Toronto" },
+  { code: "GB", name: "United Kingdom", currency: "GBP", timezone: "Europe/London" },
+  { code: "AU", name: "Australia", currency: "AUD", timezone: "Australia/Sydney" },
+  { code: "NZ", name: "New Zealand", currency: "NZD", timezone: "Pacific/Auckland" },
+  { code: "SG", name: "Singapore", currency: "SGD", timezone: "Asia/Singapore" },
+  { code: "MY", name: "Malaysia", currency: "MYR", timezone: "Asia/Kuala_Lumpur" },
+  { code: "ID", name: "Indonesia", currency: "IDR", timezone: "Asia/Jakarta" },
+  { code: "TH", name: "Thailand", currency: "THB", timezone: "Asia/Bangkok" },
+  { code: "VN", name: "Vietnam", currency: "VND", timezone: "Asia/Ho_Chi_Minh" },
+  { code: "IN", name: "India", currency: "INR", timezone: "Asia/Kolkata" },
+  { code: "AE", name: "United Arab Emirates", currency: "AED", timezone: "Asia/Dubai" },
+  { code: "SA", name: "Saudi Arabia", currency: "SAR", timezone: "Asia/Riyadh" },
+  { code: "ZA", name: "South Africa", currency: "ZAR", timezone: "Africa/Johannesburg" },
+  { code: "NG", name: "Nigeria", currency: "NGN", timezone: "Africa/Lagos" },
+  { code: "KE", name: "Kenya", currency: "KES", timezone: "Africa/Nairobi" },
+  { code: "DE", name: "Germany", currency: "EUR", timezone: "Europe/Berlin" },
+  { code: "FR", name: "France", currency: "EUR", timezone: "Europe/Paris" },
+  { code: "ES", name: "Spain", currency: "EUR", timezone: "Europe/Madrid" },
+  { code: "IT", name: "Italy", currency: "EUR", timezone: "Europe/Rome" },
+  { code: "NL", name: "Netherlands", currency: "EUR", timezone: "Europe/Amsterdam" },
+  { code: "JP", name: "Japan", currency: "JPY", timezone: "Asia/Tokyo" },
+  { code: "MX", name: "Mexico", currency: "MXN", timezone: "America/Mexico_City" },
+  { code: "BR", name: "Brazil", currency: "BRL", timezone: "America/Sao_Paulo" },
+];
+
+export const CURRENCIES = Array.from(new Set(COUNTRIES.map((c) => c.currency))).sort();
+
+/**
+ * "What do you need to track?" cards (wizard step 2). Each selection turns on
+ * one or more capability flags — nothing here is business-type specific.
+ */
+export const TRACK_ITEMS: {
+  key: string;
+  label: string;
+  hint: string;
+  features: FeatureKey[];
+}[] = [
+  { key: "products", label: "Products", hint: "Physical items you buy, hold and sell.", features: ["track_quantity", "track_cost"] },
+  { key: "services", label: "Services", hint: "Work you sell that holds no stock.", features: ["enable_services", "enable_sales"] },
+  { key: "raw_materials", label: "Raw materials", hint: "Inputs consumed to make other items.", features: ["track_quantity", "enable_purchasing"] },
+  { key: "finished_products", label: "Finished products", hint: "Items produced in-house and ready to sell.", features: ["enable_production"] },
+  { key: "consumables", label: "Consumables", hint: "Supplies used up in daily operations.", features: ["track_quantity"] },
+  { key: "equipment", label: "Equipment / assets", hint: "Tools and machines you keep track of.", features: ["enable_assets"] },
+  { key: "packaging", label: "Packaging", hint: "Boxes, bags and containers you stock.", features: ["track_quantity"] },
+  { key: "ingredients", label: "Ingredients", hint: "Food or chemical inputs measured by weight or volume.", features: ["enable_unit_conversion", "enable_food_costing"] },
+  { key: "variants", label: "Product variants", hint: "Sizes, colours, models or specs under one product.", features: ["track_variants"] },
+  { key: "batches", label: "Batches / lots", hint: "Group stock by production or delivery batch.", features: ["track_batch", "track_lot"] },
+  { key: "expiry", label: "Expiration dates", hint: "Know what expires and when.", features: ["track_expiry"] },
+  { key: "serials", label: "Serial numbers", hint: "One record per physical unit.", features: ["track_serial"] },
+  { key: "bom", label: "Recipes & components", hint: "Build items from other items and cost them automatically.", features: ["enable_bom"] },
+  { key: "production", label: "Production", hint: "Production runs that consume inputs and create output.", features: ["enable_production", "enable_bom"] },
+  { key: "locations", label: "Multiple locations", hint: "Stores, warehouses, kitchens or sites.", features: ["track_locations", "enable_stock_transfers"] },
+];
+
+/** Location types offered in the wizard. */
+export const WIZARD_LOCATION_TYPES = [
+  { value: "store", label: "Store" },
+  { value: "warehouse", label: "Warehouse" },
+  { value: "branch", label: "Branch" },
+  { value: "kitchen", label: "Kitchen" },
+  { value: "production", label: "Factory" },
+  { value: "site", label: "Office" },
+  { value: "storage", label: "Other" },
+];
+
+/** Plain-language names shown in the wizard for costing methods. */
+export const COSTING_PLAIN: Record<CostingMethod, { label: string; hint: string }> = {
+  weighted_average: {
+    label: "Automatic average cost",
+    hint: "Automatically calculates average inventory cost as purchases arrive.",
+  },
+  fifo: { label: "Oldest stock first (FIFO)", hint: "Uses the cost of the oldest inventory first." },
+  standard: { label: "Fixed standard cost", hint: "Uses a predefined standard cost for products." },
+};
+
+/** Starter units suggested for every business, plus their conversions. */
+export const STARTER_UNITS: { code: string; name: string; category: string; is_base: boolean }[] = [
+  { code: "pcs", name: "Piece", category: "count", is_base: true },
+  { code: "g", name: "Gram", category: "weight", is_base: true },
+  { code: "kg", name: "Kilogram", category: "weight", is_base: false },
+  { code: "ml", name: "Milliliter", category: "volume", is_base: true },
+  { code: "l", name: "Liter", category: "volume", is_base: false },
+  { code: "box", name: "Box", category: "count", is_base: false },
+  { code: "pack", name: "Pack", category: "count", is_base: false },
+  { code: "case", name: "Case", category: "count", is_base: false },
+  { code: "bottle", name: "Bottle", category: "count", is_base: false },
+  { code: "bag", name: "Bag", category: "count", is_base: false },
+  { code: "dozen", name: "Dozen", category: "count", is_base: false },
+];
+
+export const STARTER_CONVERSIONS: { from_unit: string; to_unit: string; factor: number }[] = [
+  { from_unit: "kg", to_unit: "g", factor: 1000 },
+  { from_unit: "l", to_unit: "ml", factor: 1000 },
+  { from_unit: "case", to_unit: "pcs", factor: 24 },
+  { from_unit: "dozen", to_unit: "pcs", factor: 12 },
+];

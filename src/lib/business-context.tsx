@@ -6,9 +6,11 @@ import { db, type Row } from "@/lib/db";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DEFAULT_SETTINGS,
+  DEFAULT_PRODUCT_CAPABILITIES,
   defaultsForType,
   type BusinessSettings,
   type FeatureKey,
+  type ProductCapability,
 } from "@/lib/business-config";
 
 export type { AppRole } from "@/lib/permissions";
@@ -35,6 +37,11 @@ type Ctx = {
   settings: BusinessSettings;
   /** Shorthand: is a capability enabled for the active business? */
   feature: (key: FeatureKey) => boolean;
+  /** Is an optional product field switched on? */
+  capability: (key: ProductCapability) => boolean;
+  /** Setup wizard progress for the active business. */
+  onboarding: Row | null;
+  onboardingLoaded: boolean;
   switchBusiness: (id: string) => void;
   refresh: () => void;
   refreshSettings: () => void;
@@ -52,10 +59,14 @@ const BusinessContext = createContext<Ctx>({
   userId: null,
   settings: DEFAULT_SETTINGS,
   feature: () => false,
+  capability: () => false,
+  onboarding: null,
+  onboardingLoaded: false,
   switchBusiness: () => {},
   refresh: () => {},
   refreshSettings: () => {},
 });
+
 
 const STORAGE_KEY = "kpioptiva-business";
 
@@ -114,6 +125,25 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     return settingsRow ? ({ ...base, ...settingsRow } as BusinessSettings) : base;
   }, [settingsRow, active]);
 
+  const capabilities = useMemo(() => {
+    const stored = (settings.extra as Record<string, unknown> | undefined)?.["product_capabilities"];
+    return { ...DEFAULT_PRODUCT_CAPABILITIES, ...((stored as Record<string, boolean>) ?? {}) };
+  }, [settings]);
+
+  const { data: onboardingRow, isFetched: onboardingLoaded } = useQuery({
+    queryKey: ["business-onboarding", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("business_onboarding")
+        .select("*")
+        .eq("business_id", businessId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as Row | null;
+    },
+  });
+
   const value: Ctx = {
     loading: isLoading || !userId,
     memberships,
@@ -126,6 +156,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     userId,
     settings,
     feature: (key: FeatureKey) => !!settings[key],
+    capability: (key: ProductCapability) => !!capabilities[key],
+    onboarding: onboardingRow ?? null,
+    onboardingLoaded: !!businessId && onboardingLoaded,
     switchBusiness: (id: string) => {
       window.localStorage.setItem(STORAGE_KEY, id);
       setSelected(id);
@@ -133,6 +166,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     refresh: () => void refetch(),
     refreshSettings: () => void refetchSettings(),
   };
+
 
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
 }

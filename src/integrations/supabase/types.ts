@@ -463,6 +463,47 @@ export type Database = {
           },
         ]
       }
+      business_onboarding: {
+        Row: {
+          business_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          current_step: number
+          draft: Json
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          draft?: Json
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          draft?: Json
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_onboarding_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: true
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_settings: {
         Row: {
           business_id: string
@@ -471,11 +512,16 @@ export type Database = {
           enable_assets: boolean
           enable_barcode: boolean
           enable_bom: boolean
+          enable_food_costing: boolean
+          enable_low_stock_alerts: boolean
           enable_production: boolean
           enable_projects: boolean
           enable_purchasing: boolean
           enable_returns: boolean
           enable_sales: boolean
+          enable_services: boolean
+          enable_stock_counts: boolean
+          enable_stock_transfers: boolean
           enable_unit_conversion: boolean
           enable_waste: boolean
           expiry_alert_days: number
@@ -499,11 +545,16 @@ export type Database = {
           enable_assets?: boolean
           enable_barcode?: boolean
           enable_bom?: boolean
+          enable_food_costing?: boolean
+          enable_low_stock_alerts?: boolean
           enable_production?: boolean
           enable_projects?: boolean
           enable_purchasing?: boolean
           enable_returns?: boolean
           enable_sales?: boolean
+          enable_services?: boolean
+          enable_stock_counts?: boolean
+          enable_stock_transfers?: boolean
           enable_unit_conversion?: boolean
           enable_waste?: boolean
           expiry_alert_days?: number
@@ -527,11 +578,16 @@ export type Database = {
           enable_assets?: boolean
           enable_barcode?: boolean
           enable_bom?: boolean
+          enable_food_costing?: boolean
+          enable_low_stock_alerts?: boolean
           enable_production?: boolean
           enable_projects?: boolean
           enable_purchasing?: boolean
           enable_returns?: boolean
           enable_sales?: boolean
+          enable_services?: boolean
+          enable_stock_counts?: boolean
+          enable_stock_transfers?: boolean
           enable_unit_conversion?: boolean
           enable_waste?: boolean
           expiry_alert_days?: number
@@ -562,11 +618,13 @@ export type Database = {
         Row: {
           address: string | null
           brand_color: string | null
+          country: string | null
           created_at: string
           created_by: string
           currency: string
           email: string | null
           id: string
+          industry: string | null
           invoice_terms: string | null
           logo_url: string | null
           name: string
@@ -580,11 +638,13 @@ export type Database = {
         Insert: {
           address?: string | null
           brand_color?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string
           currency?: string
           email?: string | null
           id?: string
+          industry?: string | null
           invoice_terms?: string | null
           logo_url?: string | null
           name: string
@@ -598,11 +658,13 @@ export type Database = {
         Update: {
           address?: string | null
           brand_color?: string | null
+          country?: string | null
           created_at?: string
           created_by?: string
           currency?: string
           email?: string | null
           id?: string
+          industry?: string | null
           invoice_terms?: string | null
           logo_url?: string | null
           name?: string
