@@ -28,6 +28,7 @@ import {
   Warehouse,
   Barcode,
   ArrowLeftRight,
+  ClipboardCheck,
 } from "lucide-react";
 
 import {
@@ -73,7 +74,8 @@ const groups: { label: string; items: { title: string; url: string; icon: any; f
   {
     label: "Operations",
     items: [
-      { title: "Inventory", url: "/inventory", icon: Boxes },
+      { title: "Stock Movements", url: "/inventory", icon: Boxes },
+      { title: "Stock Counts", url: "/stock-counts", icon: ClipboardCheck, feature: "enable_stock_counts" },
       { title: "Transfers", url: "/transfers", icon: ArrowLeftRight, feature: "track_locations" },
       { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
       { title: "Sales", url: "/sales", icon: ShoppingCart },
