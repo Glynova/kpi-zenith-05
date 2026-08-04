@@ -62,6 +62,13 @@ const fields: Field[] = [
     "required": true
   },
   {
+    "key": "inventory_model",
+    "label": "Product behaviour",
+    "type": "select",
+    "options": INVENTORY_MODELS,
+    "default": "stocked_item"
+  },
+  {
     "key": "sku",
     "label": "SKU",
     "type": "text"
@@ -117,10 +124,27 @@ const fields: Field[] = [
     "default": 0
   },
   {
+    "key": "standard_cost",
+    "label": "Standard cost",
+    "type": "number",
+    "default": 0
+  },
+  {
     "key": "reorder_level",
     "label": "Reorder level",
     "type": "number",
     "default": 0
+  },
+  {
+    "key": "min_stock",
+    "label": "Minimum stock",
+    "type": "number",
+    "default": 0
+  },
+  {
+    "key": "max_stock",
+    "label": "Maximum stock",
+    "type": "number"
   },
   {
     "key": "stock",
@@ -170,7 +194,7 @@ const description = "Your catalog. The form shows only the fields your business 
 
 /** Product form + table adapt to the business configuration from the setup wizard. */
 function ProductsPage() {
-  const { capability, feature } = useBusiness();
+  const { capability, feature, settings } = useBusiness();
 
   const keep = (key: string) => {
     switch (key) {
@@ -185,7 +209,11 @@ function ProductsPage() {
       case "reorder_level":
         return capability("reorder_level" as never) && feature("enable_low_stock_alerts");
       case "stock":
+      case "min_stock":
+      case "max_stock":
         return feature("track_quantity");
+      case "standard_cost":
+        return feature("track_cost") && settings.costing_method === "standard";
       case "batch_number":
         return feature("track_batch");
       case "serial_number":
@@ -210,6 +238,13 @@ function ProductsPage() {
       fields={fields.filter((f) => keep(f.key))}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
+      rowActions={(row) => (
+        <Button asChild variant="ghost" size="icon" title="View details">
+          <Link to="/products/$productId" params={{ productId: row.id }}>
+            <Eye className="size-4" />
+          </Link>
+        </Button>
+      )}
     />
   );
 }
