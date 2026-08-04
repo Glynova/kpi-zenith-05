@@ -40,10 +40,12 @@ import { Route as AuthenticatedShellReportsRouteImport } from './routes/_authent
 import { Route as AuthenticatedShellSalesRouteImport } from './routes/_authenticated/_shell/sales'
 import { Route as AuthenticatedShellSerialsRouteImport } from './routes/_authenticated/_shell/serials'
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
+import { Route as AuthenticatedShellStockCountsRouteImport } from './routes/_authenticated/_shell/stock-counts'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
+import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -221,6 +223,12 @@ const AuthenticatedShellSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellStockCountsRoute =
+  AuthenticatedShellStockCountsRouteImport.update({
+    id: '/stock-counts',
+    path: '/stock-counts',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellSuppliersRoute =
   AuthenticatedShellSuppliersRouteImport.update({
     id: '/suppliers',
@@ -242,6 +250,12 @@ const AuthenticatedShellVariantsRoute =
   AuthenticatedShellVariantsRouteImport.update({
     id: '/variants',
     path: '/variants',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellProductsProductIdRoute =
+  AuthenticatedShellProductsProductIdRouteImport.update({
+    id: '/products_/$productId',
+    path: '/products/$productId',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 
@@ -275,10 +289,12 @@ export interface FileRoutesByFullPath {
   '/sales': typeof AuthenticatedShellSalesRoute
   '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
+  '/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -310,10 +326,12 @@ export interface FileRoutesByTo {
   '/sales': typeof AuthenticatedShellSalesRoute
   '/serials': typeof AuthenticatedShellSerialsRoute
   '/settings': typeof AuthenticatedShellSettingsRoute
+  '/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -348,10 +366,12 @@ export interface FileRoutesById {
   '/_authenticated/_shell/sales': typeof AuthenticatedShellSalesRoute
   '/_authenticated/_shell/serials': typeof AuthenticatedShellSerialsRoute
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
+  '/_authenticated/_shell/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -385,10 +405,12 @@ export interface FileRouteTypes {
     | '/sales'
     | '/serials'
     | '/settings'
+    | '/stock-counts'
     | '/suppliers'
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/products/$productId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -420,10 +442,12 @@ export interface FileRouteTypes {
     | '/sales'
     | '/serials'
     | '/settings'
+    | '/stock-counts'
     | '/suppliers'
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/products/$productId'
   id:
     | '__root__'
     | '/'
@@ -457,10 +481,12 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/sales'
     | '/_authenticated/_shell/serials'
     | '/_authenticated/_shell/settings'
+    | '/_authenticated/_shell/stock-counts'
     | '/_authenticated/_shell/suppliers'
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/_shell/products_/$productId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -689,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSettingsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/stock-counts': {
+      id: '/_authenticated/_shell/stock-counts'
+      path: '/stock-counts'
+      fullPath: '/stock-counts'
+      preLoaderRoute: typeof AuthenticatedShellStockCountsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/suppliers': {
       id: '/_authenticated/_shell/suppliers'
       path: '/suppliers'
@@ -715,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/variants'
       fullPath: '/variants'
       preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/products_/$productId': {
+      id: '/_authenticated/_shell/products_/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof AuthenticatedShellProductsProductIdRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
   }
@@ -745,10 +785,12 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellSalesRoute: typeof AuthenticatedShellSalesRoute
   AuthenticatedShellSerialsRoute: typeof AuthenticatedShellSerialsRoute
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
+  AuthenticatedShellStockCountsRoute: typeof AuthenticatedShellStockCountsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
   AuthenticatedShellTransfersRoute: typeof AuthenticatedShellTransfersRoute
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
   AuthenticatedShellVariantsRoute: typeof AuthenticatedShellVariantsRoute
+  AuthenticatedShellProductsProductIdRoute: typeof AuthenticatedShellProductsProductIdRoute
 }
 
 const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
@@ -779,10 +821,13 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellSalesRoute: AuthenticatedShellSalesRoute,
     AuthenticatedShellSerialsRoute: AuthenticatedShellSerialsRoute,
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
+    AuthenticatedShellStockCountsRoute: AuthenticatedShellStockCountsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
     AuthenticatedShellTransfersRoute: AuthenticatedShellTransfersRoute,
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
     AuthenticatedShellVariantsRoute: AuthenticatedShellVariantsRoute,
+    AuthenticatedShellProductsProductIdRoute:
+      AuthenticatedShellProductsProductIdRoute,
   }
 
 const AuthenticatedShellRouteRouteWithChildren =

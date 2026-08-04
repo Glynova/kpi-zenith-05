@@ -28,6 +28,7 @@ export const ROUTE_SECTION: Record<string, Section> = {
   "/units": "catalog",
   "/locations": "catalog",
   "/inventory": "operations",
+  "/stock-counts": "operations",
   "/transfers": "operations",
   "/purchase-orders": "operations",
   "/sales": "operations",
