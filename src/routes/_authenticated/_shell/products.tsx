@@ -1,7 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
+import { Button } from "@/components/ui/button";
 import { useBusiness } from "@/lib/business-context";
+import { INVENTORY_MODELS } from "@/lib/business-config";
+
+
 
 
 const columns: Column[] = [
