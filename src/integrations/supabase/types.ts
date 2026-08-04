@@ -506,6 +506,7 @@ export type Database = {
       }
       business_settings: {
         Row: {
+          allow_negative_stock: boolean
           business_id: string
           costing_method: string
           created_at: string
@@ -528,6 +529,7 @@ export type Database = {
           extra: Json
           id: string
           low_stock_rule: string
+          production_mode: string
           track_batch: boolean
           track_cost: boolean
           track_expiry: boolean
@@ -539,6 +541,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_negative_stock?: boolean
           business_id: string
           costing_method?: string
           created_at?: string
@@ -561,6 +564,7 @@ export type Database = {
           extra?: Json
           id?: string
           low_stock_rule?: string
+          production_mode?: string
           track_batch?: boolean
           track_cost?: boolean
           track_expiry?: boolean
@@ -572,6 +576,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_negative_stock?: boolean
           business_id?: string
           costing_method?: string
           created_at?: string
@@ -594,6 +599,7 @@ export type Database = {
           extra?: Json
           id?: string
           low_stock_rule?: string
+          production_mode?: string
           track_batch?: boolean
           track_cost?: boolean
           track_expiry?: boolean
@@ -1087,6 +1093,81 @@ export type Database = {
           },
         ]
       }
+      inventory_cost_layers: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          movement_id: string | null
+          product_id: string
+          quantity: number
+          remaining_quantity: number
+          unit_cost: number
+          variant_id: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          movement_id?: string | null
+          product_id: string
+          quantity: number
+          remaining_quantity: number
+          unit_cost?: number
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          movement_id?: string | null
+          product_id?: string
+          quantity?: number
+          remaining_quantity?: number
+          unit_cost?: number
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_cost_layers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_cost_layers_movement_id_fkey"
+            columns: ["movement_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_cost_layers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_cost_layers_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_cost_layers_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           base_quantity: number | null
@@ -1100,7 +1181,10 @@ export type Database = {
           notes: string | null
           product_id: string
           quantity: number
+          reason: string | null
           reference: string | null
+          reference_id: string | null
+          reference_type: string | null
           serial_id: string | null
           to_warehouse_id: string | null
           total_cost: number | null
@@ -1122,7 +1206,10 @@ export type Database = {
           notes?: string | null
           product_id: string
           quantity: number
+          reason?: string | null
           reference?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           serial_id?: string | null
           to_warehouse_id?: string | null
           total_cost?: number | null
@@ -1144,7 +1231,10 @@ export type Database = {
           notes?: string | null
           product_id?: string
           quantity?: number
+          reason?: string | null
           reference?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
           serial_id?: string | null
           to_warehouse_id?: string | null
           total_cost?: number | null
@@ -1636,6 +1726,7 @@ export type Database = {
           selling_price: number
           serial_number: string | null
           sku: string | null
+          standard_cost: number
           status: string
           stock: number
           supplier_id: string | null
@@ -1643,8 +1734,10 @@ export type Database = {
           track_batch: boolean
           track_expiry: boolean
           track_serial: boolean
+          track_warranty: boolean
           unit: string
           updated_at: string
+          warranty_months: number | null
         }
         Insert: {
           average_cost?: number
@@ -1675,6 +1768,7 @@ export type Database = {
           selling_price?: number
           serial_number?: string | null
           sku?: string | null
+          standard_cost?: number
           status?: string
           stock?: number
           supplier_id?: string | null
@@ -1682,8 +1776,10 @@ export type Database = {
           track_batch?: boolean
           track_expiry?: boolean
           track_serial?: boolean
+          track_warranty?: boolean
           unit?: string
           updated_at?: string
+          warranty_months?: number | null
         }
         Update: {
           average_cost?: number
@@ -1714,6 +1810,7 @@ export type Database = {
           selling_price?: number
           serial_number?: string | null
           sku?: string | null
+          standard_cost?: number
           status?: string
           stock?: number
           supplier_id?: string | null
@@ -1721,8 +1818,10 @@ export type Database = {
           track_batch?: boolean
           track_expiry?: boolean
           track_serial?: boolean
+          track_warranty?: boolean
           unit?: string
           updated_at?: string
+          warranty_months?: number | null
         }
         Relationships: [
           {
@@ -2134,6 +2233,122 @@ export type Database = {
           },
           {
             foreignKeyName: "serial_numbers_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_count_items: {
+        Row: {
+          business_id: string
+          counted_quantity: number | null
+          created_at: string
+          expected_quantity: number
+          id: string
+          product_id: string
+          stock_count_id: string
+          variant_id: string | null
+        }
+        Insert: {
+          business_id: string
+          counted_quantity?: number | null
+          created_at?: string
+          expected_quantity?: number
+          id?: string
+          product_id: string
+          stock_count_id: string
+          variant_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          counted_quantity?: number | null
+          created_at?: string
+          expected_quantity?: number
+          id?: string
+          product_id?: string
+          stock_count_id?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_count_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_items_stock_count_id_fkey"
+            columns: ["stock_count_id"]
+            isOneToOne: false
+            referencedRelation: "stock_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_count_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_counts: {
+        Row: {
+          business_id: string
+          confirmed_at: string | null
+          counted_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          business_id: string
+          confirmed_at?: string | null
+          counted_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          confirmed_at?: string | null
+          counted_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_counts_warehouse_id_fkey"
             columns: ["warehouse_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
