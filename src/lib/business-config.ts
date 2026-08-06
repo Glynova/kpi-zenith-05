@@ -32,7 +32,13 @@ export type FeatureKey =
   | "enable_low_stock_alerts"
   | "enable_stock_counts"
   | "enable_stock_transfers"
-  | "enable_food_costing";
+  | "enable_food_costing"
+  | "enable_pos"
+  | "enable_quotes"
+  | "enable_sales_orders"
+  | "enable_shipping"
+  | "enable_customer_credit"
+  | "enable_cash_register";
 
 /** Optional product fields the owner can switch on or off. */
 export type ProductCapability =
