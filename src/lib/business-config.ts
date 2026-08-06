@@ -75,6 +75,16 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   costing_method: CostingMethod;
   low_stock_rule: string;
   expiry_alert_days: number;
+  /** Sales & POS configuration. */
+  tax_name: string;
+  tax_rate: number;
+  tax_inclusive: boolean;
+  sales_inventory_timing: "sale_completed" | "payment_completed" | "fulfillment";
+  sales_bom_mode: "finished_good" | "consume_components";
+  discount_limit_percent: number;
+  payment_methods: string[];
+  sales_channels: string[];
+  allow_negative_stock?: boolean;
   extra?: Record<string, unknown>;
 };
 
