@@ -175,6 +175,7 @@ const BASE: FeatureKey[] = [
   "enable_barcode",
   "enable_low_stock_alerts",
   "enable_stock_counts",
+  "enable_pos",
 ];
 
 
