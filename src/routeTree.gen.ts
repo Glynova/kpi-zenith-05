@@ -33,6 +33,7 @@ import { Route as AuthenticatedShellLocationsRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellNotificationsRouteImport } from './routes/_authenticated/_shell/notifications'
 import { Route as AuthenticatedShellPayablesRouteImport } from './routes/_authenticated/_shell/payables'
 import { Route as AuthenticatedShellPayrollRouteImport } from './routes/_authenticated/_shell/payroll'
+import { Route as AuthenticatedShellPosRouteImport } from './routes/_authenticated/_shell/pos'
 import { Route as AuthenticatedShellProductsRouteImport } from './routes/_authenticated/_shell/products'
 import { Route as AuthenticatedShellPurchaseOrdersRouteImport } from './routes/_authenticated/_shell/purchase-orders'
 import { Route as AuthenticatedShellReceivablesRouteImport } from './routes/_authenticated/_shell/receivables'
@@ -182,6 +183,11 @@ const AuthenticatedShellPayrollRoute =
     path: '/payroll',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellPosRoute = AuthenticatedShellPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => AuthenticatedShellRouteRoute,
+} as any)
 const AuthenticatedShellProductsRoute =
   AuthenticatedShellProductsRouteImport.update({
     id: '/products',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/pos': typeof AuthenticatedShellPosRoute
   '/products': typeof AuthenticatedShellProductsRoute
   '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
   '/receivables': typeof AuthenticatedShellReceivablesRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/pos': typeof AuthenticatedShellPosRoute
   '/products': typeof AuthenticatedShellProductsRoute
   '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
   '/receivables': typeof AuthenticatedShellReceivablesRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/notifications': typeof AuthenticatedShellNotificationsRoute
   '/_authenticated/_shell/payables': typeof AuthenticatedShellPayablesRoute
   '/_authenticated/_shell/payroll': typeof AuthenticatedShellPayrollRoute
+  '/_authenticated/_shell/pos': typeof AuthenticatedShellPosRoute
   '/_authenticated/_shell/products': typeof AuthenticatedShellProductsRoute
   '/_authenticated/_shell/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
   '/_authenticated/_shell/receivables': typeof AuthenticatedShellReceivablesRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/payables'
     | '/payroll'
+    | '/pos'
     | '/products'
     | '/purchase-orders'
     | '/receivables'
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/payables'
     | '/payroll'
+    | '/pos'
     | '/products'
     | '/purchase-orders'
     | '/receivables'
@@ -474,6 +485,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/notifications'
     | '/_authenticated/_shell/payables'
     | '/_authenticated/_shell/payroll'
+    | '/_authenticated/_shell/pos'
     | '/_authenticated/_shell/products'
     | '/_authenticated/_shell/purchase-orders'
     | '/_authenticated/_shell/receivables'
@@ -666,6 +678,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellPayrollRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/pos': {
+      id: '/_authenticated/_shell/pos'
+      path: '/pos'
+      fullPath: '/pos'
+      preLoaderRoute: typeof AuthenticatedShellPosRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/products': {
       id: '/_authenticated/_shell/products'
       path: '/products'
@@ -778,6 +797,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellNotificationsRoute: typeof AuthenticatedShellNotificationsRoute
   AuthenticatedShellPayablesRoute: typeof AuthenticatedShellPayablesRoute
   AuthenticatedShellPayrollRoute: typeof AuthenticatedShellPayrollRoute
+  AuthenticatedShellPosRoute: typeof AuthenticatedShellPosRoute
   AuthenticatedShellProductsRoute: typeof AuthenticatedShellProductsRoute
   AuthenticatedShellPurchaseOrdersRoute: typeof AuthenticatedShellPurchaseOrdersRoute
   AuthenticatedShellReceivablesRoute: typeof AuthenticatedShellReceivablesRoute
@@ -813,6 +833,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellNotificationsRoute: AuthenticatedShellNotificationsRoute,
     AuthenticatedShellPayablesRoute: AuthenticatedShellPayablesRoute,
     AuthenticatedShellPayrollRoute: AuthenticatedShellPayrollRoute,
+    AuthenticatedShellPosRoute: AuthenticatedShellPosRoute,
     AuthenticatedShellProductsRoute: AuthenticatedShellProductsRoute,
     AuthenticatedShellPurchaseOrdersRoute:
       AuthenticatedShellPurchaseOrdersRoute,

@@ -32,7 +32,13 @@ export type FeatureKey =
   | "enable_low_stock_alerts"
   | "enable_stock_counts"
   | "enable_stock_transfers"
-  | "enable_food_costing";
+  | "enable_food_costing"
+  | "enable_pos"
+  | "enable_quotes"
+  | "enable_sales_orders"
+  | "enable_shipping"
+  | "enable_customer_credit"
+  | "enable_cash_register";
 
 /** Optional product fields the owner can switch on or off. */
 export type ProductCapability =
@@ -69,6 +75,16 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   costing_method: CostingMethod;
   low_stock_rule: string;
   expiry_alert_days: number;
+  /** Sales & POS configuration. */
+  tax_name: string;
+  tax_rate: number;
+  tax_inclusive: boolean;
+  sales_inventory_timing: "sale_completed" | "payment_completed" | "fulfillment";
+  sales_bom_mode: "finished_good" | "consume_components";
+  discount_limit_percent: number;
+  payment_methods: string[];
+  sales_channels: string[];
+  allow_negative_stock?: boolean;
   extra?: Record<string, unknown>;
 };
 
@@ -127,7 +143,17 @@ export const FEATURE_GROUPS: {
       { key: "enable_returns", label: "Returns", hint: "Customer and supplier returns." },
       { key: "enable_barcode", label: "Barcode", hint: "Barcodes on products and variants." },
       { key: "enable_projects", label: "Projects / jobs", hint: "Allocate stock to jobs or sites." },
-      { key: "enable_assets", label: "Assets / equipment", hint: "Track equipment as inventory." },
+    ],
+  },
+  {
+    label: "Selling",
+    items: [
+      { key: "enable_pos", label: "Point of sale", hint: "Fast counter selling with a cart and receipts." },
+      { key: "enable_quotes", label: "Quotations", hint: "Send quotes and convert them to orders." },
+      { key: "enable_sales_orders", label: "Sales orders", hint: "Confirm orders before fulfilling them." },
+      { key: "enable_shipping", label: "Shipping & delivery", hint: "Delivery addresses, methods and tracking." },
+      { key: "enable_customer_credit", label: "Customer credit", hint: "Credit limits and outstanding balances." },
+      { key: "enable_cash_register", label: "Cash registers", hint: "Open and close tills with cash variance." },
     ],
   },
 ];
@@ -149,6 +175,7 @@ const BASE: FeatureKey[] = [
   "enable_barcode",
   "enable_low_stock_alerts",
   "enable_stock_counts",
+  "enable_pos",
 ];
 
 
@@ -290,6 +317,14 @@ export const DEFAULT_SETTINGS: BusinessSettings = {
   ...preset(BASE),
   low_stock_rule: "reorder_level",
   expiry_alert_days: 30,
+  tax_name: "Tax",
+  tax_rate: 0,
+  tax_inclusive: false,
+  sales_inventory_timing: "sale_completed",
+  sales_bom_mode: "finished_good",
+  discount_limit_percent: 100,
+  payment_methods: ["cash", "card", "bank_transfer", "digital_wallet", "credit", "other"],
+  sales_channels: ["pos", "online", "phone", "manual", "wholesale", "other"],
 } as BusinessSettings;
 
 export function defaultsForType(type: string) {
