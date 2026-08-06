@@ -133,7 +133,17 @@ export const FEATURE_GROUPS: {
       { key: "enable_returns", label: "Returns", hint: "Customer and supplier returns." },
       { key: "enable_barcode", label: "Barcode", hint: "Barcodes on products and variants." },
       { key: "enable_projects", label: "Projects / jobs", hint: "Allocate stock to jobs or sites." },
-      { key: "enable_assets", label: "Assets / equipment", hint: "Track equipment as inventory." },
+    ],
+  },
+  {
+    label: "Selling",
+    items: [
+      { key: "enable_pos", label: "Point of sale", hint: "Fast counter selling with a cart and receipts." },
+      { key: "enable_quotes", label: "Quotations", hint: "Send quotes and convert them to orders." },
+      { key: "enable_sales_orders", label: "Sales orders", hint: "Confirm orders before fulfilling them." },
+      { key: "enable_shipping", label: "Shipping & delivery", hint: "Delivery addresses, methods and tracking." },
+      { key: "enable_customer_credit", label: "Customer credit", hint: "Credit limits and outstanding balances." },
+      { key: "enable_cash_register", label: "Cash registers", hint: "Open and close tills with cash variance." },
     ],
   },
 ];
