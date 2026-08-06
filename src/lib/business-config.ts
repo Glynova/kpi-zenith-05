@@ -317,6 +317,14 @@ export const DEFAULT_SETTINGS: BusinessSettings = {
   ...preset(BASE),
   low_stock_rule: "reorder_level",
   expiry_alert_days: 30,
+  tax_name: "Tax",
+  tax_rate: 0,
+  tax_inclusive: false,
+  sales_inventory_timing: "sale_completed",
+  sales_bom_mode: "finished_good",
+  discount_limit_percent: 100,
+  payment_methods: ["cash", "card", "bank_transfer", "digital_wallet", "credit", "other"],
+  sales_channels: ["pos", "online", "phone", "manual", "wholesale", "other"],
 } as BusinessSettings;
 
 export function defaultsForType(type: string) {
