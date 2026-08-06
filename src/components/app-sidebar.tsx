@@ -29,6 +29,7 @@ import {
   Barcode,
   ArrowLeftRight,
   ClipboardCheck,
+  ScanLine,
 } from "lucide-react";
 
 import {
@@ -78,6 +79,7 @@ const groups: { label: string; items: { title: string; url: string; icon: any; f
       { title: "Stock Counts", url: "/stock-counts", icon: ClipboardCheck, feature: "enable_stock_counts" },
       { title: "Transfers", url: "/transfers", icon: ArrowLeftRight, feature: "track_locations" },
       { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
+      { title: "Point of Sale", url: "/pos", icon: ScanLine, feature: "enable_pos" },
       { title: "Sales", url: "/sales", icon: ShoppingCart },
       { title: "Invoices", url: "/invoices", icon: FileText },
     ],
