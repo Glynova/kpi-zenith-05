@@ -8,6 +8,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import { ImageThumb, ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
