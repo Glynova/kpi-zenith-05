@@ -456,7 +456,14 @@ export function ResourcePage({
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "boolean" ? (
+                {field.type === "image" ? (
+                  <ImageUpload
+                    id={field.key}
+                    businessId={businessId}
+                    value={form[field.key] ?? null}
+                    onChange={(v) => setForm({ ...form, [field.key]: v })}
+                  />
+                ) : field.type === "boolean" ? (
                   <div className="flex h-9 items-center">
                     <Switch
                       id={field.key}
