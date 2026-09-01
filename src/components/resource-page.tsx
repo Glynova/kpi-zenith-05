@@ -317,6 +317,7 @@ export function ResourcePage({
     const value = row[col.key];
     if (col.format === "boolean")
       return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
+    if (col.format === "image") return <ImageThumb value={value} alt={String(row.name ?? "")} />;
     if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
     switch (col.format) {
       case "currency":
