@@ -8,6 +8,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import { ImageThumb, ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,19 +54,20 @@ import {
 export type Column = {
   key: string;
   label: string;
-  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean";
+  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
 };
 
 export type Field = {
   key: string;
   label: string;
-  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean";
+  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean" | "image";
   options?: string[];
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
   placeholder?: string;
 };
+
 
 
 type Props = {
@@ -316,6 +318,7 @@ export function ResourcePage({
     const value = row[col.key];
     if (col.format === "boolean")
       return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
+    if (col.format === "image") return <ImageThumb value={value} alt={String(row.name ?? "")} />;
     if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
     switch (col.format) {
       case "currency":
@@ -449,13 +452,20 @@ export function ResourcePage({
             {fields.map((field) => (
               <div
                 key={field.key}
-                className={field.type === "textarea" ? "sm:col-span-2" : "min-w-0"}
+                className={field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"}
               >
                 <Label htmlFor={field.key} className="mb-1.5 block text-xs">
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "boolean" ? (
+                {field.type === "image" ? (
+                  <ImageUpload
+                    id={field.key}
+                    businessId={businessId}
+                    value={form[field.key] ?? null}
+                    onChange={(v) => setForm({ ...form, [field.key]: v })}
+                  />
+                ) : field.type === "boolean" ? (
                   <div className="flex h-9 items-center">
                     <Switch
                       id={field.key}

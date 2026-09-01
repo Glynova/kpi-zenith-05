@@ -11,6 +11,11 @@ import { INVENTORY_MODELS } from "@/lib/business-config";
 
 const columns: Column[] = [
   {
+    "key": "image_url",
+    "label": "Photo",
+    "format": "image"
+  },
+  {
     "key": "name",
     "label": "Product"
   },
@@ -169,8 +174,8 @@ const fields: Field[] = [
   },
   {
     "key": "image_url",
-    "label": "Image URL",
-    "type": "text"
+    "label": "Product image",
+    "type": "image"
   },
   {
     "key": "status",

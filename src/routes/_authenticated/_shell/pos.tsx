@@ -21,6 +21,7 @@ import {
   type CartLine,
 } from "@/lib/sales";
 import { PageHeader } from "@/components/page-header";
+import { ImageThumb } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -556,7 +557,7 @@ function POSPage() {
                     >
                       <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
                         {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="size-full object-cover" loading="lazy" />
+                          <ImageThumb value={p.image_url} alt={p.name} className="size-full" />
                         ) : (
                           <div className="grid size-full place-items-center text-xs text-muted-foreground">
                             {String(p.name).slice(0, 2).toUpperCase()}
