@@ -11,6 +11,11 @@ import { INVENTORY_MODELS } from "@/lib/business-config";
 
 const columns: Column[] = [
   {
+    "key": "image_url",
+    "label": "Photo",
+    "format": "image"
+  },
+  {
     "key": "name",
     "label": "Product"
   },
