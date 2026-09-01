@@ -152,12 +152,6 @@ const fields: Field[] = [
     "type": "number"
   },
   {
-    "key": "stock",
-    "label": "Opening stock",
-    "type": "number",
-    "default": 0
-  },
-  {
     "key": "batch_number",
     "label": "Batch number",
     "type": "text"
