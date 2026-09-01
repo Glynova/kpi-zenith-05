@@ -53,19 +53,20 @@ import {
 export type Column = {
   key: string;
   label: string;
-  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean";
+  format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
 };
 
 export type Field = {
   key: string;
   label: string;
-  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean";
+  type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean" | "image";
   options?: string[];
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
   placeholder?: string;
 };
+
 
 
 type Props = {
