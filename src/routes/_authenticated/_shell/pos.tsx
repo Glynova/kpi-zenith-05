@@ -21,6 +21,7 @@ import {
   type CartLine,
 } from "@/lib/sales";
 import { PageHeader } from "@/components/page-header";
+import { ImageThumb } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
