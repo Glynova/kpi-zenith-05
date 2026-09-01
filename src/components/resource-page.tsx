@@ -452,7 +452,7 @@ export function ResourcePage({
             {fields.map((field) => (
               <div
                 key={field.key}
-                className={field.type === "textarea" ? "sm:col-span-2" : "min-w-0"}
+                className={field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"}
               >
                 <Label htmlFor={field.key} className="mb-1.5 block text-xs">
                   {field.label}
