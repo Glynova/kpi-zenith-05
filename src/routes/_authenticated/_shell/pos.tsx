@@ -633,18 +633,7 @@ function POSPage() {
                       <Button size="icon" variant="outline" onClick={() => setQty(l.key, l.quantity + 1)}>
                         <Plus className="size-3" />
                       </Button>
-                      <Input
-                        className="h-8 flex-1"
-                        type="number"
-                        placeholder="Disc."
-                        value={l.discount || ""}
-                        onChange={(e) =>
-                          setCart((c) =>
-                            c.map((x) => (x.key === l.key ? { ...x, discount: Number(e.target.value) } : x)),
-                          )
-                        }
-                      />
-                      <span className="w-20 text-right text-sm font-semibold">
+                      <span className="flex-1 text-right text-sm font-semibold">
                         {formatCurrency(l.quantity * l.unit_price - Number(l.discount || 0), currency)}
                       </span>
                     </div>
