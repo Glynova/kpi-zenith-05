@@ -174,8 +174,8 @@ const fields: Field[] = [
   },
   {
     "key": "image_url",
-    "label": "Image URL",
-    "type": "text"
+    "label": "Product image",
+    "type": "image"
   },
   {
     "key": "status",
