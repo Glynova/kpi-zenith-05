@@ -484,11 +484,18 @@ export function ResourcePage({
             <DialogDescription>Fill in the details below and save.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map((field) => (
+            {fields
+              .filter((field) => !field.hidden?.({ form, setForm, editing }))
+              .flatMap((field) => [
               <div
                 key={field.key}
-                className={field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"}
+                className={
+                  field.type === "textarea" || field.type === "image" || field.render
+                    ? "sm:col-span-2"
+                    : "min-w-0"
+                }
               >
+
                 <Label htmlFor={field.key} className="mb-1.5 block text-xs">
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
