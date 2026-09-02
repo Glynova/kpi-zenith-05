@@ -193,7 +193,9 @@ const description = "Your catalog. The form shows only the fields your business 
 
 /** Product form + table adapt to the business configuration from the setup wizard. */
 function ProductsPage() {
-  const { capability, feature, settings } = useBusiness();
+  const { capability, feature, settings, businessId, currency } = useBusiness();
+  const bom = useProductBom(businessId, currency);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const keep = (key: string) => {
     switch (key) {
@@ -228,15 +230,82 @@ function ProductsPage() {
     }
   };
 
+  const isFinished = (form: Row) => form.inventory_model === "finished_product";
+
+  const formFields = fields.filter((f) => keep(f.key)).map((field): Field => {
+    if (field.key === "cost_price") {
+      return {
+        ...field,
+        label: "Cost price",
+        render: ({ form, setForm }) =>
+          isFinished(form) ? (
+            <div>
+              <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
+              <p className="mt-1 text-[11px] text-muted-foreground">Auto-calculated from components</p>
+            </div>
+          ) : (
+            <Input
+              type="number"
+              step="any"
+              value={form.cost_price ?? ""}
+              onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
+            />
+          ),
+      };
+    }
+    if (field.key === "selling_price") {
+      return {
+        ...field,
+        render: ({ form, setForm }) => {
+          const price = Number(form.selling_price ?? 0);
+          const cost = Number(form.cost_price ?? 0);
+          const margin = price > 0 ? ((price - cost) / price) * 100 : null;
+          return (
+            <div>
+              <Input
+                type="number"
+                step="any"
+                value={form.selling_price ?? ""}
+                onChange={(e) => setForm({ ...form, selling_price: e.target.value })}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {margin === null ? "Margin: —" : `Margin: ${margin.toFixed(0)}%`}
+              </p>
+            </div>
+          );
+        },
+      };
+    }
+    return field;
+  });
+
   return (
     <ResourcePage
       table="products"
       title="Products"
       description={description}
       columns={columns.filter((c) => keep(c.key))}
-      fields={fields.filter((f) => keep(f.key))}
+      fields={formFields}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
+      onOpenForm={(row) => {
+        setEditingId(row?.id ?? null);
+        void bom.load(row);
+      }}
+      formExtrasAfter="cost_price"
+      formExtras={({ form, setForm }) =>
+        isFinished(form) ? (
+          <bom.Section
+            excludeProductId={editingId}
+            onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
+          />
+        ) : null
+      }
+      validate={({ form }) => (isFinished(form) ? bom.validate() : null)}
+      afterSave={async ({ form, id }) => {
+        if (!isFinished(form)) return;
+        await bom.persist(id, String(form.name ?? ""));
+      }}
       rowActions={(row) => (
         <Button asChild variant="ghost" size="icon" title="View details">
           <Link to="/products/$productId" params={{ productId: row.id }}>
@@ -247,6 +316,7 @@ function ProductsPage() {
     />
   );
 }
+
 
 export const Route = createFileRoute("/_authenticated/_shell/products")({
   head: () => ({
