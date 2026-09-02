@@ -490,17 +490,17 @@ export function ResourcePage({
               <div
                 key={field.key}
                 className={
-                  field.type === "textarea" || field.type === "image" || field.render
-                    ? "sm:col-span-2"
-                    : "min-w-0"
+                  field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"
                 }
               >
-
                 <Label htmlFor={field.key} className="mb-1.5 block text-xs">
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "image" ? (
+                {field.render ? (
+                  field.render({ form, setForm, editing })
+                ) : field.type === "image" ? (
+
                   <ImageUpload
                     id={field.key}
                     businessId={businessId}
