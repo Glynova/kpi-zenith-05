@@ -118,7 +118,12 @@ export function ResourcePage({
   rowActions,
   toolbar,
   enableImport = true,
+  formExtras,
+  validate,
+  afterSave,
+  onOpenForm,
 }: Props) {
+
   const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
