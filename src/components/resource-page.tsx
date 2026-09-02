@@ -564,9 +564,20 @@ export function ResourcePage({
                     onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                   />
                 )}
-              </div>
-            ))}
+              </div>,
+              ...(formExtras && field.key === formExtrasAfter
+                ? [
+                    <div key={`${field.key}-extras`} className="sm:col-span-2">
+                      {formExtras({ form, setForm, editing })}
+                    </div>,
+                  ]
+                : []),
+            ])}
+            {formExtras && !formExtrasAfter && (
+              <div className="sm:col-span-2">{formExtras({ form, setForm, editing })}</div>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
