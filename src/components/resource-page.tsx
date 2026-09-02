@@ -175,13 +175,16 @@ export function ResourcePage({
   const save = useMutation({
     mutationFn: async (values: Row) => {
       const payload: Row = { ...values, business_id: businessId };
+      let id = editing?.id as string | undefined;
       if (editing) {
         const { error } = await db.from(table).update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await db.from(table).insert(payload);
+        const { data, error } = await db.from(table).insert(payload).select("id").single();
         if (error) throw error;
+        id = data?.id;
       }
+      if (afterSave && id) await afterSave({ form, setForm, editing, id });
     },
     onSuccess: () => {
       toast.success(editing ? "Record updated" : "Record created");
@@ -221,6 +224,7 @@ export function ResourcePage({
     });
     setForm(defaults);
     setEditing(null);
+    onOpenForm?.(null);
     setOpen(true);
   }
 
@@ -229,6 +233,7 @@ export function ResourcePage({
     fields.forEach((f) => (values[f.key] = row[f.key] ?? ""));
     setForm(values);
     setEditing(row);
+    onOpenForm?.(row);
     setOpen(true);
   }
 
@@ -238,6 +243,11 @@ export function ResourcePage({
     );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
+      return;
+    }
+    const error = validate?.({ form, setForm, editing });
+    if (error) {
+      toast.error(error);
       return;
     }
     const payload: Row = {};
@@ -253,6 +263,7 @@ export function ResourcePage({
     });
     save.mutate(payload);
   }
+
 
 
   function exportCsv() {
