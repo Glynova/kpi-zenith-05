@@ -57,6 +57,12 @@ export type Column = {
   format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
 };
 
+export type FormCtx = {
+  form: Row;
+  setForm: (row: Row) => void;
+  editing: Row | null;
+};
+
 export type Field = {
   key: string;
   label: string;
@@ -66,6 +72,10 @@ export type Field = {
   required?: boolean;
   default?: any;
   placeholder?: string;
+  /** Replace the default input with a custom control. */
+  render?: (ctx: FormCtx) => ReactNode;
+  /** Hide the field entirely for the current form state. */
+  hidden?: (ctx: FormCtx) => boolean;
 };
 
 
@@ -85,7 +95,18 @@ type Props = {
   toolbar?: ReactNode;
   /** Disable CSV import (enabled by default for writable tables). */
   enableImport?: boolean;
+  /** Extra content rendered under the form fields. */
+  formExtras?: (ctx: FormCtx) => ReactNode;
+  /** Render formExtras directly after this field key instead of at the end. */
+  formExtrasAfter?: string;
+  /** Return an error message to block saving. */
+  validate?: (ctx: FormCtx) => string | null;
+  /** Runs after the record is saved; receives the record id. */
+  afterSave?: (ctx: FormCtx & { id: string }) => Promise<void>;
+  /** Called when the create/edit dialog opens. */
+  onOpenForm?: (row: Row | null) => void;
 };
+
 
 export function ResourcePage({
   table,
@@ -99,7 +120,13 @@ export function ResourcePage({
   rowActions,
   toolbar,
   enableImport = true,
+  formExtras,
+  formExtrasAfter,
+  validate,
+  afterSave,
+  onOpenForm,
 }: Props) {
+
   const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -151,13 +178,16 @@ export function ResourcePage({
   const save = useMutation({
     mutationFn: async (values: Row) => {
       const payload: Row = { ...values, business_id: businessId };
+      let id = editing?.id as string | undefined;
       if (editing) {
         const { error } = await db.from(table).update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await db.from(table).insert(payload);
+        const { data, error } = await db.from(table).insert(payload).select("id").single();
         if (error) throw error;
+        id = data?.id;
       }
+      if (afterSave && id) await afterSave({ form, setForm, editing, id });
     },
     onSuccess: () => {
       toast.success(editing ? "Record updated" : "Record created");
@@ -197,6 +227,7 @@ export function ResourcePage({
     });
     setForm(defaults);
     setEditing(null);
+    onOpenForm?.(null);
     setOpen(true);
   }
 
@@ -205,6 +236,7 @@ export function ResourcePage({
     fields.forEach((f) => (values[f.key] = row[f.key] ?? ""));
     setForm(values);
     setEditing(row);
+    onOpenForm?.(row);
     setOpen(true);
   }
 
@@ -214,6 +246,11 @@ export function ResourcePage({
     );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
+      return;
+    }
+    const error = validate?.({ form, setForm, editing });
+    if (error) {
+      toast.error(error);
       return;
     }
     const payload: Row = {};
@@ -229,6 +266,7 @@ export function ResourcePage({
     });
     save.mutate(payload);
   }
+
 
 
   function exportCsv() {
@@ -449,16 +487,23 @@ export function ResourcePage({
             <DialogDescription>Fill in the details below and save.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map((field) => (
+            {fields
+              .filter((field) => !field.hidden?.({ form, setForm, editing }))
+              .flatMap((field) => [
               <div
                 key={field.key}
-                className={field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"}
+                className={
+                  field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"
+                }
               >
                 <Label htmlFor={field.key} className="mb-1.5 block text-xs">
                   {field.label}
                   {field.required && <span className="text-destructive"> *</span>}
                 </Label>
-                {field.type === "image" ? (
+                {field.render ? (
+                  field.render({ form, setForm, editing })
+                ) : field.type === "image" ? (
+
                   <ImageUpload
                     id={field.key}
                     businessId={businessId}
@@ -522,9 +567,20 @@ export function ResourcePage({
                     onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                   />
                 )}
-              </div>
-            ))}
+              </div>,
+              ...(formExtras && field.key === formExtrasAfter
+                ? [
+                    <div key={`${field.key}-extras`} className="sm:col-span-2">
+                      {formExtras({ form, setForm, editing })}
+                    </div>,
+                  ]
+                : []),
+            ])}
+            {formExtras && !formExtrasAfter && (
+              <div className="sm:col-span-2">{formExtras({ form, setForm, editing })}</div>
+            )}
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
