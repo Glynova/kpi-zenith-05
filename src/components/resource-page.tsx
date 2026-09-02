@@ -97,6 +97,8 @@ type Props = {
   enableImport?: boolean;
   /** Extra content rendered under the form fields. */
   formExtras?: (ctx: FormCtx) => ReactNode;
+  /** Render formExtras directly after this field key instead of at the end. */
+  formExtrasAfter?: string;
   /** Return an error message to block saving. */
   validate?: (ctx: FormCtx) => string | null;
   /** Runs after the record is saved; receives the record id. */
@@ -119,6 +121,7 @@ export function ResourcePage({
   toolbar,
   enableImport = true,
   formExtras,
+  formExtrasAfter,
   validate,
   afterSave,
   onOpenForm,
