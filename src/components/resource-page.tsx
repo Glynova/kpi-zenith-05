@@ -57,6 +57,12 @@ export type Column = {
   format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
 };
 
+export type FormCtx = {
+  form: Row;
+  setForm: (row: Row) => void;
+  editing: Row | null;
+};
+
 export type Field = {
   key: string;
   label: string;
@@ -66,6 +72,10 @@ export type Field = {
   required?: boolean;
   default?: any;
   placeholder?: string;
+  /** Replace the default input with a custom control. */
+  render?: (ctx: FormCtx) => ReactNode;
+  /** Hide the field entirely for the current form state. */
+  hidden?: (ctx: FormCtx) => boolean;
 };
 
 
@@ -85,7 +95,16 @@ type Props = {
   toolbar?: ReactNode;
   /** Disable CSV import (enabled by default for writable tables). */
   enableImport?: boolean;
+  /** Extra content rendered under the form fields. */
+  formExtras?: (ctx: FormCtx) => ReactNode;
+  /** Return an error message to block saving. */
+  validate?: (ctx: FormCtx) => string | null;
+  /** Runs after the record is saved; receives the record id. */
+  afterSave?: (ctx: FormCtx & { id: string }) => Promise<void>;
+  /** Called when the create/edit dialog opens. */
+  onOpenForm?: (row: Row | null) => void;
 };
+
 
 export function ResourcePage({
   table,
