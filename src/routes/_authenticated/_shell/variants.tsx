@@ -41,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/_shell/variants")({
   }),
   component: () => (
     <ResourcePage
+      illustration="inventory"
       table="product_variants"
       title="Product Variants"
       description={description}

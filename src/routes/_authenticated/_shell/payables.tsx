@@ -87,6 +87,7 @@ export const Route = createFileRoute("/_authenticated/_shell/payables")({
   }),
   component: () => (
     <ResourcePage
+      illustration="finance"
       table="accounts_payable"
       title="Payables"
       description={"Supplier debts, schedules and remaining balances."}

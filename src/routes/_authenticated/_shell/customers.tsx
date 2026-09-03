@@ -106,6 +106,7 @@ export const Route = createFileRoute("/_authenticated/_shell/customers")({
   }),
   component: () => (
     <ResourcePage
+      illustration="sales"
       table="customers"
       title="Customers"
       description={"Retail, wholesale and credit customers with balances."}

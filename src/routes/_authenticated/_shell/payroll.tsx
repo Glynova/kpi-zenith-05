@@ -129,6 +129,7 @@ export const Route = createFileRoute("/_authenticated/_shell/payroll")({
   }),
   component: () => (
     <ResourcePage
+      illustration="people"
       table="payroll"
       title="Payroll"
       description={"Pay runs with allowances, deductions, loans and net pay."}

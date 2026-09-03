@@ -50,6 +50,7 @@ export const Route = createFileRoute("/_authenticated/_shell/batches")({
   }),
   component: () => (
     <ResourcePage
+      illustration="inventory"
       table="batches"
       title="Batches"
       description={description}

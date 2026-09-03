@@ -96,6 +96,7 @@ export const Route = createFileRoute("/_authenticated/_shell/attendance")({
   }),
   component: () => (
     <ResourcePage
+      illustration="people"
       table="attendance"
       title="Attendance"
       description={"Time in, time out, overtime, late, undertime and leaves."}
