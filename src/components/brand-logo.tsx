@@ -1,20 +1,13 @@
 import { cn } from "@/lib/utils";
 import markAsset from "@/assets/daraven-mark.png.asset.json";
 import logoAsset from "@/assets/daraven-logo.png.asset.json";
-import markLightAsset from "@/assets/daraven-mark-light.png.asset.json";
-import logoLightAsset from "@/assets/daraven-logo-light.png.asset.json";
+import { DaravenLogoSvg } from "@/components/daraven-logo-svg";
 
-/** Daraven raven mark — original artwork, light/dark variants. */
+/** Daraven raven mark — SVG in light mode, original blue artwork in dark mode. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <>
-      <img
-        src={markLightAsset.url}
-        alt="Daraven ERP"
-        className={cn("size-8 w-auto object-contain dark:hidden", className)}
-        loading="eager"
-        decoding="async"
-      />
+      <DaravenLogoSvg compact className={cn("size-8 w-auto dark:hidden", className)} />
       <img
         src={markAsset.url}
         alt=""
@@ -42,17 +35,10 @@ export function BrandLogo({
 
   return (
     <>
-      <img
-        src={logoLightAsset.url}
-        alt="Daraven ERP — Smarter Decisions. Better Performance."
-        className={cn("h-9 w-auto object-contain dark:hidden", className)}
-        loading="eager"
-        decoding="async"
-      />
+      <DaravenLogoSvg className={cn("h-9 w-auto dark:hidden", className)} />
       <img
         src={logoAsset.url}
-        alt=""
-        aria-hidden
+        alt="Daraven ERP — Smarter Decisions. Better Performance."
         className={cn("hidden h-9 w-auto object-contain dark:block", className)}
         loading="eager"
         decoding="async"
