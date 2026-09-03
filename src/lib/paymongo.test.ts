@@ -50,3 +50,38 @@ describe("PayMongo webhook signature", () => {
     expect(await verifyWebhookSignature(body, "garbage", SECRET)).toBe(false);
   });
 });
+
+import {
+  INVOICE_STATUS_MAP,
+  nextStatusAfterFailure,
+  SUBSCRIPTION_STATUS_MAP,
+} from "./paymongo-events";
+
+describe("PayMongo event mapping", () => {
+  it("maps the subscription events we subscribe to", () => {
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.activated"]).toBe("active");
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.updated"]).toBe("active");
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.past_due"]).toBe("past_due");
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.unpaid"]).toBe("unpaid");
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.cancelled"]).toBe("cancelled");
+  });
+
+  it("maps the invoice events we subscribe to", () => {
+    expect(INVOICE_STATUS_MAP["subscription.invoice.created"]).toBe("open");
+    expect(INVOICE_STATUS_MAP["subscription.invoice.finalized"]).toBe("open");
+    expect(INVOICE_STATUS_MAP["subscription.invoice.paid"]).toBe("paid");
+    expect(INVOICE_STATUS_MAP["subscription.invoice.payment_failed"]).toBe("payment_failed");
+  });
+
+  it("ignores unknown events", () => {
+    expect(SUBSCRIPTION_STATUS_MAP["some.unknown.event"]).toBeUndefined();
+    expect(INVOICE_STATUS_MAP["some.unknown.event"]).toBeUndefined();
+  });
+
+  it("escalates active -> past_due -> unpaid on repeated failures", () => {
+    expect(nextStatusAfterFailure("active")).toBe("past_due");
+    expect(nextStatusAfterFailure("trialing")).toBe("past_due");
+    expect(nextStatusAfterFailure("past_due")).toBe("unpaid");
+    expect(nextStatusAfterFailure("unpaid")).toBe("unpaid");
+  });
+});

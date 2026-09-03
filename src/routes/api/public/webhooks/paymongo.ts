@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import {
+  INVOICE_STATUS_MAP,
+  nextStatusAfterFailure,
+  SUBSCRIPTION_STATUS_MAP,
+  toIso,
+} from "@/lib/paymongo-events";
 import { readWebhookSecret, verifyWebhookSignature } from "@/lib/paymongo.server";
 
 /**
@@ -23,35 +29,6 @@ type PayMongoEvent = {
     };
   };
 };
-
-/** PayMongo subscription event -> Daraven subscription status. */
-const STATUS_MAP: Record<string, string> = {
-  "subscription.activated": "active",
-  "subscription.active": "active",
-  "subscription.updated": "active",
-  "subscription.resumed": "active",
-  "subscription.cancelled": "cancelled",
-  "subscription.canceled": "cancelled",
-  "subscription.past_due": "past_due",
-  "subscription.unpaid": "unpaid",
-  "subscription.incomplete": "incomplete",
-  "subscription.paused": "suspended",
-};
-
-const INVOICE_STATUS_MAP: Record<string, string> = {
-  "subscription.invoice.created": "open",
-  "subscription.invoice.finalized": "open",
-  "subscription.invoice.upcoming": "draft",
-  "subscription.invoice.paid": "paid",
-  "subscription.invoice.payment_failed": "payment_failed",
-  "subscription.invoice.voided": "void",
-};
-
-function toIso(value: unknown): string | undefined {
-  if (typeof value === "number") return new Date(value * 1000).toISOString();
-  if (typeof value === "string" && value) return value;
-  return undefined;
-}
 
 export const Route = createFileRoute("/api/public/webhooks/paymongo")({
   server: {
@@ -136,7 +113,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
 
         if (sub) {
           // 4a. Subscription lifecycle.
-          const mapped = STATUS_MAP[type];
+          const mapped = SUBSCRIPTION_STATUS_MAP[type];
           if (mapped) {
             await admin
               .from("subscriptions")
@@ -182,7 +159,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
             if (invoiceStatus === "payment_failed") {
               // Retries are handled by PayMongo; we escalate past_due -> unpaid
               // on a second failure. Tenant data is never removed.
-              const next = sub.status === "past_due" || sub.status === "unpaid" ? "unpaid" : "past_due";
+              const next = nextStatusAfterFailure(sub.status);
               await admin.from("subscriptions").update({ status: next }).eq("id", sub.id);
             }
           }
@@ -211,7 +188,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 .update({ status: "active", cancelled_at: null })
                 .eq("id", sub.id);
             } else {
-              const next = sub.status === "past_due" || sub.status === "unpaid" ? "unpaid" : "past_due";
+              const next = nextStatusAfterFailure(sub.status);
               await admin.from("subscriptions").update({ status: next }).eq("id", sub.id);
             }
           }
