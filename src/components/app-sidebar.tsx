@@ -17,7 +17,7 @@ import {
   BadgeDollarSign,
   UserCog,
   CalendarClock,
-  Layers,
+  
   BarChart3,
   Bell,
   LineChart,
@@ -64,7 +64,7 @@ const groups: { label: string; items: { title: string; url: string; icon: any; f
       { title: "Categories", url: "/categories", icon: Tags },
       { title: "Suppliers", url: "/suppliers", icon: Truck },
       { title: "Customers", url: "/customers", icon: Users },
-      { title: "Bill of Materials", url: "/bill-of-materials", icon: Layers, feature: "enable_bom" },
+      
       { title: "Variants", url: "/variants", icon: Palette, feature: "track_variants" },
       { title: "Batches", url: "/batches", icon: Boxes, feature: "track_batch" },
       { title: "Serial Numbers", url: "/serials", icon: Barcode, feature: "track_serial" },

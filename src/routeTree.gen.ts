@@ -20,7 +20,6 @@ import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
 import { Route as AuthenticatedShellBatchesRouteImport } from './routes/_authenticated/_shell/batches'
-import { Route as AuthenticatedShellBillOfMaterialsRouteImport } from './routes/_authenticated/_shell/bill-of-materials'
 import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
 import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
 import { Route as AuthenticatedShellCustomersRouteImport } from './routes/_authenticated/_shell/customers'
@@ -103,12 +102,6 @@ const AuthenticatedShellBatchesRoute =
   AuthenticatedShellBatchesRouteImport.update({
     id: '/batches',
     path: '/batches',
-    getParentRoute: () => AuthenticatedShellRouteRoute,
-  } as any)
-const AuthenticatedShellBillOfMaterialsRoute =
-  AuthenticatedShellBillOfMaterialsRouteImport.update({
-    id: '/bill-of-materials',
-    path: '/bill-of-materials',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellCashFlowRoute =
@@ -275,7 +268,6 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
-  '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
@@ -313,7 +305,6 @@ export interface FileRoutesByTo {
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
-  '/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
@@ -354,7 +345,6 @@ export interface FileRoutesById {
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/_authenticated/_shell/batches': typeof AuthenticatedShellBatchesRoute
-  '/_authenticated/_shell/bill-of-materials': typeof AuthenticatedShellBillOfMaterialsRoute
   '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
   '/_authenticated/_shell/customers': typeof AuthenticatedShellCustomersRoute
@@ -394,7 +384,6 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/audit-logs'
     | '/batches'
-    | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
     | '/customers'
@@ -432,7 +421,6 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/audit-logs'
     | '/batches'
-    | '/bill-of-materials'
     | '/cash-flow'
     | '/categories'
     | '/customers'
@@ -472,7 +460,6 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
     | '/_authenticated/_shell/batches'
-    | '/_authenticated/_shell/bill-of-materials'
     | '/_authenticated/_shell/cash-flow'
     | '/_authenticated/_shell/categories'
     | '/_authenticated/_shell/customers'
@@ -585,13 +572,6 @@ declare module '@tanstack/react-router' {
       path: '/batches'
       fullPath: '/batches'
       preLoaderRoute: typeof AuthenticatedShellBatchesRouteImport
-      parentRoute: typeof AuthenticatedShellRouteRoute
-    }
-    '/_authenticated/_shell/bill-of-materials': {
-      id: '/_authenticated/_shell/bill-of-materials'
-      path: '/bill-of-materials'
-      fullPath: '/bill-of-materials'
-      preLoaderRoute: typeof AuthenticatedShellBillOfMaterialsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
     '/_authenticated/_shell/cash-flow': {
@@ -784,7 +764,6 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
   AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
   AuthenticatedShellBatchesRoute: typeof AuthenticatedShellBatchesRoute
-  AuthenticatedShellBillOfMaterialsRoute: typeof AuthenticatedShellBillOfMaterialsRoute
   AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
   AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
   AuthenticatedShellCustomersRoute: typeof AuthenticatedShellCustomersRoute
@@ -819,8 +798,6 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
     AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
     AuthenticatedShellBatchesRoute: AuthenticatedShellBatchesRoute,
-    AuthenticatedShellBillOfMaterialsRoute:
-      AuthenticatedShellBillOfMaterialsRoute,
     AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
     AuthenticatedShellCategoriesRoute: AuthenticatedShellCategoriesRoute,
     AuthenticatedShellCustomersRoute: AuthenticatedShellCustomersRoute,

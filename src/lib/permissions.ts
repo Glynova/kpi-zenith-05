@@ -21,7 +21,7 @@ export const ROUTE_SECTION: Record<string, Section> = {
   "/categories": "catalog",
   "/suppliers": "catalog",
   "/customers": "catalog",
-  "/bill-of-materials": "catalog",
+  
   "/variants": "catalog",
   "/batches": "catalog",
   "/serials": "catalog",
