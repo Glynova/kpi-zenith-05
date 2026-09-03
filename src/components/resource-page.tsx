@@ -133,7 +133,7 @@ export function ResourcePage({
   // "Products" -> "Product", "Categories" -> "Category" for form headings.
   const singularTitle = title.endsWith("ies")
     ? `${title.slice(0, -3)}y`
-    : title.endsWith("ses")
+    : /(sses|xes|zes|ches|shes)$/.test(title)
       ? title.slice(0, -2)
       : title.endsWith("s") && !title.endsWith("ss")
         ? title.slice(0, -1)
