@@ -507,3 +507,84 @@ export const STARTER_CONVERSIONS: { from_unit: string; to_unit: string; factor: 
   { from_unit: "case", to_unit: "pcs", factor: 24 },
   { from_unit: "dozen", to_unit: "pcs", factor: 12 },
 ];
+
+/** Grouped catalog of standard units of measure used across the app. */
+export const UNIT_OPTION_GROUPS: { label: string; options: { value: string; label: string }[] }[] = [
+  {
+    label: "Count",
+    options: [
+      { value: "pcs", label: "pcs — Piece" },
+      { value: "unit", label: "unit — Unit" },
+      { value: "box", label: "box — Box" },
+      { value: "pack", label: "pack — Pack" },
+      { value: "case", label: "case — Case" },
+      { value: "set", label: "set — Set" },
+      { value: "pair", label: "pair — Pair" },
+      { value: "dozen", label: "dozen — Dozen" },
+      { value: "carton", label: "carton — Carton" },
+      { value: "bottle", label: "bottle — Bottle" },
+      { value: "can", label: "can — Can" },
+      { value: "jar", label: "jar — Jar" },
+      { value: "bag", label: "bag — Bag" },
+      { value: "sack", label: "sack — Sack" },
+      { value: "tube", label: "tube — Tube" },
+      { value: "roll", label: "roll — Roll" },
+      { value: "sheet", label: "sheet — Sheet" },
+      { value: "ream", label: "ream — Ream" },
+      { value: "bundle", label: "bundle — Bundle" },
+      { value: "pallet", label: "pallet — Pallet" },
+    ],
+  },
+  {
+    label: "Weight",
+    options: [
+      { value: "kg", label: "kg — Kilogram" },
+      { value: "g", label: "g — Gram" },
+      { value: "mg", label: "mg — Milligram" },
+      { value: "lb", label: "lb — Pound" },
+      { value: "oz", label: "oz — Ounce" },
+      { value: "tonne", label: "tonne — Tonne" },
+    ],
+  },
+  {
+    label: "Volume",
+    options: [
+      { value: "l", label: "L — Liter" },
+      { value: "ml", label: "ml — Milliliter" },
+      { value: "gal", label: "gal — Gallon" },
+    ],
+  },
+  {
+    label: "Length",
+    options: [
+      { value: "m", label: "m — Meter" },
+      { value: "cm", label: "cm — Centimeter" },
+      { value: "mm", label: "mm — Millimeter" },
+      { value: "in", label: "in — Inch" },
+      { value: "ft", label: "ft — Foot" },
+      { value: "yd", label: "yd — Yard" },
+    ],
+  },
+  {
+    label: "Area & Volume (space)",
+    options: [
+      { value: "sqm", label: "sqm — Square meter" },
+      { value: "cbm", label: "cbm — Cubic meter" },
+    ],
+  },
+  {
+    label: "Time",
+    options: [
+      { value: "hour", label: "hour — Hour" },
+      { value: "day", label: "day — Day" },
+    ],
+  },
+  {
+    label: "Service",
+    options: [
+      { value: "service", label: "service — Service" },
+      { value: "session", label: "session — Session" },
+      { value: "license", label: "license — License" },
+    ],
+  },
+];

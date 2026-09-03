@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBusiness } from "@/lib/business-context";
 import type { Row } from "@/lib/db";
-import { INVENTORY_MODELS } from "@/lib/business-config";
+import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
 
 
@@ -111,7 +111,9 @@ const fields: Field[] = [
   {
     "key": "unit",
     "label": "Unit",
-    "type": "text",
+    "type": "select",
+    "optionGroups": UNIT_OPTION_GROUPS,
+    "searchable": true,
     "default": "pcs"
   },
   {

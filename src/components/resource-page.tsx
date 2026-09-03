@@ -51,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GroupedSelect } from "@/components/grouped-select";
 
 export type Column = {
   key: string;
@@ -69,6 +70,10 @@ export type Field = {
   label: string;
   type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean" | "image";
   options?: string[];
+  /** Grouped select options with friendly labels; takes precedence over `options`. */
+  optionGroups?: { label: string; options: { value: string; label: string }[] }[];
+  /** Show a search box inside the select dropdown. */
+  searchable?: boolean;
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
@@ -611,21 +616,31 @@ export function ResourcePage({
                       onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                     />
                   ) : field.type === "select" ? (
-                    <Select
-                      value={form[field.key] ? String(form[field.key]) : undefined}
-                      onValueChange={(v) => setForm({ ...form, [field.key]: v })}
-                    >
-                      <SelectTrigger id={field.key}>
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(field.options ?? []).map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {titleCase(o)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    field.optionGroups ? (
+                      <GroupedSelect
+                        id={field.key}
+                        value={form[field.key] ? String(form[field.key]) : undefined}
+                        groups={field.optionGroups}
+                        searchable={field.searchable}
+                        onChange={(v) => setForm({ ...form, [field.key]: v })}
+                      />
+                    ) : (
+                      <Select
+                        value={form[field.key] ? String(form[field.key]) : undefined}
+                        onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                      >
+                        <SelectTrigger id={field.key}>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(field.options ?? []).map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {titleCase(o)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )
                   ) : field.type === "relation" ? (
                     <Select
                       value={form[field.key] ? String(form[field.key]) : undefined}
