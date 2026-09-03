@@ -300,6 +300,8 @@ function ProductsPage() {
       formExtras={({ form, setForm }) =>
         isFinished(form) ? (
           <bom.Section
+            productName={String(form.name ?? "")}
+
             excludeProductId={editingId}
             onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
           />
