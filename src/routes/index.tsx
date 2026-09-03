@@ -74,9 +74,15 @@ function Landing() {
           </div>
           <span className="font-display text-lg font-semibold">KPIOptiva</span>
         </div>
-        <Button asChild size="sm">
-          <Link to="/auth">Sign in</Link>
-        </Button>
+        <nav className="flex items-center gap-2">
+          <Button asChild size="sm" variant="ghost">
+            <Link to="/pricing">Pricing</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/auth">Sign in</Link>
+          </Button>
+        </nav>
+
       </header>
 
       <main>
@@ -97,10 +103,14 @@ function Landing() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
               <Link to="/auth">
-                Start your business workspace <ArrowRight className="size-4" />
+                Start 14-day Pro trial <ArrowRight className="size-4" />
               </Link>
             </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/pricing">See pricing — from ₱0/month</Link>
+            </Button>
           </div>
+
         </section>
 
         <section className="border-y border-border bg-card/40">

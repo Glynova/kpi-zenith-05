@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ROLE_LABEL, ROLE_OPTIONS } from "@/lib/permissions";
+import { useLimit } from "@/lib/use-subscription";
+
 import {
   addTeamMember,
   listTeam,
@@ -41,7 +43,11 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
     queryFn: () => fetchTeam({ data: { businessId } }) as Promise<any[]>,
   });
 
+  // Seat cap comes from the plan entitlements, not from the role system.
+  const seats = useLimit("max_users", teamQuery.data?.length ?? 0);
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["team", businessId] });
+
 
   const add = useMutation({
     mutationFn: () => addFn({ data: { businessId, email, role: role as any } }),
@@ -111,7 +117,10 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => add.mutate()} disabled={!email || add.isPending}>
+        <Button
+          onClick={() => add.mutate()}
+          disabled={!email || add.isPending || seats.reached}
+        >
           {add.isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -120,6 +129,15 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
           Add member
         </Button>
       </div>
+
+      {seats.reached && (
+        <p className="text-xs text-destructive">
+          Your plan includes {seats.max} team member{seats.max === 1 ? "" : "s"}. Upgrade in
+          Billing to invite more.
+        </p>
+      )}
+
+
 
       <p className="text-xs text-muted-foreground">
         {ROLE_OPTIONS.find((r) => r.value === role)?.description}

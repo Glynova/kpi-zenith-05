@@ -24,10 +24,15 @@ import { useTheme } from "@/lib/theme";
 import { supabase } from "@/integrations/supabase/client";
 import { titleCase } from "@/lib/format";
 import { canAccessRoute } from "@/lib/permissions";
+import { ROUTE_FEATURE } from "@/lib/billing";
+import { useSubscription } from "@/lib/use-subscription";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { SubscriptionBanner } from "@/components/subscription-banner";
 
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
 });
+
 
 function Shell() {
   const { loading, memberships, business, role, switchBusiness, onboarding, onboardingLoaded, isAdmin } =
@@ -38,6 +43,12 @@ function Shell() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const allowed = canAccessRoute(role, pathname);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // Role decides *who* may open a module; the subscription decides *whether*
+  // the business has the capability at all.
+  const billing = useSubscription();
+  const requiredFeature = ROUTE_FEATURE[pathname];
+  const entitled = !requiredFeature || billing.loading || billing.can(requiredFeature);
+
 
   useEffect(() => {
     if (!loading && memberships.length === 0) {
@@ -132,15 +143,30 @@ function Shell() {
               </Button>
             </div>
           </header>
+          <SubscriptionBanner />
           <div className="border-b border-border/60 bg-background/60 px-4 py-2 sm:px-6 lg:px-8">
             <Breadcrumbs />
           </div>
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            {allowed ? (
+            {allowed && entitled ? (
               <div className="page-enter">
                 <Outlet />
               </div>
+            ) : allowed && requiredFeature ? (
+              <div className="py-10">
+                <UpgradePrompt
+                  feature={requiredFeature}
+                  plan={
+                    ["multi_branch", "advanced_permissions", "consolidated_reports", "api_access"].includes(
+                      requiredFeature,
+                    )
+                      ? "Business"
+                      : "Pro"
+                  }
+                />
+              </div>
             ) : (
+
               <div className="mx-auto max-w-md space-y-3 py-16 text-center">
                 <ShieldAlert className="mx-auto size-10 text-muted-foreground" />
                 <h1 className="font-display text-xl font-semibold">No access to this module</h1>

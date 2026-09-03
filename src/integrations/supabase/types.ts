@@ -408,6 +408,63 @@ export type Database = {
           },
         ]
       }
+      billing_invoices: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          currency: string
+          due_date: string | null
+          external_invoice_id: string | null
+          id: string
+          invoice_number: string | null
+          paid_at: string | null
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount?: number
+          business_id: string
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          external_invoice_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          currency?: string
+          due_date?: string | null
+          external_invoice_id?: string | null
+          id?: string
+          invoice_number?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bom_items: {
         Row: {
           bom_id: string
@@ -2057,6 +2114,56 @@ export type Database = {
           },
         ]
       }
+      plan_entitlements: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          id: string
+          limit_value: number | null
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          limit_value?: number | null
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          limit_value?: number | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_entitlements_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           business_id: string
@@ -3700,6 +3807,241 @@ export type Database = {
           },
         ]
       }
+      subscription_events: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          event_type: string
+          external_event_id: string | null
+          id: string
+          payload: Json | null
+          subscription_id: string | null
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          event_type: string
+          external_event_id?: string | null
+          id?: string
+          payload?: Json | null
+          subscription_id?: string | null
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          event_type?: string
+          external_event_id?: string | null
+          id?: string
+          payload?: Json | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          paid_at: string | null
+          paymongo_payment_id: string | null
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount?: number
+          business_id: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          paymongo_payment_id?: string | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          paymongo_payment_id?: string | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          billing_interval: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          name: string
+          paymongo_plan_id: string | null
+          price: number
+          slug: string
+          sort_order: number
+          status: string
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          billing_interval?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          name: string
+          paymongo_plan_id?: string | null
+          price?: number
+          slug: string
+          sort_order?: number
+          status?: string
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_interval?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          name?: string
+          paymongo_plan_id?: string | null
+          price?: number
+          slug?: string
+          sort_order?: number
+          status?: string
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          business_id: string
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          payment_method_brand: string | null
+          payment_method_last4: string | null
+          paymongo_customer_id: string | null
+          paymongo_subscription_id: string | null
+          pending_plan_effective_at: string | null
+          pending_plan_id: string | null
+          plan_id: string
+          start_date: string
+          status: string
+          test_mode: boolean
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          payment_method_brand?: string | null
+          payment_method_last4?: string | null
+          paymongo_customer_id?: string | null
+          paymongo_subscription_id?: string | null
+          pending_plan_effective_at?: string | null
+          pending_plan_id?: string | null
+          plan_id: string
+          start_date?: string
+          status?: string
+          test_mode?: boolean
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          payment_method_brand?: string | null
+          payment_method_last4?: string | null
+          paymongo_customer_id?: string | null
+          paymongo_subscription_id?: string | null
+          pending_plan_effective_at?: string | null
+          pending_plan_id?: string | null
+          plan_id?: string
+          start_date?: string
+          status?: string
+          test_mode?: boolean
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_pending_plan_id_fkey"
+            columns: ["pending_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_credits: {
         Row: {
           amount: number
@@ -4307,6 +4649,7 @@ export type Database = {
       }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
+      is_platform_admin: { Args: never; Returns: boolean }
       movement_sign: { Args: { _type: string }; Returns: number }
       next_doc_number: {
         Args: { _business_id: string; _prefix: string }
