@@ -53,7 +53,7 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-semibold">KPIOptiva</p>
+              <p className="truncate font-display text-sm font-semibold">Daraven ERP</p>
               <p className="truncate text-[11px] text-muted-foreground">
                 Smarter Decisions. Better Performance.
               </p>

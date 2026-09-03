@@ -80,11 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KPIOptiva — Business Performance Platform" },
+      { title: "Daraven ERP — Business Performance Platform" },
       {
         name: "description",
         content:
-          "KPIOptiva unifies inventory, finance, KPIs and business performance management for every type of business.",
+          "Daraven ERP unifies inventory, finance, KPIs and business performance management for every type of business.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

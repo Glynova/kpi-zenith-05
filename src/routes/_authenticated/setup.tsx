@@ -54,15 +54,15 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/setup")({
   head: () => ({
     meta: [
-      { title: "Business Setup — KPIOptiva" },
+      { title: "Business Setup — Daraven ERP" },
       {
         name: "description",
-        content: "Set up KPIOptiva around how your business actually tracks stock, costs and sales.",
+        content: "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
       },
-      { property: "og:title", content: "Business Setup — KPIOptiva" },
+      { property: "og:title", content: "Business Setup — Daraven ERP" },
       {
         property: "og:description",
-        content: "Set up KPIOptiva around how your business actually tracks stock, costs and sales.",
+        content: "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -410,7 +410,7 @@ function SetupWizard() {
     return (
       <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
         <CheckCircle2 className="size-14 text-success" />
-        <h1 className="font-display text-2xl font-semibold">Your KPIOptiva workspace is ready.</h1>
+        <h1 className="font-display text-2xl font-semibold">Your Daraven ERP workspace is ready.</h1>
         <p className="text-sm text-muted-foreground">Let&apos;s add your first product.</p>
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={() => navigate({ to: "/products" })}>Add First Product</Button>
@@ -829,7 +829,7 @@ function SetupWizard() {
       {step === 6 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">How should KPIOptiva calculate inventory cost?</CardTitle>
+            <CardTitle className="text-base">How should Daraven ERP calculate inventory cost?</CardTitle>
             <CardDescription>Authorized users can change this later in Settings.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -854,7 +854,7 @@ function SetupWizard() {
           <CardHeader>
             <CardTitle className="text-base">Product fields</CardTitle>
             <CardDescription>
-              KPIOptiva configures your product form from your inventory needs. Turn off anything you
+              Daraven ERP configures your product form from your inventory needs. Turn off anything you
               don&apos;t use.
             </CardDescription>
           </CardHeader>

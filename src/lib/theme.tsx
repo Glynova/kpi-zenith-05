@@ -11,7 +11,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("kpioptiva-theme") as Theme | null;
+    const stored = window.localStorage.getItem("daraven-theme") as Theme | null;
     const initial =
       stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(initial);
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
-    window.localStorage.setItem("kpioptiva-theme", theme);
+    window.localStorage.setItem("daraven-theme", theme);
   }, [theme]);
 
   return (

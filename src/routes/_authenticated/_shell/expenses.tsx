@@ -124,9 +124,9 @@ const fields: Field[] = [
 export const Route = createFileRoute("/_authenticated/_shell/expenses")({
   head: () => ({
     meta: [
-      { title: "Expenses — KPIOptiva" },
+      { title: "Expenses — Daraven ERP" },
       { name: "description", content: "Recurring and one-off spend across every category." },
-      { property: "og:title", content: "Expenses — KPIOptiva" },
+      { property: "og:title", content: "Expenses — Daraven ERP" },
       { property: "og:description", content: "Recurring and one-off spend across every category." },
     ],
   }),

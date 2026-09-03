@@ -122,9 +122,9 @@ const fields: Field[] = [
 export const Route = createFileRoute("/_authenticated/_shell/employees")({
   head: () => ({
     meta: [
-      { title: "Employees — KPIOptiva" },
+      { title: "Employees — Daraven ERP" },
       { name: "description", content: "Staff records, departments, rates and emergency contacts." },
-      { property: "og:title", content: "Employees — KPIOptiva" },
+      { property: "og:title", content: "Employees — Daraven ERP" },
       { property: "og:description", content: "Staff records, departments, rates and emergency contacts." },
     ],
   }),

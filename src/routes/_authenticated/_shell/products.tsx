@@ -360,9 +360,9 @@ function ProductsPage() {
 export const Route = createFileRoute("/_authenticated/_shell/products")({
   head: () => ({
     meta: [
-      { title: "Products — KPIOptiva" },
+      { title: "Products — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Products — KPIOptiva" },
+      { property: "og:title", content: "Products — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

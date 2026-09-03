@@ -13,10 +13,10 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — KPIOptiva" },
-      { name: "description", content: "Access your KPIOptiva business workspace." },
-      { property: "og:title", content: "Sign in — KPIOptiva" },
-      { property: "og:description", content: "Access your KPIOptiva business workspace." },
+      { title: "Sign in — Daraven ERP" },
+      { name: "description", content: "Access your Daraven ERP business workspace." },
+      { property: "og:title", content: "Sign in — Daraven ERP" },
+      { property: "og:description", content: "Access your Daraven ERP business workspace." },
     ],
   }),
   component: AuthPage,
@@ -89,7 +89,7 @@ function AuthPage() {
           <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
             K
           </div>
-          <span className="font-display text-lg font-semibold">KPIOptiva</span>
+          <span className="font-display text-lg font-semibold">Daraven ERP</span>
         </div>
         <div>
           <h2 className="max-w-sm text-3xl font-semibold leading-tight">
@@ -106,7 +106,7 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-semibold">Welcome</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in or create your KPIOptiva account.
+            Sign in or create your Daraven ERP account.
           </p>
 
           <Button variant="outline" className="mt-6 w-full" onClick={google}>

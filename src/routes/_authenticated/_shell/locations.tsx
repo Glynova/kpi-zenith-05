@@ -28,9 +28,9 @@ const description =
 export const Route = createFileRoute("/_authenticated/_shell/locations")({
   head: () => ({
     meta: [
-      { title: "Locations — KPIOptiva" },
+      { title: "Locations — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Locations — KPIOptiva" },
+      { property: "og:title", content: "Locations — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
