@@ -82,6 +82,8 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   sales_inventory_timing: "sale_completed" | "payment_completed" | "fulfillment";
   sales_bom_mode: "finished_good" | "consume_components";
   discount_limit_percent: number;
+  po_approval_threshold: number;
+  enable_alerts: boolean;
   payment_methods: string[];
   sales_channels: string[];
   allow_negative_stock?: boolean;
@@ -322,7 +324,9 @@ export const DEFAULT_SETTINGS: BusinessSettings = {
   tax_inclusive: false,
   sales_inventory_timing: "sale_completed",
   sales_bom_mode: "finished_good",
-  discount_limit_percent: 100,
+  discount_limit_percent: 0,
+  po_approval_threshold: 0,
+  enable_alerts: true,
   payment_methods: ["cash", "card", "bank_transfer", "digital_wallet", "credit", "other"],
   sales_channels: ["pos", "online", "phone", "manual", "wholesale", "other"],
 } as BusinessSettings;
