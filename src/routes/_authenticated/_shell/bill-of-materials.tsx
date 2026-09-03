@@ -58,7 +58,7 @@ function newComponent(): Component {
 }
 
 function BomPage() {
-  const { businessId, currency, canWrite, userId } = useBusiness();
+  const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
