@@ -163,8 +163,10 @@ export async function verifyWebhookSignature(
   ) as Record<string, string | undefined>;
 
   const timestamp = parts["t"];
-  const provided = parts["li"] || parts["te"];
-  if (!timestamp || !provided) return false;
+  // te = test-mode signature, li = live-mode signature. Either may be present;
+  // accept the one that matches so the same endpoint serves both modes.
+  const candidates = [parts["te"], parts["li"]].filter(Boolean) as string[];
+  if (!timestamp || candidates.length === 0) return false;
 
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -179,8 +181,11 @@ export async function verifyWebhookSignature(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  if (expected.length !== provided.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
-  return diff === 0;
+  return candidates.some((provided) => {
+    if (expected.length !== provided.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++)
+      diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+    return diff === 0;
+  });
 }
