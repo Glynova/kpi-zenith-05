@@ -77,8 +77,9 @@ export type Field = {
   maxSizeMB?: number;
   uploadVariant?: "inline" | "dropzone";
   uploadHint?: string;
-
+  /** Replace the default input with a custom control. */
   render?: (ctx: FormCtx) => ReactNode;
+
   /** Hide the field entirely for the current form state. */
   hidden?: (ctx: FormCtx) => boolean;
 };
