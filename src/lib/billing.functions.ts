@@ -70,7 +70,7 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => businessInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
-    const { readConfig } = await import("@/lib/paymongo.server");
+    const { readConfig, readWebhookSecret } = await import("@/lib/paymongo.server");
     const cfg = readConfig();
     const { data: sub } = await context.supabase
       .from("subscriptions")
@@ -83,7 +83,7 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
     return {
       secretKeyConfigured: cfg.configured,
       publicKeyConfigured: !!cfg.publicKey,
-      webhookSecretConfigured: !!process.env["PAYMONGO_WEBHOOK_SECRET"],
+      webhookSecretConfigured: !!readWebhookSecret(),
       mode: cfg.mode,
       recurringBillingReady:
         cfg.configured && !!(plans ?? []).some((p: any) => p.paymongo_plan_id),

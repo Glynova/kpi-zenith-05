@@ -31,6 +31,16 @@ export function readConfig(): PayMongoConfig {
   return { secretKey, publicKey, mode, configured: !!secretKey };
 }
 
+/** The webhook signing secret, accepting either configured name. */
+export function readWebhookSecret(): string | null {
+  return (
+    process.env["PAYMONGO_WEBHOOK_SECRET"] ||
+    process.env["Webhook_Secret"] ||
+    process.env["WEBHOOK_SECRET"] ||
+    null
+  );
+}
+
 export class PayMongoError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -163,8 +173,10 @@ export async function verifyWebhookSignature(
   ) as Record<string, string | undefined>;
 
   const timestamp = parts["t"];
-  const provided = parts["li"] || parts["te"];
-  if (!timestamp || !provided) return false;
+  // te = test-mode signature, li = live-mode signature. Either may be present;
+  // accept the one that matches so the same endpoint serves both modes.
+  const candidates = [parts["te"], parts["li"]].filter(Boolean) as string[];
+  if (!timestamp || candidates.length === 0) return false;
 
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -179,8 +191,11 @@ export async function verifyWebhookSignature(
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  if (expected.length !== provided.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
-  return diff === 0;
+  return candidates.some((provided) => {
+    if (expected.length !== provided.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i++)
+      diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+    return diff === 0;
+  });
 }
