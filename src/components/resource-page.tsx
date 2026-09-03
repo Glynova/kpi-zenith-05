@@ -130,6 +130,14 @@ export function ResourcePage({
   steps,
   illustration = "generic",
 }: Props) {
+  // "Products" -> "Product", "Categories" -> "Category" for form headings.
+  const singularTitle = title.endsWith("ies")
+    ? `${title.slice(0, -3)}y`
+    : /(sses|xes|zes|ches|shes)$/.test(title)
+      ? title.slice(0, -2)
+      : title.endsWith("s") && !title.endsWith("ss")
+        ? title.slice(0, -1)
+        : title;
   const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -522,7 +530,9 @@ export function ResourcePage({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editing ? `Edit ${title}` : `New ${title}`}</DialogTitle>
+            <DialogTitle>
+              {editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}
+            </DialogTitle>
             <DialogDescription>
               {activeStep?.description ?? "Fill in the details below and save."}
             </DialogDescription>
