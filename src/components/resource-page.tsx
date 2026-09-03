@@ -8,6 +8,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import type { IllustrationKind } from "@/components/empty-illustration";
 import { ImageThumb, ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,10 @@ type Props = {
   afterSave?: (ctx: FormCtx & { id: string }) => Promise<void>;
   /** Called when the create/edit dialog opens. */
   onOpenForm?: (row: Row | null) => void;
+  /** Split the form into a multi-step wizard. Field keys not listed fall into the last step. */
+  steps?: { title: string; description?: string; fields: string[] }[];
+  /** Illustration used on the empty state. */
+  illustration?: IllustrationKind;
 };
 
 
@@ -125,6 +130,8 @@ export function ResourcePage({
   validate,
   afterSave,
   onOpenForm,
+  steps,
+  illustration = "generic",
 }: Props) {
 
   const { businessId, currency, canWrite } = useBusiness();
@@ -135,6 +142,7 @@ export function ResourcePage({
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<Row>({});
   const [deleteRow, setDeleteRow] = useState<Row | null>(null);
+  const [step, setStep] = useState(0);
 
   const editable = canWrite && !readOnly;
 
@@ -227,6 +235,7 @@ export function ResourcePage({
     });
     setForm(defaults);
     setEditing(null);
+    setStep(0);
     onOpenForm?.(null);
     setOpen(true);
   }
@@ -236,6 +245,7 @@ export function ResourcePage({
     fields.forEach((f) => (values[f.key] = row[f.key] ?? ""));
     setForm(values);
     setEditing(row);
+    setStep(0);
     onOpenForm?.(row);
     setOpen(true);
   }
@@ -434,11 +444,12 @@ export function ResourcePage({
       ) : rows.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
+          illustration={illustration}
           description={`Create your first record to start tracking ${title.toLowerCase()}.`}
           action={editable ? <Button onClick={openCreate}>Add record</Button> : undefined}
         />
       ) : (
-        <div className="surface-panel overflow-x-auto">
+        <div className="surface-panel overflow-x-auto shadow-elevate-1">
           <Table>
             <TableHeader>
               <TableRow>
