@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import {
+  ChevronDown,
   TrendingUp,
   TrendingDown,
   Wallet,
@@ -33,8 +34,11 @@ import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber, formatDate, daysAgoISO, todayISO } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiOrb } from "@/components/kpi-orb";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -84,7 +88,7 @@ function KpiCard({
           ? "text-destructive"
           : "text-primary";
   return (
-    <Card>
+    <Card className="surface-card border-0">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -295,23 +299,46 @@ function Dashboard() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-4 sm:grid-cols-2 stagger-grid">
+          <KpiCard label="Revenue (period)" value={formatCurrency(m.revenue, currency)} sub={`Avg order ${formatCurrency(m.aov, currency)}`} icon={TrendingUp} />
+          <KpiCard label="Net Profit (period)" value={formatCurrency(m.netProfit, currency)} sub={`${m.margin.toFixed(1)}% margin`} icon={Activity} tone={m.netProfit >= 0 ? "success" : "destructive"} />
+          <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
+          <KpiCard label="Inventory Value" value={formatCurrency(m.inventoryValue, currency)} icon={Boxes} />
+        </div>
+        <Card className="surface-card overflow-hidden border-0">
+          <CardContent className="p-2">
+            <KpiOrb
+              score={m.health}
+              caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm" className="group gap-2">
+            Show all metrics
+            <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+          <div className="mt-4 grid gap-4 stagger-grid sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Today's Sales" value={formatCurrency(m.todaySales, currency)} icon={TrendingUp} tone="success" />
         <KpiCard label="Today's Expenses" value={formatCurrency(m.todayExpenses, currency)} icon={TrendingDown} tone="warning" />
         <KpiCard label="Today's Profit" value={formatCurrency(m.todayProfit, currency)} icon={Activity} />
         <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
-        <KpiCard label="Revenue (period)" value={formatCurrency(m.revenue, currency)} sub={`Avg order ${formatCurrency(m.aov, currency)}`} icon={TrendingUp} />
-        <KpiCard label="Net Profit (period)" value={formatCurrency(m.netProfit, currency)} sub={`${m.margin.toFixed(1)}% margin`} icon={Activity} tone={m.netProfit >= 0 ? "success" : "destructive"} />
-        <KpiCard label="Inventory Value" value={formatCurrency(m.inventoryValue, currency)} icon={Boxes} />
-        <KpiCard label="Business Health" value={`${m.health}/100`} sub={`Expense ratio ${m.expenseRatio.toFixed(1)}%`} icon={Activity} tone={m.health >= 70 ? "success" : m.health >= 45 ? "warning" : "destructive"} />
         <KpiCard label="Outstanding Receivables" value={formatCurrency(m.receivables, currency)} icon={ArrowDownLeft} tone="warning" />
         <KpiCard label="Outstanding Payables" value={formatCurrency(m.payables, currency)} icon={ArrowUpRight} tone="warning" />
         <KpiCard label="Low Stock Items" value={formatNumber(m.lowStock.length)} icon={AlertTriangle} tone="warning" />
         <KpiCard label="Out Of Stock" value={formatNumber(m.outOfStock.length)} icon={PackageX} tone="destructive" />
-      </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="surface-card border-0 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Sales vs Expenses</CardTitle>
           </CardHeader>
@@ -340,7 +367,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="surface-card border-0">
           <CardHeader>
             <CardTitle className="text-base">Expense Mix</CardTitle>
           </CardHeader>
@@ -370,7 +397,7 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
+        <Card className="surface-card border-0">
           <CardHeader>
             <CardTitle className="text-base">Best Selling Products</CardTitle>
           </CardHeader>
@@ -397,7 +424,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="surface-card border-0">
           <CardHeader>
             <CardTitle className="text-base">Top Customers</CardTitle>
           </CardHeader>
@@ -415,7 +442,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="surface-card border-0">
           <CardHeader>
             <CardTitle className="text-base">Recent Activity</CardTitle>
           </CardHeader>
