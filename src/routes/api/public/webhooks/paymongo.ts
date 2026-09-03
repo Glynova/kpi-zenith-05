@@ -56,6 +56,14 @@ function toIso(value: unknown): string | undefined {
 export const Route = createFileRoute("/api/public/webhooks/paymongo")({
   server: {
     handlers: {
+      // Non-sensitive readiness probe (never reveals the secret itself).
+      GET: async () =>
+        Response.json({
+          endpoint: "/api/public/webhooks/paymongo",
+          method: "POST",
+          signatureVerification: "hmac-sha256 (te/li)",
+          webhookSecretConfigured: !!process.env["PAYMONGO_WEBHOOK_SECRET"],
+        }),
       POST: async ({ request }) => {
         // 1. Raw body, untouched, for HMAC verification.
         const raw = await request.text();
