@@ -29,7 +29,9 @@ import {
   ScanLine,
   Factory,
   Landmark,
+  CreditCard,
   UsersRound,
+
   type LucideIcon,
 } from "lucide-react";
 
@@ -131,7 +133,9 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: Settings,
     items: [
       { title: "Settings", url: "/settings", icon: Settings, keywords: "preferences access team" },
+      { title: "Billing", url: "/billing", icon: CreditCard, keywords: "subscription plan invoice upgrade payment" },
       { title: "Notifications", url: "/notifications", icon: Bell, keywords: "alerts" },
+
       { title: "Audit Logs", url: "/audit-logs", icon: ScrollText, keywords: "history trail" },
     ],
   },

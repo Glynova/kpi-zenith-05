@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -20,6 +21,7 @@ import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
 import { Route as AuthenticatedShellBatchesRouteImport } from './routes/_authenticated/_shell/batches'
+import { Route as AuthenticatedShellBillingRouteImport } from './routes/_authenticated/_shell/billing'
 import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
 import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
 import { Route as AuthenticatedShellCustomersRouteImport } from './routes/_authenticated/_shell/customers'
@@ -32,6 +34,7 @@ import { Route as AuthenticatedShellLocationsRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellNotificationsRouteImport } from './routes/_authenticated/_shell/notifications'
 import { Route as AuthenticatedShellPayablesRouteImport } from './routes/_authenticated/_shell/payables'
 import { Route as AuthenticatedShellPayrollRouteImport } from './routes/_authenticated/_shell/payroll'
+import { Route as AuthenticatedShellPlatformBillingRouteImport } from './routes/_authenticated/_shell/platform-billing'
 import { Route as AuthenticatedShellPosRouteImport } from './routes/_authenticated/_shell/pos'
 import { Route as AuthenticatedShellProductsRouteImport } from './routes/_authenticated/_shell/products'
 import { Route as AuthenticatedShellPurchaseOrdersRouteImport } from './routes/_authenticated/_shell/purchase-orders'
@@ -46,6 +49,7 @@ import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
+import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,6 +63,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -102,6 +111,12 @@ const AuthenticatedShellBatchesRoute =
   AuthenticatedShellBatchesRouteImport.update({
     id: '/batches',
     path: '/batches',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellBillingRoute =
+  AuthenticatedShellBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellCashFlowRoute =
@@ -174,6 +189,12 @@ const AuthenticatedShellPayrollRoute =
   AuthenticatedShellPayrollRouteImport.update({
     id: '/payroll',
     path: '/payroll',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellPlatformBillingRoute =
+  AuthenticatedShellPlatformBillingRouteImport.update({
+    id: '/platform-billing',
+    path: '/platform-billing',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellPosRoute = AuthenticatedShellPosRouteImport.update({
@@ -257,10 +278,17 @@ const AuthenticatedShellProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const ApiPublicWebhooksPaymongoRoute =
+  ApiPublicWebhooksPaymongoRouteImport.update({
+    id: '/api/public/webhooks/paymongo',
+    path: '/api/public/webhooks/paymongo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -268,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
+  '/billing': typeof AuthenticatedShellBillingRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
@@ -280,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/platform-billing': typeof AuthenticatedShellPlatformBillingRoute
   '/pos': typeof AuthenticatedShellPosRoute
   '/products': typeof AuthenticatedShellProductsRoute
   '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
@@ -294,10 +324,12 @@ export interface FileRoutesByFullPath {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -305,6 +337,7 @@ export interface FileRoutesByTo {
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
+  '/billing': typeof AuthenticatedShellBillingRoute
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
@@ -317,6 +350,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedShellNotificationsRoute
   '/payables': typeof AuthenticatedShellPayablesRoute
   '/payroll': typeof AuthenticatedShellPayrollRoute
+  '/platform-billing': typeof AuthenticatedShellPlatformBillingRoute
   '/pos': typeof AuthenticatedShellPosRoute
   '/products': typeof AuthenticatedShellProductsRoute
   '/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
@@ -331,12 +365,14 @@ export interface FileRoutesByTo {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -345,6 +381,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/_authenticated/_shell/batches': typeof AuthenticatedShellBatchesRoute
+  '/_authenticated/_shell/billing': typeof AuthenticatedShellBillingRoute
   '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
   '/_authenticated/_shell/customers': typeof AuthenticatedShellCustomersRoute
@@ -357,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/notifications': typeof AuthenticatedShellNotificationsRoute
   '/_authenticated/_shell/payables': typeof AuthenticatedShellPayablesRoute
   '/_authenticated/_shell/payroll': typeof AuthenticatedShellPayrollRoute
+  '/_authenticated/_shell/platform-billing': typeof AuthenticatedShellPlatformBillingRoute
   '/_authenticated/_shell/pos': typeof AuthenticatedShellPosRoute
   '/_authenticated/_shell/products': typeof AuthenticatedShellProductsRoute
   '/_authenticated/_shell/purchase-orders': typeof AuthenticatedShellPurchaseOrdersRoute
@@ -371,12 +409,14 @@ export interface FileRoutesById {
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/reset-password'
     | '/onboarding'
     | '/setup'
@@ -384,6 +424,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/audit-logs'
     | '/batches'
+    | '/billing'
     | '/cash-flow'
     | '/categories'
     | '/customers'
@@ -396,6 +437,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/payables'
     | '/payroll'
+    | '/platform-billing'
     | '/pos'
     | '/products'
     | '/purchase-orders'
@@ -410,10 +452,12 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/products/$productId'
+    | '/api/public/webhooks/paymongo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/pricing'
     | '/reset-password'
     | '/onboarding'
     | '/setup'
@@ -421,6 +465,7 @@ export interface FileRouteTypes {
     | '/attendance'
     | '/audit-logs'
     | '/batches'
+    | '/billing'
     | '/cash-flow'
     | '/categories'
     | '/customers'
@@ -433,6 +478,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/payables'
     | '/payroll'
+    | '/platform-billing'
     | '/pos'
     | '/products'
     | '/purchase-orders'
@@ -447,11 +493,13 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/products/$productId'
+    | '/api/public/webhooks/paymongo'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/pricing'
     | '/reset-password'
     | '/_authenticated/_shell'
     | '/_authenticated/onboarding'
@@ -460,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
     | '/_authenticated/_shell/batches'
+    | '/_authenticated/_shell/billing'
     | '/_authenticated/_shell/cash-flow'
     | '/_authenticated/_shell/categories'
     | '/_authenticated/_shell/customers'
@@ -472,6 +521,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/notifications'
     | '/_authenticated/_shell/payables'
     | '/_authenticated/_shell/payroll'
+    | '/_authenticated/_shell/platform-billing'
     | '/_authenticated/_shell/pos'
     | '/_authenticated/_shell/products'
     | '/_authenticated/_shell/purchase-orders'
@@ -486,13 +536,16 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
     | '/_authenticated/_shell/products_/$productId'
+    | '/api/public/webhooks/paymongo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -516,6 +569,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -572,6 +632,13 @@ declare module '@tanstack/react-router' {
       path: '/batches'
       fullPath: '/batches'
       preLoaderRoute: typeof AuthenticatedShellBatchesRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/billing': {
+      id: '/_authenticated/_shell/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedShellBillingRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
     '/_authenticated/_shell/cash-flow': {
@@ -656,6 +723,13 @@ declare module '@tanstack/react-router' {
       path: '/payroll'
       fullPath: '/payroll'
       preLoaderRoute: typeof AuthenticatedShellPayrollRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/platform-billing': {
+      id: '/_authenticated/_shell/platform-billing'
+      path: '/platform-billing'
+      fullPath: '/platform-billing'
+      preLoaderRoute: typeof AuthenticatedShellPlatformBillingRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
     '/_authenticated/_shell/pos': {
@@ -756,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellProductsProductIdRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/api/public/webhooks/paymongo': {
+      id: '/api/public/webhooks/paymongo'
+      path: '/api/public/webhooks/paymongo'
+      fullPath: '/api/public/webhooks/paymongo'
+      preLoaderRoute: typeof ApiPublicWebhooksPaymongoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -764,6 +845,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
   AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
   AuthenticatedShellBatchesRoute: typeof AuthenticatedShellBatchesRoute
+  AuthenticatedShellBillingRoute: typeof AuthenticatedShellBillingRoute
   AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
   AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
   AuthenticatedShellCustomersRoute: typeof AuthenticatedShellCustomersRoute
@@ -776,6 +858,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellNotificationsRoute: typeof AuthenticatedShellNotificationsRoute
   AuthenticatedShellPayablesRoute: typeof AuthenticatedShellPayablesRoute
   AuthenticatedShellPayrollRoute: typeof AuthenticatedShellPayrollRoute
+  AuthenticatedShellPlatformBillingRoute: typeof AuthenticatedShellPlatformBillingRoute
   AuthenticatedShellPosRoute: typeof AuthenticatedShellPosRoute
   AuthenticatedShellProductsRoute: typeof AuthenticatedShellProductsRoute
   AuthenticatedShellPurchaseOrdersRoute: typeof AuthenticatedShellPurchaseOrdersRoute
@@ -798,6 +881,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
     AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
     AuthenticatedShellBatchesRoute: AuthenticatedShellBatchesRoute,
+    AuthenticatedShellBillingRoute: AuthenticatedShellBillingRoute,
     AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
     AuthenticatedShellCategoriesRoute: AuthenticatedShellCategoriesRoute,
     AuthenticatedShellCustomersRoute: AuthenticatedShellCustomersRoute,
@@ -810,6 +894,8 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellNotificationsRoute: AuthenticatedShellNotificationsRoute,
     AuthenticatedShellPayablesRoute: AuthenticatedShellPayablesRoute,
     AuthenticatedShellPayrollRoute: AuthenticatedShellPayrollRoute,
+    AuthenticatedShellPlatformBillingRoute:
+      AuthenticatedShellPlatformBillingRoute,
     AuthenticatedShellPosRoute: AuthenticatedShellPosRoute,
     AuthenticatedShellProductsRoute: AuthenticatedShellProductsRoute,
     AuthenticatedShellPurchaseOrdersRoute:
@@ -852,7 +938,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
