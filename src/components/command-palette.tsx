@@ -53,12 +53,7 @@ export function CommandPalette({
   }
 
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Command palette"
-      description="Jump to any page or run an action"
-    >
+    <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Search pages and actions..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
