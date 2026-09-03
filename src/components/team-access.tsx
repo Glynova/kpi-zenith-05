@@ -115,7 +115,10 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => add.mutate()} disabled={!email || add.isPending}>
+        <Button
+          onClick={() => add.mutate()}
+          disabled={!email || add.isPending || seats.reached}
+        >
           {add.isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
@@ -124,6 +127,15 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
           Add member
         </Button>
       </div>
+
+      {seats.reached && (
+        <p className="text-xs text-destructive">
+          Your plan includes {seats.max} team member{seats.max === 1 ? "" : "s"}. Upgrade in
+          Billing to invite more.
+        </p>
+      )}
+
+
 
       <p className="text-xs text-muted-foreground">
         {ROLE_OPTIONS.find((r) => r.value === role)?.description}
