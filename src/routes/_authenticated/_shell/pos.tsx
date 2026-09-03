@@ -934,9 +934,9 @@ function Row({ label, value }: { label: string; value: string }) {
 export const Route = createFileRoute("/_authenticated/_shell/pos")({
   head: () => ({
     meta: [
-      { title: "Point of Sale — KPIOptiva" },
+      { title: "Point of Sale — Daraven ERP" },
       { name: "description", content: "Fast counter selling with barcode search, split payments and receipts." },
-      { property: "og:title", content: "Point of Sale — KPIOptiva" },
+      { property: "og:title", content: "Point of Sale — Daraven ERP" },
       { property: "og:description", content: "Fast counter selling with barcode search, split payments and receipts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

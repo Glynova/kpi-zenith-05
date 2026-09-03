@@ -1159,12 +1159,12 @@ function PurchaseOrdersPage() {
 export const Route = createFileRoute("/_authenticated/_shell/purchase-orders")({
   head: () => ({
     meta: [
-      { title: "Purchase Orders — KPIOptiva" },
+      { title: "Purchase Orders — Daraven ERP" },
       {
         name: "description",
         content: "Raise supplier orders, approve them and receive goods with full audit history.",
       },
-      { property: "og:title", content: "Purchase Orders — KPIOptiva" },
+      { property: "og:title", content: "Purchase Orders — Daraven ERP" },
       {
         property: "og:description",
         content: "Raise supplier orders, approve them and receive goods with full audit history.",

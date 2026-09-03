@@ -10,17 +10,18 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "KPIOptiva — Smarter Decisions. Better Performance." },
+      { title: "Daraven ERP — Smarter Decisions. Better Performance." },
       {
         name: "description",
         content:
           "All-in-one inventory, financial, KPI and business performance management for retail, restaurants, wholesalers, pharmacies, manufacturers and SMEs.",
       },
-      { property: "og:title", content: "KPIOptiva — Smarter Decisions. Better Performance." },
+      { property: "og:title", content: "Daraven ERP — Smarter Decisions. Better Performance." },
       {
         property: "og:description",
         content:
@@ -68,12 +69,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
-            K
-          </div>
-          <span className="font-display text-lg font-semibold">KPIOptiva</span>
-        </div>
+        <BrandLogo markClassName="size-10" />
         <nav className="flex items-center gap-2">
           <Button asChild size="sm" variant="ghost">
             <Link to="/pricing">Pricing</Link>
@@ -96,7 +92,7 @@ function Landing() {
             Better Performance.
           </h1>
           <p className="mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
-            KPIOptiva brings inventory, sales, finance, payroll and KPI analytics into one
+            Daraven ERP brings inventory, sales, finance, payroll and KPI analytics into one
             multi-tenant workspace — for retail, restaurants, wholesale, pharmacy, manufacturing
             and services.
           </p>
@@ -138,7 +134,7 @@ function Landing() {
 
       <footer className="border-t border-border px-6 py-8">
         <p className="mx-auto max-w-6xl text-xs text-muted-foreground">
-          © {new Date().getFullYear()} KPIOptiva. Smarter Decisions. Better Performance.
+          © {new Date().getFullYear()} Daraven ERP. Smarter Decisions. Better Performance.
         </p>
       </footer>
     </div>

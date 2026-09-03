@@ -485,9 +485,9 @@ function StockMovements() {
 export const Route = createFileRoute("/_authenticated/_shell/inventory")({
   head: () => ({
     meta: [
-      { title: "Stock Movements — KPIOptiva" },
+      { title: "Stock Movements — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Stock Movements — KPIOptiva" },
+      { property: "og:title", content: "Stock Movements — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

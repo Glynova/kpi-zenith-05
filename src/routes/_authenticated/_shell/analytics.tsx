@@ -12,12 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/_authenticated/_shell/analytics")({
   head: () => ({
     meta: [
-      { title: "KPI Analytics — KPIOptiva" },
+      { title: "KPI Analytics — Daraven ERP" },
       {
         name: "description",
         content: "Margin, turnover, ROI, dead stock and business health KPIs.",
       },
-      { property: "og:title", content: "KPI Analytics — KPIOptiva" },
+      { property: "og:title", content: "KPI Analytics — Daraven ERP" },
       {
         property: "og:description",
         content: "Margin, turnover, ROI, dead stock and business health KPIs.",

@@ -77,7 +77,7 @@ export const addTeamMember = createServerFn({ method: "POST" })
 
     if (!profile) {
       throw new Error(
-        "No KPIOptiva account found for that email. Ask them to sign up first, then add them.",
+        "No Daraven ERP account found for that email. Ask them to sign up first, then add them.",
       );
     }
 

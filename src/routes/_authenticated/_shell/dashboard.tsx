@@ -57,9 +57,9 @@ import {
 export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — KPIOptiva" },
+      { title: "Dashboard — Daraven ERP" },
       { name: "description", content: "Live business performance overview and KPIs." },
-      { property: "og:title", content: "Dashboard — KPIOptiva" },
+      { property: "og:title", content: "Dashboard — Daraven ERP" },
       { property: "og:description", content: "Live business performance overview and KPIs." },
     ],
   }),

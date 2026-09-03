@@ -40,9 +40,9 @@ const description = "Define the units you buy, stock and sell in, plus how they 
 export const Route = createFileRoute("/_authenticated/_shell/units")({
   head: () => ({
     meta: [
-      { title: "Units of Measure — KPIOptiva" },
+      { title: "Units of Measure — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Units of Measure — KPIOptiva" },
+      { property: "og:title", content: "Units of Measure — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

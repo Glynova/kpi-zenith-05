@@ -666,12 +666,12 @@ function SalesPage() {
 export const Route = createFileRoute("/_authenticated/_shell/sales")({
   head: () => ({
     meta: [
-      { title: "Sales — KPIOptiva" },
+      { title: "Sales — Daraven ERP" },
       {
         name: "description",
         content: "Record sales with line items, automatic stock deduction and receivables.",
       },
-      { property: "og:title", content: "Sales — KPIOptiva" },
+      { property: "og:title", content: "Sales — Daraven ERP" },
       {
         property: "og:description",
         content: "Record sales with line items, automatic stock deduction and receivables.",

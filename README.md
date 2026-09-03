@@ -1,10 +1,10 @@
 # Optiva Business Suite
 
-Build a production-ready SaaS web application called KPIOptiva with the tagline:
+Build a production-ready SaaS web application called Daraven ERP with the tagline:
 
 "Smarter Decisions. Better Performance."
 
-KPIOptiva is an all-in-one Inventory, Financial, KPI, and Business Performance Management platform designed for all business types including retail stores, restaurants, wholesalers, pharmacies, manufacturers, distributors, service businesses, and SMEs.
+Daraven ERP is an all-in-one Inventory, Financial, KPI, and Business Performance Management platform designed for all business types including retail stores, restaurants, wholesalers, pharmacies, manufacturers, distributors, service businesses, and SMEs.
 
 ==================================================
 
@@ -918,7 +918,7 @@ FINAL REQUIREMENT
 
 ==================================================
 
-Build KPIOptiva as a scalable SaaS platform with production-ready architecture, clean code organization, reusable components, feature-based folders, proper TypeScript types, secure authentication, RLS policies, and an enterprise-grade user experience suitable for thousands of businesses.
+Build Daraven ERP as a scalable SaaS platform with production-ready architecture, clean code organization, reusable components, feature-based folders, proper TypeScript types, secure authentication, RLS policies, and an enterprise-grade user experience suitable for thousands of businesses.
 
 This project was built with [Lovable](https://lovable.dev).
 

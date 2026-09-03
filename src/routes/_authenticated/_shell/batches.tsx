@@ -40,9 +40,9 @@ const description =
 export const Route = createFileRoute("/_authenticated/_shell/batches")({
   head: () => ({
     meta: [
-      { title: "Batches & Expiry — KPIOptiva" },
+      { title: "Batches & Expiry — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Batches & Expiry — KPIOptiva" },
+      { property: "og:title", content: "Batches & Expiry — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

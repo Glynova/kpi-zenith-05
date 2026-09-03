@@ -8,15 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — KPIOptiva" },
-      { name: "description", content: "Access your KPIOptiva business workspace." },
-      { property: "og:title", content: "Sign in — KPIOptiva" },
-      { property: "og:description", content: "Access your KPIOptiva business workspace." },
+      { title: "Sign in — Daraven ERP" },
+      { name: "description", content: "Access your Daraven ERP business workspace." },
+      { property: "og:title", content: "Sign in — Daraven ERP" },
+      { property: "og:description", content: "Access your Daraven ERP business workspace." },
     ],
   }),
   component: AuthPage,
@@ -85,12 +86,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-card p-12 lg:flex">
-        <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
-            K
-          </div>
-          <span className="font-display text-lg font-semibold">KPIOptiva</span>
-        </div>
+        <BrandLogo markClassName="size-10" />
         <div>
           <h2 className="max-w-sm text-3xl font-semibold leading-tight">
             Smarter Decisions. Better Performance.
@@ -106,7 +102,7 @@ function AuthPage() {
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-semibold">Welcome</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in or create your KPIOptiva account.
+            Sign in or create your Daraven ERP account.
           </p>
 
           <Button variant="outline" className="mt-6 w-full" onClick={google}>

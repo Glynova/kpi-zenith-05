@@ -36,9 +36,9 @@ const fields: Field[] = [];
 export const Route = createFileRoute("/_authenticated/_shell/audit-logs")({
   head: () => ({
     meta: [
-      { title: "Audit Logs — KPIOptiva" },
+      { title: "Audit Logs — Daraven ERP" },
       { name: "description", content: "Immutable record of who changed what, and when." },
-      { property: "og:title", content: "Audit Logs — KPIOptiva" },
+      { property: "og:title", content: "Audit Logs — Daraven ERP" },
       { property: "og:description", content: "Immutable record of who changed what, and when." },
     ],
   }),

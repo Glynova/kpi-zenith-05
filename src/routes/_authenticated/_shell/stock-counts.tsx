@@ -329,9 +329,9 @@ function StockCounts() {
 export const Route = createFileRoute("/_authenticated/_shell/stock-counts")({
   head: () => ({
     meta: [
-      { title: "Stock Counts — KPIOptiva" },
+      { title: "Stock Counts — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Stock Counts — KPIOptiva" },
+      { property: "og:title", content: "Stock Counts — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

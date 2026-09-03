@@ -33,9 +33,9 @@ const description =
 export const Route = createFileRoute("/_authenticated/_shell/serials")({
   head: () => ({
     meta: [
-      { title: "Serial Numbers — KPIOptiva" },
+      { title: "Serial Numbers — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Serial Numbers — KPIOptiva" },
+      { property: "og:title", content: "Serial Numbers — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

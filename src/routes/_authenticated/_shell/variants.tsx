@@ -31,9 +31,9 @@ const description =
 export const Route = createFileRoute("/_authenticated/_shell/variants")({
   head: () => ({
     meta: [
-      { title: "Product Variants — KPIOptiva" },
+      { title: "Product Variants — Daraven ERP" },
       { name: "description", content: description },
-      { property: "og:title", content: "Product Variants — KPIOptiva" },
+      { property: "og:title", content: "Product Variants — Daraven ERP" },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

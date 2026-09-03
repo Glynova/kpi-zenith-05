@@ -21,6 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useBusiness } from "@/lib/business-context";
 import { canAccessRoute } from "@/lib/permissions";
 import { NAV_GROUPS } from "@/lib/nav";
+import { BrandMark } from "@/components/brand-logo";
 
 export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
   const { state } = useSidebar();
@@ -47,15 +48,15 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-1 py-2">
-          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold shadow-elevate-1">
-            K
-          </div>
+        <div className="flex items-center gap-2.5 px-1 py-2">
+          <BrandMark className="size-8 shrink-0 text-sidebar-foreground" />
           {!collapsed && (
-            <div className="min-w-0">
-              <p className="truncate font-display text-sm font-semibold">KPIOptiva</p>
-              <p className="truncate text-[11px] text-muted-foreground">
-                Smarter Decisions. Better Performance.
+            <div className="min-w-0 leading-none">
+              <p className="truncate font-display text-sm font-semibold tracking-[0.16em]">
+                DARA<span className="text-primary">V</span>EN
+              </p>
+              <p className="mt-1 truncate text-[9px] font-medium tracking-[0.4em] text-primary">
+                ERP
               </p>
             </div>
           )}

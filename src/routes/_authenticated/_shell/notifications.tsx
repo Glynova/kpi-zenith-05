@@ -201,9 +201,9 @@ function NotificationsPage() {
 export const Route = createFileRoute("/_authenticated/_shell/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — KPIOptiva" },
+      { title: "Notifications — Daraven ERP" },
       { name: "description", content: "Low stock, overdue invoice and debt alerts for your team." },
-      { property: "og:title", content: "Notifications — KPIOptiva" },
+      { property: "og:title", content: "Notifications — Daraven ERP" },
       {
         property: "og:description",
         content: "Low stock, overdue invoice and debt alerts for your team.",

@@ -11,10 +11,10 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reset password — KPIOptiva" },
-      { name: "description", content: "Set a new password for your KPIOptiva account." },
-      { property: "og:title", content: "Reset password — KPIOptiva" },
-      { property: "og:description", content: "Set a new password for your KPIOptiva account." },
+      { title: "Reset password — Daraven ERP" },
+      { name: "description", content: "Set a new password for your Daraven ERP account." },
+      { property: "og:title", content: "Reset password — Daraven ERP" },
+      { property: "og:description", content: "Set a new password for your Daraven ERP account." },
     ],
   }),
   component: ResetPassword,
