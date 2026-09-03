@@ -292,6 +292,37 @@ function ProductsPage() {
       fields={formFields}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
+      illustration="inventory"
+      steps={[
+        {
+          title: "Basics",
+          description: "What is this product and how should it behave?",
+          fields: ["name", "inventory_model", "sku", "barcode", "category_id", "brand", "unit", "status"],
+        },
+        {
+          title: "Pricing",
+          description: "Cost, price and tax. Recipes for finished products live here too.",
+          fields: ["cost_price", "selling_price", "tax_rate", "standard_cost"],
+        },
+        {
+          title: "Stock",
+          description: "Reorder rules and tracking details.",
+          fields: [
+            "supplier_id",
+            "reorder_level",
+            "min_stock",
+            "max_stock",
+            "batch_number",
+            "serial_number",
+            "expiration_date",
+          ],
+        },
+        {
+          title: "Media",
+          description: "Photo and description shoppers and staff will see.",
+          fields: ["image_url", "description"],
+        },
+      ]}
       onOpenForm={(row) => {
         setEditingId(row?.id ?? null);
         void bom.load(row);

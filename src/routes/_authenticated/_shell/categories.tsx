@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_authenticated/_shell/categories")({
   }),
   component: () => (
     <ResourcePage
+      illustration="inventory"
       table="categories"
       title="Categories"
       description={"Organise your catalog into reportable groups."}

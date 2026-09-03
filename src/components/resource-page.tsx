@@ -8,6 +8,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import type { IllustrationKind } from "@/components/empty-illustration";
 import { ImageThumb, ImageUpload } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,10 @@ type Props = {
   afterSave?: (ctx: FormCtx & { id: string }) => Promise<void>;
   /** Called when the create/edit dialog opens. */
   onOpenForm?: (row: Row | null) => void;
+  /** Split the form into a multi-step wizard. Field keys not listed fall into the last step. */
+  steps?: { title: string; description?: string; fields: string[] }[];
+  /** Illustration used on the empty state. */
+  illustration?: IllustrationKind;
 };
 
 
@@ -125,6 +130,8 @@ export function ResourcePage({
   validate,
   afterSave,
   onOpenForm,
+  steps,
+  illustration = "generic",
 }: Props) {
 
   const { businessId, currency, canWrite } = useBusiness();
@@ -135,6 +142,7 @@ export function ResourcePage({
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<Row>({});
   const [deleteRow, setDeleteRow] = useState<Row | null>(null);
+  const [step, setStep] = useState(0);
 
   const editable = canWrite && !readOnly;
 
@@ -227,6 +235,7 @@ export function ResourcePage({
     });
     setForm(defaults);
     setEditing(null);
+    setStep(0);
     onOpenForm?.(null);
     setOpen(true);
   }
@@ -236,6 +245,7 @@ export function ResourcePage({
     fields.forEach((f) => (values[f.key] = row[f.key] ?? ""));
     setForm(values);
     setEditing(row);
+    setStep(0);
     onOpenForm?.(row);
     setOpen(true);
   }
@@ -372,6 +382,37 @@ export function ResourcePage({
     }
   }
 
+  const visibleFields = fields.filter((field) => !field.hidden?.({ form, setForm, editing }));
+
+  const stepPlan = useMemo(() => {
+    if (!steps?.length) return null;
+    const listed = new Set(steps.flatMap((s) => s.fields));
+    const rest = fields.filter((f) => !listed.has(f.key)).map((f) => f.key);
+    return steps.map((s, i) => ({
+      title: s.title,
+      description: s.description,
+      keys: i === steps.length - 1 ? [...s.fields, ...rest] : s.fields,
+    }));
+  }, [steps, fields]);
+
+  const activeStep = stepPlan?.[Math.min(step, stepPlan.length - 1)] ?? null;
+  const isLastStep = !stepPlan || step >= stepPlan.length - 1;
+
+  function goNext() {
+    const missing = visibleFields.filter(
+      (f) =>
+        f.required &&
+        f.type !== "boolean" &&
+        activeStep?.keys.includes(f.key) &&
+        !String(form[f.key] ?? "").trim(),
+    );
+    if (missing.length) {
+      toast.error(`${missing[0].label} is required`);
+      return;
+    }
+    setStep((s) => s + 1);
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -434,11 +475,12 @@ export function ResourcePage({
       ) : rows.length === 0 ? (
         <EmptyState
           title="Nothing here yet"
+          illustration={illustration}
           description={`Create your first record to start tracking ${title.toLowerCase()}.`}
           action={editable ? <Button onClick={openCreate}>Add record</Button> : undefined}
         />
       ) : (
-        <div className="surface-panel overflow-x-auto">
+        <div className="surface-panel overflow-x-auto shadow-elevate-1">
           <Table>
             <TableHeader>
               <TableRow>
@@ -481,14 +523,41 @@ export function ResourcePage({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? `Edit ${title}` : `New ${title}`}</DialogTitle>
-            <DialogDescription>Fill in the details below and save.</DialogDescription>
+            <DialogDescription>
+              {activeStep?.description ?? "Fill in the details below and save."}
+            </DialogDescription>
           </DialogHeader>
+
+          {steps && steps.length > 1 && (
+            <ol className="flex flex-wrap items-center gap-2">
+              {steps.map((s, i) => (
+                <li key={s.title} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(i)}
+                    className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+                      i === step
+                        ? "border-primary bg-primary text-primary-foreground shadow-elevate-1"
+                        : i < step
+                          ? "border-border bg-secondary text-secondary-foreground"
+                          : "border-dashed border-border text-muted-foreground"
+                    }`}
+                  >
+                    <span className="font-medium tabular-nums">{i + 1}</span>
+                    <span className="hidden sm:inline">{s.title}</span>
+                  </button>
+                  {i < steps.length - 1 && <span className="h-px w-4 bg-border" />}
+                </li>
+              ))}
+            </ol>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
-            {fields
-              .filter((field) => !field.hidden?.({ form, setForm, editing }))
+            {visibleFields
+              .filter((field) => !activeStep || activeStep.keys.includes(field.key))
               .flatMap((field) => [
               <div
                 key={field.key}
@@ -581,13 +650,31 @@ export function ResourcePage({
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={submit} disabled={save.isPending}>
-              {save.isPending ? "Saving..." : "Save"}
-            </Button>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <div className="flex items-center gap-2">
+              {stepPlan && step > 0 && (
+                <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
+                  Back
+                </Button>
+              )}
+              {stepPlan && (
+                <span className="text-xs text-muted-foreground">
+                  Step {Math.min(step + 1, stepPlan.length)} of {stepPlan.length}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              {!isLastStep ? (
+                <Button onClick={goNext}>Continue</Button>
+              ) : (
+                <Button onClick={submit} disabled={save.isPending}>
+                  {save.isPending ? "Saving..." : "Save"}
+                </Button>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

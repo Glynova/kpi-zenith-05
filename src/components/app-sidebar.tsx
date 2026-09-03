@@ -1,131 +1,54 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  LayoutDashboard,
-  Package,
-  Tags,
-  Truck,
-  Users,
-  Boxes,
-  ClipboardList,
-  ShoppingCart,
-  FileText,
-  Receipt,
-  Wallet,
-  ArrowDownLeft,
-  ArrowUpRight,
-  BadgeDollarSign,
-  UserCog,
-  CalendarClock,
-  
-  BarChart3,
-  Bell,
-  LineChart,
-  Settings,
-  ScrollText,
-  Palette,
-  Ruler,
-  Warehouse,
-  Barcode,
-  ArrowLeftRight,
-  ClipboardCheck,
-  ScanLine,
-} from "lucide-react";
+import { ChevronRight, Command } from "lucide-react";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useBusiness } from "@/lib/business-context";
 import { canAccessRoute } from "@/lib/permissions";
-import type { FeatureKey } from "@/lib/business-config";
+import { NAV_GROUPS } from "@/lib/nav";
 
-const groups: { label: string; items: { title: string; url: string; icon: any; feature?: FeatureKey }[] }[] = [
-  {
-    label: "Overview",
-    items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Analytics", url: "/analytics", icon: LineChart },
-      { title: "Reports", url: "/reports", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Catalog",
-    items: [
-      { title: "Products", url: "/products", icon: Package },
-      { title: "Categories", url: "/categories", icon: Tags },
-      { title: "Suppliers", url: "/suppliers", icon: Truck },
-      { title: "Customers", url: "/customers", icon: Users },
-      
-      { title: "Variants", url: "/variants", icon: Palette, feature: "track_variants" },
-      { title: "Batches", url: "/batches", icon: Boxes, feature: "track_batch" },
-      { title: "Serial Numbers", url: "/serials", icon: Barcode, feature: "track_serial" },
-      { title: "Units", url: "/units", icon: Ruler },
-      { title: "Locations", url: "/locations", icon: Warehouse },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { title: "Stock Movements", url: "/inventory", icon: Boxes },
-      { title: "Stock Counts", url: "/stock-counts", icon: ClipboardCheck, feature: "enable_stock_counts" },
-      { title: "Transfers", url: "/transfers", icon: ArrowLeftRight, feature: "track_locations" },
-      { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList },
-      { title: "Point of Sale", url: "/pos", icon: ScanLine, feature: "enable_pos" },
-      { title: "Sales", url: "/sales", icon: ShoppingCart },
-      { title: "Invoices", url: "/invoices", icon: FileText },
-    ],
-  },
-  {
-    label: "Finance",
-    items: [
-      { title: "Expenses", url: "/expenses", icon: Receipt },
-      { title: "Cash Flow", url: "/cash-flow", icon: Wallet },
-      { title: "Receivables", url: "/receivables", icon: ArrowDownLeft },
-      { title: "Payables", url: "/payables", icon: ArrowUpRight },
-    ],
-  },
-  {
-    label: "People",
-    items: [
-      { title: "Employees", url: "/employees", icon: UserCog },
-      { title: "Attendance", url: "/attendance", icon: CalendarClock },
-      { title: "Payroll", url: "/payroll", icon: BadgeDollarSign },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { title: "Notifications", url: "/notifications", icon: Bell },
-      { title: "Audit Logs", url: "/audit-logs", icon: ScrollText },
-      { title: "Settings", url: "/settings", icon: Settings },
-    ],
-  },
-];
-
-export function AppSidebar() {
+export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { role, feature } = useBusiness();
 
-  const visibleGroups = groups
-    .map((g) => ({ ...g, items: g.items.filter((i) => canAccessRoute(role, i.url) && (!i.feature || feature(i.feature))) }))
-    .filter((g) => g.items.length > 0);
+  const groups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter(
+      (i) => canAccessRoute(role, i.url) && (!i.feature || feature(i.feature)),
+    ),
+  })).filter((g) => (g.url ? canAccessRoute(role, g.url) : g.items.length > 0));
+
+  const activeGroup = groups.find((g) =>
+    g.url ? pathname === g.url : g.items.some((i) => pathname.startsWith(i.url)),
+  )?.id;
+
+  const [openGroup, setOpenGroup] = useState<string | null>(activeGroup ?? null);
+  useEffect(() => {
+    if (activeGroup) setOpenGroup(activeGroup);
+  }, [activeGroup]);
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-1 py-2">
-          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold">
+          <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold shadow-elevate-1">
             K
           </div>
           {!collapsed && (
@@ -138,27 +61,98 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarHeader>
+
       <SidebarContent>
-        {visibleGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="size-4 shrink-0" />
-                        <span className="truncate">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {groups.map((group) => {
+                if (group.url) {
+                  const active = pathname === group.url;
+                  return (
+                    <SidebarMenuItem key={group.id}>
+                      <SidebarMenuButton asChild isActive={active} tooltip={group.label}>
+                        <Link to={group.url} className="flex items-center gap-2">
+                          <group.icon className="size-4 shrink-0" />
+                          <span className="truncate">{group.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                const isOpen = openGroup === group.id;
+                const hasActive = group.items.some((i) => pathname.startsWith(i.url));
+
+                if (collapsed) {
+                  // In icon mode show the section's first page so the rail stays usable.
+                  return (
+                    <SidebarMenuItem key={group.id}>
+                      <SidebarMenuButton asChild isActive={hasActive} tooltip={group.label}>
+                        <Link to={group.items[0].url} className="flex items-center gap-2">
+                          <group.icon className="size-4 shrink-0" />
+                          <span className="truncate">{group.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                return (
+                  <Collapsible
+                    key={group.id}
+                    open={isOpen}
+                    onOpenChange={(o) => setOpenGroup(o ? group.id : null)}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton isActive={hasActive && !isOpen} tooltip={group.label}>
+                          <group.icon className="size-4 shrink-0" />
+                          <span className="truncate">{group.label}</span>
+                          <ChevronRight
+                            className={`ml-auto size-4 shrink-0 transition-transform duration-200 ${
+                              isOpen ? "rotate-90" : ""
+                            }`}
+                          />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                        <SidebarMenuSub>
+                          {group.items.map((item) => (
+                            <SidebarMenuSubItem key={item.url}>
+                              <SidebarMenuSubButton asChild isActive={pathname === item.url}>
+                                <Link to={item.url} className="flex items-center gap-2">
+                                  <item.icon className="size-3.5 shrink-0 opacity-70" />
+                                  <span className="truncate">{item.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={onOpenPalette} tooltip="Search (⌘K)">
+              <Command className="size-4 shrink-0" />
+              <span className="truncate">Quick search</span>
+              <kbd className="ml-auto rounded border border-sidebar-border px-1 text-[10px] text-muted-foreground">
+                ⌘K
+              </kbd>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

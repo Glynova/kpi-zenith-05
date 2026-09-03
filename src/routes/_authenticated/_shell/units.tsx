@@ -55,6 +55,7 @@ function UnitsPage() {
   return (
     <div className="space-y-10">
       <ResourcePage
+      illustration="inventory"
         table="units_of_measure"
         title="Units of Measure"
         description={description}

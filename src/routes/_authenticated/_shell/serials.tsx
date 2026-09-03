@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_authenticated/_shell/serials")({
   }),
   component: () => (
     <ResourcePage
+      illustration="inventory"
       table="serial_numbers"
       title="Serial Numbers"
       description={description}

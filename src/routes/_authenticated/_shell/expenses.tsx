@@ -128,6 +128,7 @@ export const Route = createFileRoute("/_authenticated/_shell/expenses")({
   }),
   component: () => (
     <ResourcePage
+      illustration="finance"
       table="expenses"
       title="Expenses"
       description={"Recurring and one-off spend across every category."}

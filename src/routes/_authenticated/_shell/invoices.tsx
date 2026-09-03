@@ -126,6 +126,7 @@ export const Route = createFileRoute("/_authenticated/_shell/invoices")({
   }),
   component: () => (
     <ResourcePage
+      illustration="sales"
       table="invoices"
       title="Invoices"
       description={"Issue professional invoices with due dates, tax and terms."}

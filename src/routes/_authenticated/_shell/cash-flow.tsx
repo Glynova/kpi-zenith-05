@@ -79,6 +79,7 @@ export const Route = createFileRoute("/_authenticated/_shell/cash-flow")({
   }),
   component: () => (
     <ResourcePage
+      illustration="finance"
       table="cash_transactions"
       title="Cash Flow"
       description={"Every cash movement in and out of the business."}

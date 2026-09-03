@@ -130,6 +130,7 @@ export const Route = createFileRoute("/_authenticated/_shell/employees")({
   }),
   component: () => (
     <ResourcePage
+      illustration="people"
       table="employees"
       title="Employees"
       description={"Staff records, departments, rates and emergency contacts."}

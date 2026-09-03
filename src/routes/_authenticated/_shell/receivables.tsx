@@ -88,6 +88,7 @@ export const Route = createFileRoute("/_authenticated/_shell/receivables")({
   }),
   component: () => (
     <ResourcePage
+      illustration="finance"
       table="accounts_receivable"
       title="Receivables"
       description={"Customer debts, partial payments and aging."}
