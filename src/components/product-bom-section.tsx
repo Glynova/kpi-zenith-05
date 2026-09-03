@@ -246,7 +246,6 @@ export function useProductBom(businessId: string | null, currency: string) {
           </div>
         </div>
 
-
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label className="mb-1 block text-[11px] text-muted-foreground">Output quantity</Label>
@@ -302,7 +301,8 @@ export function useProductBom(businessId: string | null, currency: string) {
                   <SelectContent>
                     {options.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.name} — {formatCurrency(Number(p.average_cost || p.cost_price || 0), currency)}
+                        {p.name} —{" "}
+                        {formatCurrency(Number(p.average_cost || p.cost_price || 0), currency)}
                       </SelectItem>
                     ))}
                   </SelectContent>

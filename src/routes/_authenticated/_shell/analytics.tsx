@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
@@ -14,9 +13,15 @@ export const Route = createFileRoute("/_authenticated/_shell/analytics")({
   head: () => ({
     meta: [
       { title: "KPI Analytics — KPIOptiva" },
-      { name: "description", content: "Margin, turnover, ROI, dead stock and business health KPIs." },
+      {
+        name: "description",
+        content: "Margin, turnover, ROI, dead stock and business health KPIs.",
+      },
       { property: "og:title", content: "KPI Analytics — KPIOptiva" },
-      { property: "og:description", content: "Margin, turnover, ROI, dead stock and business health KPIs." },
+      {
+        property: "og:description",
+        content: "Margin, turnover, ROI, dead stock and business health KPIs.",
+      },
     ],
   }),
   component: Analytics,
@@ -75,8 +80,14 @@ function Analytics() {
     data.sales.filter((s) => s.customer_id && Number(s.total ?? 0) > 0).map((s) => s.customer_id),
   ).size;
   const clv = payingCustomers ? revenue / payingCustomers : 0;
-  const cashIn = sum(data.cash.filter((c) => c.type === "in"), "amount");
-  const cashOut = sum(data.cash.filter((c) => c.type === "out"), "amount");
+  const cashIn = sum(
+    data.cash.filter((c) => c.type === "in"),
+    "amount",
+  );
+  const cashOut = sum(
+    data.cash.filter((c) => c.type === "out"),
+    "amount",
+  );
   const receivables = sum(data.ar, "amount") - sum(data.ar, "paid");
   const payables = sum(data.ap, "amount") - sum(data.ap, "paid");
   // Current assets = cash + receivables + inventory; current liabilities = payables.

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -16,9 +15,15 @@ export const Route = createFileRoute("/_authenticated/_shell/reports")({
   head: () => ({
     meta: [
       { title: "Reports — KPIOptiva" },
-      { name: "description", content: "Sales, expense, inventory, profit and payroll reporting with export." },
+      {
+        name: "description",
+        content: "Sales, expense, inventory, profit and payroll reporting with export.",
+      },
       { property: "og:title", content: "Reports — KPIOptiva" },
-      { property: "og:description", content: "Sales, expense, inventory, profit and payroll reporting with export." },
+      {
+        property: "og:description",
+        content: "Sales, expense, inventory, profit and payroll reporting with export.",
+      },
     ],
   }),
   component: Reports,
@@ -67,13 +72,48 @@ function Reports() {
   const inventoryValue = inventoryValueOf(data.products);
 
   const reports = [
-    { title: "Sales Report", rows: data.sales, value: formatCurrency(revenue, currency), note: `${m.orders} posted transactions` },
-    { title: "Expense Report", rows: data.expenses, value: formatCurrency(expenseTotal, currency), note: `${data.expenses.length} entries` },
-    { title: "Profit Report", rows: data.sales, value: formatCurrency(revenue - cogs - expenseTotal, currency), note: `Gross ${formatCurrency(revenue - cogs, currency)}` },
-    { title: "Inventory Report", rows: data.products, value: formatCurrency(inventoryValue, currency), note: `${formatNumber(data.products.length)} products` },
-    { title: "Payroll Report", rows: data.payroll, value: formatCurrency(sum(data.payroll, "net_pay"), currency), note: `${data.payroll.length} pay runs` },
-    { title: "Receivable Report", rows: data.ar, value: formatCurrency(sum(data.ar, "amount") - sum(data.ar, "paid"), currency), note: `${data.ar.length} open items` },
-    { title: "Payable Report", rows: data.ap, value: formatCurrency(sum(data.ap, "amount") - sum(data.ap, "paid"), currency), note: `${data.ap.length} open items` },
+    {
+      title: "Sales Report",
+      rows: data.sales,
+      value: formatCurrency(revenue, currency),
+      note: `${m.orders} posted transactions`,
+    },
+    {
+      title: "Expense Report",
+      rows: data.expenses,
+      value: formatCurrency(expenseTotal, currency),
+      note: `${data.expenses.length} entries`,
+    },
+    {
+      title: "Profit Report",
+      rows: data.sales,
+      value: formatCurrency(revenue - cogs - expenseTotal, currency),
+      note: `Gross ${formatCurrency(revenue - cogs, currency)}`,
+    },
+    {
+      title: "Inventory Report",
+      rows: data.products,
+      value: formatCurrency(inventoryValue, currency),
+      note: `${formatNumber(data.products.length)} products`,
+    },
+    {
+      title: "Payroll Report",
+      rows: data.payroll,
+      value: formatCurrency(sum(data.payroll, "net_pay"), currency),
+      note: `${data.payroll.length} pay runs`,
+    },
+    {
+      title: "Receivable Report",
+      rows: data.ar,
+      value: formatCurrency(sum(data.ar, "amount") - sum(data.ar, "paid"), currency),
+      note: `${data.ar.length} open items`,
+    },
+    {
+      title: "Payable Report",
+      rows: data.ap,
+      value: formatCurrency(sum(data.ap, "amount") - sum(data.ap, "paid"), currency),
+      note: `${data.ap.length} open items`,
+    },
   ];
 
   function exportRows(name: string, rows: Row[]) {
@@ -93,7 +133,10 @@ function Reports() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports" description="Board-ready summaries you can export in one click." />
+      <PageHeader
+        title="Reports"
+        description="Board-ready summaries you can export in one click."
+      />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reports.map((r) => (
           <Card key={r.title}>

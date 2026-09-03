@@ -79,8 +79,6 @@ export type Field = {
   hidden?: (ctx: FormCtx) => boolean;
 };
 
-
-
 type Props = {
   table: string;
   title: string;
@@ -112,7 +110,6 @@ type Props = {
   illustration?: IllustrationKind;
 };
 
-
 export function ResourcePage({
   table,
   title,
@@ -133,7 +130,6 @@ export function ResourcePage({
   steps,
   illustration = "generic",
 }: Props) {
-
   const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -172,11 +168,7 @@ export function ResourcePage({
     queryFn: async () => {
       const out: Record<string, Row[]> = {};
       for (const rel of relationTables) {
-        const { data } = await db
-          .from(rel)
-          .select("*")
-          .eq("business_id", businessId)
-          .limit(500);
+        const { data } = await db.from(rel).select("*").eq("business_id", businessId).limit(500);
         out[rel] = data ?? [];
       }
       return out;
@@ -224,7 +216,11 @@ export function ResourcePage({
     if (!search.trim()) return list;
     const q = search.toLowerCase();
     return list.filter((row) =>
-      searchKeys.some((k) => String(row[k] ?? "").toLowerCase().includes(q)),
+      searchKeys.some((k) =>
+        String(row[k] ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
   }, [data, search, searchKeys]);
 
@@ -277,12 +273,12 @@ export function ResourcePage({
     save.mutate(payload);
   }
 
-
-
   function exportCsv() {
     const header = columns.map((c) => c.label).join(",");
     const body = rows
-      .map((row) => columns.map((c) => `"${String(row[c.key] ?? "").replace(/"/g, '""')}"`).join(","))
+      .map((row) =>
+        columns.map((c) => `"${String(row[c.key] ?? "").replace(/"/g, '""')}"`).join(","),
+      )
       .join("\n");
     const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -330,13 +326,13 @@ export function ResourcePage({
       if (parsed.length < 2) throw new Error("The file has no data rows");
       const header = parsed[0].map((h) => h.trim().toLowerCase());
       const map = header.map((h) => {
-        const field = fields.find(
-          (f) => f.key.toLowerCase() === h || f.label.toLowerCase() === h,
-        );
+        const field = fields.find((f) => f.key.toLowerCase() === h || f.label.toLowerCase() === h);
         return field ?? null;
       });
       if (!map.some(Boolean)) {
-        throw new Error(`No matching columns. Expected headers like: ${fields.map((f) => f.label).join(", ")}`);
+        throw new Error(
+          `No matching columns. Expected headers like: ${fields.map((f) => f.label).join(", ")}`,
+        );
       }
       const payload = parsed.slice(1).map((line) => {
         const record: Row = { business_id: businessId };
@@ -367,7 +363,8 @@ export function ResourcePage({
     if (col.format === "boolean")
       return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
     if (col.format === "image") return <ImageThumb value={value} alt={String(row.name ?? "")} />;
-    if (value === null || value === undefined || value === "") return <span className="text-muted-foreground">—</span>;
+    if (value === null || value === undefined || value === "")
+      return <span className="text-muted-foreground">—</span>;
     switch (col.format) {
       case "currency":
         return formatCurrency(Number(value), currency);
@@ -559,92 +556,94 @@ export function ResourcePage({
             {visibleFields
               .filter((field) => !activeStep || activeStep.keys.includes(field.key))
               .flatMap((field) => [
-              <div
-                key={field.key}
-                className={
-                  field.type === "textarea" || field.type === "image" ? "sm:col-span-2" : "min-w-0"
-                }
-              >
-                <Label htmlFor={field.key} className="mb-1.5 block text-xs">
-                  {field.label}
-                  {field.required && <span className="text-destructive"> *</span>}
-                </Label>
-                {field.render ? (
-                  field.render({ form, setForm, editing })
-                ) : field.type === "image" ? (
-
-                  <ImageUpload
-                    id={field.key}
-                    businessId={businessId}
-                    value={form[field.key] ?? null}
-                    onChange={(v) => setForm({ ...form, [field.key]: v })}
-                  />
-                ) : field.type === "boolean" ? (
-                  <div className="flex h-9 items-center">
-                    <Switch
+                <div
+                  key={field.key}
+                  className={
+                    field.type === "textarea" || field.type === "image"
+                      ? "sm:col-span-2"
+                      : "min-w-0"
+                  }
+                >
+                  <Label htmlFor={field.key} className="mb-1.5 block text-xs">
+                    {field.label}
+                    {field.required && <span className="text-destructive"> *</span>}
+                  </Label>
+                  {field.render ? (
+                    field.render({ form, setForm, editing })
+                  ) : field.type === "image" ? (
+                    <ImageUpload
                       id={field.key}
-                      checked={form[field.key] === true || form[field.key] === "true"}
-                      onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
+                      businessId={businessId}
+                      value={form[field.key] ?? null}
+                      onChange={(v) => setForm({ ...form, [field.key]: v })}
                     />
-                  </div>
-                ) : field.type === "textarea" ? (
-                  <Textarea
-                    id={field.key}
-                    value={form[field.key] ?? ""}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                  />
-
-                ) : field.type === "select" ? (
-                  <Select
-                    value={form[field.key] ? String(form[field.key]) : undefined}
-                    onValueChange={(v) => setForm({ ...form, [field.key]: v })}
-                  >
-                    <SelectTrigger id={field.key}>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(field.options ?? []).map((o) => (
-                        <SelectItem key={o} value={o}>
-                          {titleCase(o)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : field.type === "relation" ? (
-                  <Select
-                    value={form[field.key] ? String(form[field.key]) : undefined}
-                    onValueChange={(v) => setForm({ ...form, [field.key]: v })}
-                  >
-                    <SelectTrigger id={field.key}>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(relations?.[field.relation!.table] ?? []).map((o) => (
-                        <SelectItem key={o.id} value={o.id}>
-                          {o[field.relation!.labelKey ?? "name"] ?? o.id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id={field.key}
-                    type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-                    step={field.type === "number" ? "any" : undefined}
-                    placeholder={field.placeholder}
-                    value={form[field.key] ?? ""}
-                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                  />
-                )}
-              </div>,
-              ...(formExtras && field.key === formExtrasAfter
-                ? [
-                    <div key={`${field.key}-extras`} className="sm:col-span-2">
-                      {formExtras({ form, setForm, editing })}
-                    </div>,
-                  ]
-                : []),
-            ])}
+                  ) : field.type === "boolean" ? (
+                    <div className="flex h-9 items-center">
+                      <Switch
+                        id={field.key}
+                        checked={form[field.key] === true || form[field.key] === "true"}
+                        onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
+                      />
+                    </div>
+                  ) : field.type === "textarea" ? (
+                    <Textarea
+                      id={field.key}
+                      value={form[field.key] ?? ""}
+                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    />
+                  ) : field.type === "select" ? (
+                    <Select
+                      value={form[field.key] ? String(form[field.key]) : undefined}
+                      onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                    >
+                      <SelectTrigger id={field.key}>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(field.options ?? []).map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {titleCase(o)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : field.type === "relation" ? (
+                    <Select
+                      value={form[field.key] ? String(form[field.key]) : undefined}
+                      onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                    >
+                      <SelectTrigger id={field.key}>
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(relations?.[field.relation!.table] ?? []).map((o) => (
+                          <SelectItem key={o.id} value={o.id}>
+                            {o[field.relation!.labelKey ?? "name"] ?? o.id}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id={field.key}
+                      type={
+                        field.type === "number" ? "number" : field.type === "date" ? "date" : "text"
+                      }
+                      step={field.type === "number" ? "any" : undefined}
+                      placeholder={field.placeholder}
+                      value={form[field.key] ?? ""}
+                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    />
+                  )}
+                </div>,
+                ...(formExtras && field.key === formExtrasAfter
+                  ? [
+                      <div key={`${field.key}-extras`} className="sm:col-span-2">
+                        {formExtras({ form, setForm, editing })}
+                      </div>,
+                    ]
+                  : []),
+              ])}
             {formExtras && !formExtrasAfter && (
               <div className="sm:col-span-2">{formExtras({ form, setForm, editing })}</div>
             )}

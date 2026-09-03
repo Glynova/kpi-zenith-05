@@ -166,8 +166,14 @@ function Dashboard() {
     const expenseTotal = sum(d.expenses, "amount");
     const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
-    const cashIn = sum(d.cash.filter((c) => c.type === "in"), "amount");
-    const cashOut = sum(d.cash.filter((c) => c.type === "out"), "amount");
+    const cashIn = sum(
+      d.cash.filter((c) => c.type === "in"),
+      "amount",
+    );
+    const cashOut = sum(
+      d.cash.filter((c) => c.type === "out"),
+      "amount",
+    );
     const inventoryValue = inventoryValueOf(d.products);
     const lowStock = d.products.filter(
       (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.reorder_level ?? 0),
@@ -210,7 +216,10 @@ function Dashboard() {
     // expense mix
     const byCat = new Map<string, number>();
     for (const x of d.expenses) {
-      byCat.set(x.category ?? "other", (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0));
+      byCat.set(
+        x.category ?? "other",
+        (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
+      );
     }
     const expenseMix = Array.from(byCat.entries()).map(([name, value]) => ({ name, value }));
 
@@ -313,17 +322,33 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid gap-4 sm:grid-cols-2 stagger-grid">
-          <KpiCard label="Revenue (period)" value={formatCurrency(m.revenue, currency)} sub={`Avg order ${formatCurrency(m.aov, currency)}`} icon={TrendingUp} />
-          <KpiCard label="Net Profit (period)" value={formatCurrency(m.netProfit, currency)} sub={`${m.margin.toFixed(1)}% margin`} icon={Activity} tone={m.netProfit >= 0 ? "success" : "destructive"} />
-          <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
-          <KpiCard label="Inventory Value" value={formatCurrency(m.inventoryValue, currency)} icon={Boxes} />
+          <KpiCard
+            label="Revenue (period)"
+            value={formatCurrency(m.revenue, currency)}
+            sub={`Avg order ${formatCurrency(m.aov, currency)}`}
+            icon={TrendingUp}
+          />
+          <KpiCard
+            label="Net Profit (period)"
+            value={formatCurrency(m.netProfit, currency)}
+            sub={`${m.margin.toFixed(1)}% margin`}
+            icon={Activity}
+            tone={m.netProfit >= 0 ? "success" : "destructive"}
+          />
+          <KpiCard
+            label="Cash On Hand"
+            value={formatCurrency(m.cashOnHand, currency)}
+            icon={Wallet}
+          />
+          <KpiCard
+            label="Inventory Value"
+            value={formatCurrency(m.inventoryValue, currency)}
+            icon={Boxes}
+          />
         </div>
         <Card className="surface-card overflow-hidden border-0">
           <CardContent className="p-2">
-            <KpiOrb
-              score={m.health}
-              caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`}
-            />
+            <KpiOrb score={m.health} caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`} />
           </CardContent>
         </Card>
       </div>
@@ -337,14 +362,52 @@ function Dashboard() {
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <div className="mt-4 grid gap-4 stagger-grid sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Today's Sales" value={formatCurrency(m.todaySales, currency)} icon={TrendingUp} tone="success" />
-        <KpiCard label="Today's Expenses" value={formatCurrency(m.todayExpenses, currency)} icon={TrendingDown} tone="warning" />
-        <KpiCard label="Today's Profit" value={formatCurrency(m.todayProfit, currency)} icon={Activity} />
-        <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
-        <KpiCard label="Outstanding Receivables" value={formatCurrency(m.receivables, currency)} icon={ArrowDownLeft} tone="warning" />
-        <KpiCard label="Outstanding Payables" value={formatCurrency(m.payables, currency)} icon={ArrowUpRight} tone="warning" />
-        <KpiCard label="Low Stock Items" value={formatNumber(m.lowStock.length)} icon={AlertTriangle} tone="warning" />
-        <KpiCard label="Out Of Stock" value={formatNumber(m.outOfStock.length)} icon={PackageX} tone="destructive" />
+            <KpiCard
+              label="Today's Sales"
+              value={formatCurrency(m.todaySales, currency)}
+              icon={TrendingUp}
+              tone="success"
+            />
+            <KpiCard
+              label="Today's Expenses"
+              value={formatCurrency(m.todayExpenses, currency)}
+              icon={TrendingDown}
+              tone="warning"
+            />
+            <KpiCard
+              label="Today's Profit"
+              value={formatCurrency(m.todayProfit, currency)}
+              icon={Activity}
+            />
+            <KpiCard
+              label="Cash On Hand"
+              value={formatCurrency(m.cashOnHand, currency)}
+              icon={Wallet}
+            />
+            <KpiCard
+              label="Outstanding Receivables"
+              value={formatCurrency(m.receivables, currency)}
+              icon={ArrowDownLeft}
+              tone="warning"
+            />
+            <KpiCard
+              label="Outstanding Payables"
+              value={formatCurrency(m.payables, currency)}
+              icon={ArrowUpRight}
+              tone="warning"
+            />
+            <KpiCard
+              label="Low Stock Items"
+              value={formatNumber(m.lowStock.length)}
+              icon={AlertTriangle}
+              tone="warning"
+            />
+            <KpiCard
+              label="Out Of Stock"
+              value={formatNumber(m.outOfStock.length)}
+              icon={PackageX}
+              tone="destructive"
+            />
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -371,8 +434,20 @@ function Dashboard() {
                       color: "var(--popover-foreground)",
                     }}
                   />
-                  <Area type="monotone" dataKey="sales" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.15} />
-                  <Area type="monotone" dataKey="expenses" stroke="var(--chart-5)" fill="var(--chart-5)" fillOpacity={0.12} />
+                  <Area
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="var(--chart-1)"
+                    fill="var(--chart-1)"
+                    fillOpacity={0.15}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke="var(--chart-5)"
+                    fill="var(--chart-5)"
+                    fillOpacity={0.12}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -389,7 +464,13 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={m.expenseMix} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
+                  <Pie
+                    data={m.expenseMix}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={90}
+                  >
                     {m.expenseMix.map((_, i) => (
                       <Cell key={i} fill={chartColors[i % chartColors.length]} />
                     ))}

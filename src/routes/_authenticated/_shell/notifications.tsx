@@ -94,7 +94,11 @@ function NotificationsPage() {
     const q = search.trim().toLowerCase();
     if (!q) return data;
     return data.filter((n) =>
-      [n.title, n.message, n.type].some((v) => String(v ?? "").toLowerCase().includes(q)),
+      [n.title, n.message, n.type].some((v) =>
+        String(v ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
   }, [data, search]);
 
@@ -114,7 +118,8 @@ function NotificationsPage() {
                 onClick={() => scan.mutate()}
                 disabled={scan.isPending}
               >
-                <RefreshCw className="size-4" /> {scan.isPending ? "Scanning..." : "Scan for alerts"}
+                <RefreshCw className="size-4" />{" "}
+                {scan.isPending ? "Scanning..." : "Scan for alerts"}
               </Button>
             )}
             {canWrite && unread > 0 && (
@@ -149,7 +154,9 @@ function NotificationsPage() {
         <EmptyState
           title="No notifications"
           description="Run a scan to generate low-stock and overdue payment alerts."
-          action={canWrite ? <Button onClick={() => scan.mutate()}>Scan for alerts</Button> : undefined}
+          action={
+            canWrite ? <Button onClick={() => scan.mutate()}>Scan for alerts</Button> : undefined
+          }
         />
       ) : (
         <div className="space-y-2">
@@ -173,7 +180,12 @@ function NotificationsPage() {
                   <Button variant="ghost" size="sm" onClick={() => toggleRead.mutate(n)}>
                     {n.is_read ? "Unread" : "Read"}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove.mutate(n)} aria-label="Delete">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove.mutate(n)}
+                    aria-label="Delete"
+                  >
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>

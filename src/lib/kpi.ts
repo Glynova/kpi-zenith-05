@@ -97,9 +97,7 @@ export function saleNetRevenue(sale: Row): number {
 export function inventoryValueOf(products: Row[]): number {
   return round2(
     products.reduce(
-      (a, p) =>
-        a +
-        Number(p.stock ?? 0) * Number(p.average_cost || p.cost_price || 0),
+      (a, p) => a + Number(p.stock ?? 0) * Number(p.average_cost || p.cost_price || 0),
       0,
     ),
   );
@@ -129,11 +127,8 @@ export function healthScore(input: {
   const activity = input.revenue > 0 ? 15 : 0;
   const cash = input.netCashFlow > 0 ? 20 : input.netCashFlow === 0 ? 10 : 0;
   const availability =
-    input.productCount > 0
-      ? clamp(1 - input.outOfStock / input.productCount, 0, 1) * 15
-      : 15;
-  const liquidity =
-    input.payables > 0 ? clamp(input.receivables / input.payables, 0, 1) * 10 : 10;
+    input.productCount > 0 ? clamp(1 - input.outOfStock / input.productCount, 0, 1) * 15 : 15;
+  const liquidity = input.payables > 0 ? clamp(input.receivables / input.payables, 0, 1) * 10 : 10;
 
   return Math.round(profitability + activity + cash + availability + liquidity);
 }
