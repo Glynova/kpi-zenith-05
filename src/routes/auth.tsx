@@ -85,12 +85,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-card p-12 lg:flex">
-        <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
-            K
-          </div>
-          <span className="font-display text-lg font-semibold">Daraven ERP</span>
-        </div>
+        <BrandLogo markClassName="size-10" />
         <div>
           <h2 className="max-w-sm text-3xl font-semibold leading-tight">
             Smarter Decisions. Better Performance.
