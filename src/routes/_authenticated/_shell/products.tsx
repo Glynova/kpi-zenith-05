@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
+import { useProductBom } from "@/components/product-bom-section";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useBusiness } from "@/lib/business-context";
+import type { Row } from "@/lib/db";
 import { INVENTORY_MODELS } from "@/lib/business-config";
 
 
