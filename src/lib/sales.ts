@@ -285,6 +285,7 @@ export type SaleDraft = {
   expiresOn?: string | null;
   paymentTerms?: string | null;
   salespersonId?: string | null;
+  paymentMethod?: string | null;
   notes?: string | null;
   status?: string;
   orderDiscount?: number;
@@ -333,7 +334,7 @@ export async function createSale(draft: SaleDraft) {
       tax_inclusive: !!draft.taxInclusive,
       sale_type: draft.documentType,
       status: draft.status ?? "draft",
-      payment_method: null,
+      payment_method: draft.paymentMethod ?? "cash",
       payment_status: "unpaid",
       sale_date: draft.saleDate ?? new Date().toISOString().slice(0, 10),
       due_date: draft.dueDate ?? null,
