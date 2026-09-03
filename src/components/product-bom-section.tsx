@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Factory } from "lucide-react";
+import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
