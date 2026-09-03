@@ -589,9 +589,13 @@ export function ResourcePage({
                     <ImageUpload
                       id={field.key}
                       businessId={businessId}
+                      maxSizeMB={field.maxSizeMB}
+                      variant={field.uploadVariant}
+                      hint={field.uploadHint}
                       value={form[field.key] ?? null}
                       onChange={(v) => setForm({ ...form, [field.key]: v })}
                     />
+
                   ) : field.type === "boolean" ? (
                     <div className="flex h-9 items-center">
                       <Switch
