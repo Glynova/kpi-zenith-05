@@ -7,6 +7,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
+import { salesMetrics, inventoryValueOf } from "@/lib/kpi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,16 +60,14 @@ function Reports() {
   }
 
   const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
-  const revenue = sum(data.sales, "total");
-  const cogs = sum(data.sales, "cost_total");
+  const m = salesMetrics(data.sales);
+  const revenue = m.revenue;
+  const cogs = m.cogs;
   const expenseTotal = sum(data.expenses, "amount");
-  const inventoryValue = data.products.reduce(
-    (a, p) => a + Number(p.stock ?? 0) * Number(p.cost_price ?? 0),
-    0,
-  );
+  const inventoryValue = inventoryValueOf(data.products);
 
   const reports = [
-    { title: "Sales Report", rows: data.sales, value: formatCurrency(revenue, currency), note: `${data.sales.length} transactions` },
+    { title: "Sales Report", rows: data.sales, value: formatCurrency(revenue, currency), note: `${m.orders} posted transactions` },
     { title: "Expense Report", rows: data.expenses, value: formatCurrency(expenseTotal, currency), note: `${data.expenses.length} entries` },
     { title: "Profit Report", rows: data.sales, value: formatCurrency(revenue - cogs - expenseTotal, currency), note: `Gross ${formatCurrency(revenue - cogs, currency)}` },
     { title: "Inventory Report", rows: data.products, value: formatCurrency(inventoryValue, currency), note: `${formatNumber(data.products.length)} products` },
