@@ -615,21 +615,31 @@ export function ResourcePage({
                       onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
                     />
                   ) : field.type === "select" ? (
-                    <Select
-                      value={form[field.key] ? String(form[field.key]) : undefined}
-                      onValueChange={(v) => setForm({ ...form, [field.key]: v })}
-                    >
-                      <SelectTrigger id={field.key}>
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(field.options ?? []).map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {titleCase(o)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    field.optionGroups ? (
+                      <GroupedSelect
+                        id={field.key}
+                        value={form[field.key] ? String(form[field.key]) : undefined}
+                        groups={field.optionGroups}
+                        searchable={field.searchable}
+                        onChange={(v) => setForm({ ...form, [field.key]: v })}
+                      />
+                    ) : (
+                      <Select
+                        value={form[field.key] ? String(form[field.key]) : undefined}
+                        onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                      >
+                        <SelectTrigger id={field.key}>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(field.options ?? []).map((o) => (
+                            <SelectItem key={o} value={o}>
+                              {titleCase(o)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )
                   ) : field.type === "relation" ? (
                     <Select
                       value={form[field.key] ? String(form[field.key]) : undefined}
