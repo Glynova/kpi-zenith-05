@@ -32,6 +32,13 @@ import {
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber, formatDate, daysAgoISO, todayISO } from "@/lib/format";
+import {
+  salesMetrics,
+  saleNetRevenue,
+  inventoryValueOf,
+  healthScore,
+  marginPercent,
+} from "@/lib/kpi";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiOrb } from "@/components/kpi-orb";
@@ -149,19 +156,19 @@ function Dashboard() {
     if (!d) return null;
     const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
 
-    const todaySales = d.sales.filter((s) => s.sale_date === today);
+    const todayRows = d.sales.filter((s) => s.sale_date === today);
     const todayExpenses = d.expenses.filter((e) => e.expense_date === today);
-    const revenue = sum(d.sales, "total");
-    const cogs = sum(d.sales, "cost_total");
+    const period = salesMetrics(d.sales);
+    const todayM = salesMetrics(todayRows);
+
+    const revenue = period.revenue;
+    const cogs = period.cogs;
     const expenseTotal = sum(d.expenses, "amount");
-    const grossProfit = revenue - cogs;
+    const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
     const cashIn = sum(d.cash.filter((c) => c.type === "in"), "amount");
     const cashOut = sum(d.cash.filter((c) => c.type === "out"), "amount");
-    const inventoryValue = d.products.reduce(
-      (a, p) => a + Number(p.stock ?? 0) * Number(p.cost_price ?? 0),
-      0,
-    );
+    const inventoryValue = inventoryValueOf(d.products);
     const lowStock = d.products.filter(
       (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.reorder_level ?? 0),
     );
@@ -172,9 +179,11 @@ function Dashboard() {
     // time series
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
     for (const s of d.sales) {
+      const net = saleNetRevenue(s);
+      if (!net) continue;
       const k = s.sale_date;
       const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
-      e.sales += Number(s.total ?? 0);
+      e.sales += net;
       byDay.set(k, e);
     }
     for (const x of d.expenses) {
@@ -209,7 +218,9 @@ function Dashboard() {
     const byCustomer = new Map<string, number>();
     for (const s of d.sales) {
       if (!s.customer_id) continue;
-      byCustomer.set(s.customer_id, (byCustomer.get(s.customer_id) ?? 0) + Number(s.total ?? 0));
+      const net = saleNetRevenue(s);
+      if (!net) continue;
+      byCustomer.set(s.customer_id, (byCustomer.get(s.customer_id) ?? 0) + net);
     }
     const topCustomers = Array.from(byCustomer.entries())
       .map(([id, total]) => ({
@@ -219,23 +230,24 @@ function Dashboard() {
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
 
-    const margin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    const margin = marginPercent(netProfit, revenue);
     const expenseRatio = revenue > 0 ? (expenseTotal / revenue) * 100 : 0;
-    const aov = d.sales.length ? revenue / d.sales.length : 0;
+    const aov = period.aov;
 
-    // health score
-    let health = 50;
-    health += Math.max(-25, Math.min(25, margin));
-    health += revenue > 0 ? 10 : -10;
-    health -= outOfStock.length > 0 ? 8 : 0;
-    health -= lowStock.length > 3 ? 5 : 0;
-    health += cashIn - cashOut > 0 ? 10 : -5;
-    health = Math.max(0, Math.min(100, Math.round(health)));
+    const health = healthScore({
+      netMargin: margin,
+      revenue,
+      netCashFlow: cashIn - cashOut,
+      outOfStock: outOfStock.length,
+      productCount: d.products.length,
+      receivables,
+      payables,
+    });
 
     return {
-      todaySales: sum(todaySales, "total"),
+      todaySales: todayM.revenue,
       todayExpenses: sum(todayExpenses, "amount"),
-      todayProfit: sum(todaySales, "total") - sum(todaySales, "cost_total") - sum(todayExpenses, "amount"),
+      todayProfit: todayM.grossProfit - sum(todayExpenses, "amount"),
       revenue,
       netProfit,
       grossProfit,
