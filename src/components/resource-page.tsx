@@ -51,6 +51,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GroupedSelect } from "@/components/grouped-select";
 
 export type Column = {
   key: string;
