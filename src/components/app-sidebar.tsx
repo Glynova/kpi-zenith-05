@@ -17,7 +17,7 @@ import {
   BadgeDollarSign,
   UserCog,
   CalendarClock,
-  Layers,
+  
   BarChart3,
   Bell,
   LineChart,
