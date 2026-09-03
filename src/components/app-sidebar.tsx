@@ -21,6 +21,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useBusiness } from "@/lib/business-context";
 import { canAccessRoute } from "@/lib/permissions";
 import { NAV_GROUPS } from "@/lib/nav";
+import { BrandMark } from "@/components/brand-logo";
 
 export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
   const { state } = useSidebar();
