@@ -73,7 +73,11 @@ export type Field = {
   required?: boolean;
   default?: any;
   placeholder?: string;
-  /** Replace the default input with a custom control. */
+  /** Image field options. */
+  maxSizeMB?: number;
+  uploadVariant?: "inline" | "dropzone";
+  uploadHint?: string;
+
   render?: (ctx: FormCtx) => ReactNode;
   /** Hide the field entirely for the current form state. */
   hidden?: (ctx: FormCtx) => boolean;
