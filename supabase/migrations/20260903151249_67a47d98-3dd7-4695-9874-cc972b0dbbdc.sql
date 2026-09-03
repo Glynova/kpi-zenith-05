@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.enforce_discount_limit() FROM PUBLIC, anon, authenticated;
