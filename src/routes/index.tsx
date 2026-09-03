@@ -68,12 +68,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2">
-          <div className="grid size-9 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
-            K
-          </div>
-          <span className="font-display text-lg font-semibold">Daraven ERP</span>
-        </div>
+        <BrandLogo markClassName="size-10" />
         <nav className="flex items-center gap-2">
           <Button asChild size="sm" variant="ghost">
             <Link to="/pricing">Pricing</Link>
