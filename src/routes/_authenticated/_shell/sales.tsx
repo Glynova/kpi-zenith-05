@@ -92,7 +92,7 @@ function SalesPage() {
     queryFn: async () => {
       const { data } = await db
         .from("products")
-        .select("id,name,selling_price,cost_price,tax_rate,stock")
+        .select("id,name,selling_price,cost_price,average_cost,tax_rate,stock")
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];

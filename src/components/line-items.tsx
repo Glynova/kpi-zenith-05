@@ -73,7 +73,7 @@ export function LineItemsEditor({
       product_id: productId,
       product_name: p?.name ?? "",
       unit_price: Number(p?.[priceKey] ?? 0),
-      unit_cost: Number(p?.cost_price ?? 0),
+      unit_cost: Number(p?.average_cost || p?.cost_price || 0),
     });
   }
 

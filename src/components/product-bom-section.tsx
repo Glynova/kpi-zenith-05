@@ -60,7 +60,7 @@ export function useProductBom(businessId: string | null, currency: string) {
     queryFn: async () => {
       const { data } = await db
         .from("products")
-        .select("id,name,cost_price")
+        .select("id,name,cost_price,average_cost")
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];
@@ -68,7 +68,11 @@ export function useProductBom(businessId: string | null, currency: string) {
   });
 
   const costOf = useCallback(
-    (id: string) => Number(products.find((p) => p.id === id)?.cost_price ?? 0),
+    (id: string) => {
+      const p = products.find((x) => x.id === id);
+      // Mirrors recalc_product_cost_from_bom(): actual average cost wins.
+      return Number(p?.average_cost || p?.cost_price || 0);
+    },
     [products],
   );
 
@@ -298,7 +302,7 @@ export function useProductBom(businessId: string | null, currency: string) {
                   <SelectContent>
                     {options.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.name} — {formatCurrency(Number(p.cost_price ?? 0), currency)}
+                        {p.name} — {formatCurrency(Number(p.average_cost || p.cost_price || 0), currency)}
                       </SelectItem>
                     ))}
                   </SelectContent>
