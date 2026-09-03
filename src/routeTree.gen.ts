@@ -49,6 +49,7 @@ import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
+import { Route as ApiPublicTmpWhselftestRouteImport } from './routes/api/public/tmp/whselftest'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
 const IndexRoute = IndexRouteImport.update({
@@ -278,6 +279,11 @@ const AuthenticatedShellProductsProductIdRoute =
     path: '/products/$productId',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const ApiPublicTmpWhselftestRoute = ApiPublicTmpWhselftestRouteImport.update({
+  id: '/api/public/tmp/whselftest',
+  path: '/api/public/tmp/whselftest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksPaymongoRoute =
   ApiPublicWebhooksPaymongoRouteImport.update({
     id: '/api/public/webhooks/paymongo',
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/tmp/whselftest': typeof ApiPublicTmpWhselftestRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRoutesByTo {
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/tmp/whselftest': typeof ApiPublicTmpWhselftestRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRoutesById {
@@ -409,6 +417,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
+  '/api/public/tmp/whselftest': typeof ApiPublicTmpWhselftestRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
 export interface FileRouteTypes {
@@ -452,6 +461,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/products/$productId'
+    | '/api/public/tmp/whselftest'
     | '/api/public/webhooks/paymongo'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -493,6 +503,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/products/$productId'
+    | '/api/public/tmp/whselftest'
     | '/api/public/webhooks/paymongo'
   id:
     | '__root__'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
     | '/_authenticated/_shell/products_/$productId'
+    | '/api/public/tmp/whselftest'
     | '/api/public/webhooks/paymongo'
   fileRoutesById: FileRoutesById
 }
@@ -545,6 +557,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicTmpWhselftestRoute: typeof ApiPublicTmpWhselftestRoute
   ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
 
@@ -830,6 +843,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellProductsProductIdRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/api/public/tmp/whselftest': {
+      id: '/api/public/tmp/whselftest'
+      path: '/api/public/tmp/whselftest'
+      fullPath: '/api/public/tmp/whselftest'
+      preLoaderRoute: typeof ApiPublicTmpWhselftestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/paymongo': {
       id: '/api/public/webhooks/paymongo'
       path: '/api/public/webhooks/paymongo'
@@ -940,6 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicTmpWhselftestRoute: ApiPublicTmpWhselftestRoute,
   ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
 export const routeTree = rootRouteImport
