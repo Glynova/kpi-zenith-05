@@ -69,6 +69,10 @@ export type Field = {
   label: string;
   type: "text" | "number" | "textarea" | "date" | "select" | "relation" | "boolean" | "image";
   options?: string[];
+  /** Grouped select options with friendly labels; takes precedence over `options`. */
+  optionGroups?: { label: string; options: { value: string; label: string }[] }[];
+  /** Show a search box inside the select dropdown. */
+  searchable?: boolean;
   relation?: { table: string; labelKey?: string };
   required?: boolean;
   default?: any;
