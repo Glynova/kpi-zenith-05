@@ -31,6 +31,16 @@ export function readConfig(): PayMongoConfig {
   return { secretKey, publicKey, mode, configured: !!secretKey };
 }
 
+/** The webhook signing secret, accepting either configured name. */
+export function readWebhookSecret(): string | null {
+  return (
+    process.env["PAYMONGO_WEBHOOK_SECRET"] ||
+    process.env["Webhook_Secret"] ||
+    process.env["WEBHOOK_SECRET"] ||
+    null
+  );
+}
+
 export class PayMongoError extends Error {
   status: number;
   constructor(message: string, status: number) {

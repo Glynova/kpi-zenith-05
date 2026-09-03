@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { verifyWebhookSignature } from "@/lib/paymongo.server";
+import { readWebhookSecret, verifyWebhookSignature } from "@/lib/paymongo.server";
 
 /**
  * PayMongo webhook receiver.
@@ -62,12 +62,12 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           endpoint: "/api/public/webhooks/paymongo",
           method: "POST",
           signatureVerification: "hmac-sha256 (te/li)",
-          webhookSecretConfigured: !!process.env["PAYMONGO_WEBHOOK_SECRET"],
+          webhookSecretConfigured: !!readWebhookSecret(),
         }),
       POST: async ({ request }) => {
         // 1. Raw body, untouched, for HMAC verification.
         const raw = await request.text();
-        const secret = process.env["PAYMONGO_WEBHOOK_SECRET"] ?? null;
+        const secret = readWebhookSecret();
         const ok = await verifyWebhookSignature(
           raw,
           request.headers.get("paymongo-signature"),
