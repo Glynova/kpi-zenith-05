@@ -41,7 +41,11 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
     queryFn: () => fetchTeam({ data: { businessId } }) as Promise<any[]>,
   });
 
+  // Seat cap comes from the plan entitlements, not from the role system.
+  const seats = useLimit("max_users", teamQuery.data?.length ?? 0);
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["team", businessId] });
+
 
   const add = useMutation({
     mutationFn: () => addFn({ data: { businessId, email, role: role as any } }),
