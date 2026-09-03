@@ -32,6 +32,13 @@ import {
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber, formatDate, daysAgoISO, todayISO } from "@/lib/format";
+import {
+  salesMetrics,
+  saleNetRevenue,
+  inventoryValueOf,
+  healthScore,
+  marginPercent,
+} from "@/lib/kpi";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiOrb } from "@/components/kpi-orb";
@@ -149,19 +156,25 @@ function Dashboard() {
     if (!d) return null;
     const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
 
-    const todaySales = d.sales.filter((s) => s.sale_date === today);
+    const todayRows = d.sales.filter((s) => s.sale_date === today);
     const todayExpenses = d.expenses.filter((e) => e.expense_date === today);
-    const revenue = sum(d.sales, "total");
-    const cogs = sum(d.sales, "cost_total");
+    const period = salesMetrics(d.sales);
+    const todayM = salesMetrics(todayRows);
+
+    const revenue = period.revenue;
+    const cogs = period.cogs;
     const expenseTotal = sum(d.expenses, "amount");
-    const grossProfit = revenue - cogs;
+    const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
-    const cashIn = sum(d.cash.filter((c) => c.type === "in"), "amount");
-    const cashOut = sum(d.cash.filter((c) => c.type === "out"), "amount");
-    const inventoryValue = d.products.reduce(
-      (a, p) => a + Number(p.stock ?? 0) * Number(p.cost_price ?? 0),
-      0,
+    const cashIn = sum(
+      d.cash.filter((c) => c.type === "in"),
+      "amount",
     );
+    const cashOut = sum(
+      d.cash.filter((c) => c.type === "out"),
+      "amount",
+    );
+    const inventoryValue = inventoryValueOf(d.products);
     const lowStock = d.products.filter(
       (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.reorder_level ?? 0),
     );
@@ -172,9 +185,11 @@ function Dashboard() {
     // time series
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
     for (const s of d.sales) {
+      const net = saleNetRevenue(s);
+      if (!net) continue;
       const k = s.sale_date;
       const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
-      e.sales += Number(s.total ?? 0);
+      e.sales += net;
       byDay.set(k, e);
     }
     for (const x of d.expenses) {
@@ -201,7 +216,10 @@ function Dashboard() {
     // expense mix
     const byCat = new Map<string, number>();
     for (const x of d.expenses) {
-      byCat.set(x.category ?? "other", (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0));
+      byCat.set(
+        x.category ?? "other",
+        (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
+      );
     }
     const expenseMix = Array.from(byCat.entries()).map(([name, value]) => ({ name, value }));
 
@@ -209,7 +227,9 @@ function Dashboard() {
     const byCustomer = new Map<string, number>();
     for (const s of d.sales) {
       if (!s.customer_id) continue;
-      byCustomer.set(s.customer_id, (byCustomer.get(s.customer_id) ?? 0) + Number(s.total ?? 0));
+      const net = saleNetRevenue(s);
+      if (!net) continue;
+      byCustomer.set(s.customer_id, (byCustomer.get(s.customer_id) ?? 0) + net);
     }
     const topCustomers = Array.from(byCustomer.entries())
       .map(([id, total]) => ({
@@ -219,23 +239,24 @@ function Dashboard() {
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
 
-    const margin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
+    const margin = marginPercent(netProfit, revenue);
     const expenseRatio = revenue > 0 ? (expenseTotal / revenue) * 100 : 0;
-    const aov = d.sales.length ? revenue / d.sales.length : 0;
+    const aov = period.aov;
 
-    // health score
-    let health = 50;
-    health += Math.max(-25, Math.min(25, margin));
-    health += revenue > 0 ? 10 : -10;
-    health -= outOfStock.length > 0 ? 8 : 0;
-    health -= lowStock.length > 3 ? 5 : 0;
-    health += cashIn - cashOut > 0 ? 10 : -5;
-    health = Math.max(0, Math.min(100, Math.round(health)));
+    const health = healthScore({
+      netMargin: margin,
+      revenue,
+      netCashFlow: cashIn - cashOut,
+      outOfStock: outOfStock.length,
+      productCount: d.products.length,
+      receivables,
+      payables,
+    });
 
     return {
-      todaySales: sum(todaySales, "total"),
+      todaySales: todayM.revenue,
       todayExpenses: sum(todayExpenses, "amount"),
-      todayProfit: sum(todaySales, "total") - sum(todaySales, "cost_total") - sum(todayExpenses, "amount"),
+      todayProfit: todayM.grossProfit - sum(todayExpenses, "amount"),
       revenue,
       netProfit,
       grossProfit,
@@ -301,17 +322,33 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid gap-4 sm:grid-cols-2 stagger-grid">
-          <KpiCard label="Revenue (period)" value={formatCurrency(m.revenue, currency)} sub={`Avg order ${formatCurrency(m.aov, currency)}`} icon={TrendingUp} />
-          <KpiCard label="Net Profit (period)" value={formatCurrency(m.netProfit, currency)} sub={`${m.margin.toFixed(1)}% margin`} icon={Activity} tone={m.netProfit >= 0 ? "success" : "destructive"} />
-          <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
-          <KpiCard label="Inventory Value" value={formatCurrency(m.inventoryValue, currency)} icon={Boxes} />
+          <KpiCard
+            label="Revenue (period)"
+            value={formatCurrency(m.revenue, currency)}
+            sub={`Avg order ${formatCurrency(m.aov, currency)}`}
+            icon={TrendingUp}
+          />
+          <KpiCard
+            label="Net Profit (period)"
+            value={formatCurrency(m.netProfit, currency)}
+            sub={`${m.margin.toFixed(1)}% margin`}
+            icon={Activity}
+            tone={m.netProfit >= 0 ? "success" : "destructive"}
+          />
+          <KpiCard
+            label="Cash On Hand"
+            value={formatCurrency(m.cashOnHand, currency)}
+            icon={Wallet}
+          />
+          <KpiCard
+            label="Inventory Value"
+            value={formatCurrency(m.inventoryValue, currency)}
+            icon={Boxes}
+          />
         </div>
         <Card className="surface-card overflow-hidden border-0">
           <CardContent className="p-2">
-            <KpiOrb
-              score={m.health}
-              caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`}
-            />
+            <KpiOrb score={m.health} caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`} />
           </CardContent>
         </Card>
       </div>
@@ -325,14 +362,52 @@ function Dashboard() {
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <div className="mt-4 grid gap-4 stagger-grid sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Today's Sales" value={formatCurrency(m.todaySales, currency)} icon={TrendingUp} tone="success" />
-        <KpiCard label="Today's Expenses" value={formatCurrency(m.todayExpenses, currency)} icon={TrendingDown} tone="warning" />
-        <KpiCard label="Today's Profit" value={formatCurrency(m.todayProfit, currency)} icon={Activity} />
-        <KpiCard label="Cash On Hand" value={formatCurrency(m.cashOnHand, currency)} icon={Wallet} />
-        <KpiCard label="Outstanding Receivables" value={formatCurrency(m.receivables, currency)} icon={ArrowDownLeft} tone="warning" />
-        <KpiCard label="Outstanding Payables" value={formatCurrency(m.payables, currency)} icon={ArrowUpRight} tone="warning" />
-        <KpiCard label="Low Stock Items" value={formatNumber(m.lowStock.length)} icon={AlertTriangle} tone="warning" />
-        <KpiCard label="Out Of Stock" value={formatNumber(m.outOfStock.length)} icon={PackageX} tone="destructive" />
+            <KpiCard
+              label="Today's Sales"
+              value={formatCurrency(m.todaySales, currency)}
+              icon={TrendingUp}
+              tone="success"
+            />
+            <KpiCard
+              label="Today's Expenses"
+              value={formatCurrency(m.todayExpenses, currency)}
+              icon={TrendingDown}
+              tone="warning"
+            />
+            <KpiCard
+              label="Today's Profit"
+              value={formatCurrency(m.todayProfit, currency)}
+              icon={Activity}
+            />
+            <KpiCard
+              label="Cash On Hand"
+              value={formatCurrency(m.cashOnHand, currency)}
+              icon={Wallet}
+            />
+            <KpiCard
+              label="Outstanding Receivables"
+              value={formatCurrency(m.receivables, currency)}
+              icon={ArrowDownLeft}
+              tone="warning"
+            />
+            <KpiCard
+              label="Outstanding Payables"
+              value={formatCurrency(m.payables, currency)}
+              icon={ArrowUpRight}
+              tone="warning"
+            />
+            <KpiCard
+              label="Low Stock Items"
+              value={formatNumber(m.lowStock.length)}
+              icon={AlertTriangle}
+              tone="warning"
+            />
+            <KpiCard
+              label="Out Of Stock"
+              value={formatNumber(m.outOfStock.length)}
+              icon={PackageX}
+              tone="destructive"
+            />
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -359,8 +434,20 @@ function Dashboard() {
                       color: "var(--popover-foreground)",
                     }}
                   />
-                  <Area type="monotone" dataKey="sales" stroke="var(--chart-1)" fill="var(--chart-1)" fillOpacity={0.15} />
-                  <Area type="monotone" dataKey="expenses" stroke="var(--chart-5)" fill="var(--chart-5)" fillOpacity={0.12} />
+                  <Area
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="var(--chart-1)"
+                    fill="var(--chart-1)"
+                    fillOpacity={0.15}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke="var(--chart-5)"
+                    fill="var(--chart-5)"
+                    fillOpacity={0.12}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -377,7 +464,13 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={m.expenseMix} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
+                  <Pie
+                    data={m.expenseMix}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={90}
+                  >
                     {m.expenseMix.map((_, i) => (
                       <Cell key={i} fill={chartColors[i % chartColors.length]} />
                     ))}

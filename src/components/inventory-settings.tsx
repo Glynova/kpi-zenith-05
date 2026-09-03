@@ -60,12 +60,15 @@ export function InventorySettings() {
     FEATURE_GROUPS.flatMap((g) => g.items).forEach((i) => (payload[i.key] = !!flag(i.key)));
     payload.costing_method = config.costing_method ?? settings.costing_method;
     payload.low_stock_rule = config.low_stock_rule ?? settings.low_stock_rule;
-    payload.expiry_alert_days = Number(config.expiry_alert_days ?? settings.expiry_alert_days) || 30;
+    payload.expiry_alert_days =
+      Number(config.expiry_alert_days ?? settings.expiry_alert_days) || 30;
+    payload.enable_alerts = config.enable_alerts ?? settings.enable_alerts ?? true;
+    payload.po_approval_threshold =
+      Number(config.po_approval_threshold ?? settings.po_approval_threshold ?? 0) || 0;
+    payload.discount_limit_percent =
+      Number(config.discount_limit_percent ?? settings.discount_limit_percent ?? 0) || 0;
 
-    const { error: typeError } = await db
-      .from("businesses")
-      .update({ type })
-      .eq("id", businessId);
+    const { error: typeError } = await db.from("businesses").update({ type }).eq("id", businessId);
     const { error } = await db
       .from("business_settings")
       .upsert(payload, { onConflict: "business_id" });
@@ -124,11 +127,20 @@ export function InventorySettings() {
               </SelectContent>
             </Select>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              {COSTING_METHODS.find((m) => m.value === (config.costing_method ?? settings.costing_method))?.description}
+              {
+                COSTING_METHODS.find(
+                  (m) => m.value === (config.costing_method ?? settings.costing_method),
+                )?.description
+              }
             </p>
           </div>
           <div className="sm:col-span-2">
-            <Button variant="outline" className="gap-2" onClick={applyRecommended} disabled={!isAdmin}>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={applyRecommended}
+              disabled={!isAdmin}
+            >
               <Wand2 className="size-4" /> Load recommended settings for this business type
             </Button>
           </div>
@@ -142,7 +154,10 @@ export function InventorySettings() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             {group.items.map((item) => (
-              <div key={item.key} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
+              <div
+                key={item.key}
+                className="flex items-start justify-between gap-3 rounded-lg border border-border p-3"
+              >
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.hint}</p>
@@ -189,6 +204,49 @@ export function InventorySettings() {
               value={config.expiry_alert_days ?? settings.expiry_alert_days}
               onChange={(e) => setConfig({ ...config, expiry_alert_days: e.target.value })}
             />
+          </div>
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 sm:col-span-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Automatic alerts</p>
+              <p className="text-xs text-muted-foreground">
+                Create notifications for low stock, pending approvals and overdue payments.
+              </p>
+            </div>
+            <Switch
+              checked={config.enable_alerts ?? settings.enable_alerts ?? true}
+              disabled={!isAdmin}
+              onCheckedChange={(v: boolean) => setConfig({ ...config, enable_alerts: v })}
+            />
+          </div>
+          <div className="min-w-0">
+            <Label className="text-xs">Purchase order approval threshold</Label>
+            <Input
+              className="mt-1.5"
+              type="number"
+              step="any"
+              disabled={!isAdmin}
+              value={config.po_approval_threshold ?? settings.po_approval_threshold ?? 0}
+              onChange={(e) => setConfig({ ...config, po_approval_threshold: e.target.value })}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Orders at or above this total must be submitted for approval first. 0 disables the
+              rule.
+            </p>
+          </div>
+          <div className="min-w-0">
+            <Label className="text-xs">Maximum discount without approval (%)</Label>
+            <Input
+              className="mt-1.5"
+              type="number"
+              step="any"
+              disabled={!isAdmin}
+              value={config.discount_limit_percent ?? settings.discount_limit_percent ?? 0}
+              onChange={(e) => setConfig({ ...config, discount_limit_percent: e.target.value })}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Bigger discounts are blocked unless an owner, admin or manager records the sale. 0
+              disables the rule.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <Button onClick={save} disabled={saving || !isAdmin}>

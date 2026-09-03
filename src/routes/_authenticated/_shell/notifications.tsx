@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
-import { formatDate, titleCase, todayISO } from "@/lib/format";
+import { formatDate, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,72 +77,11 @@ function NotificationsPage() {
 
   const scan = useMutation({
     mutationFn: async () => {
-      const today = todayISO();
-      const [{ data: products }, { data: invoices }, { data: receivables }] = await Promise.all([
-        db.from("products").select("id,name,stock,reorder_level").eq("business_id", businessId),
-        db
-          .from("invoices")
-          .select("id,invoice_number,due_date,total,paid,status")
-          .eq("business_id", businessId),
-        db
-          .from("accounts_receivable")
-          .select("id,amount,paid,due_date,status")
-          .eq("business_id", businessId),
-      ]);
-
-      const alerts: Row[] = [];
-      (products ?? []).forEach((p: Row) => {
-        if (Number(p.stock) <= 0) {
-          alerts.push({
-            type: "out_of_stock",
-            title: `${p.name} is out of stock`,
-            message: "Reorder this product to avoid lost sales.",
-            link: "/products",
-          });
-        } else if (Number(p.stock) <= Number(p.reorder_level ?? 0)) {
-          alerts.push({
-            type: "low_stock",
-            title: `${p.name} is below reorder level`,
-            message: `Stock is ${p.stock}, reorder level is ${p.reorder_level}.`,
-            link: "/products",
-          });
-        }
+      const { data: created, error } = await db.rpc("scan_business_alerts", {
+        _business_id: businessId,
       });
-      (invoices ?? []).forEach((i: Row) => {
-        if (
-          i.due_date &&
-          i.due_date < today &&
-          Number(i.paid ?? 0) < Number(i.total ?? 0) &&
-          i.status !== "cancelled"
-        ) {
-          alerts.push({
-            type: "invoice_due",
-            title: `Invoice ${i.invoice_number} is overdue`,
-            message: `Due ${formatDate(i.due_date)} and still unpaid.`,
-            link: "/invoices",
-          });
-        }
-      });
-      (receivables ?? []).forEach((r: Row) => {
-        if (r.due_date && r.due_date < today && Number(r.paid ?? 0) < Number(r.amount ?? 0)) {
-          alerts.push({
-            type: "debt_due",
-            title: "Customer debt is overdue",
-            message: `Outstanding since ${formatDate(r.due_date)}.`,
-            link: "/receivables",
-          });
-        }
-      });
-
-      const existing = new Set((data ?? []).filter((n) => !n.is_read).map((n) => n.title));
-      const fresh = alerts.filter((a) => !existing.has(a.title));
-      if (!fresh.length) return 0;
-
-      const { error } = await db
-        .from("notifications")
-        .insert(fresh.map((a) => ({ ...a, business_id: businessId, is_read: false })));
       if (error) throw error;
-      return fresh.length;
+      return Number(created ?? 0);
     },
     onSuccess: (count) => {
       toast.success(count ? `${count} new alert(s) created` : "Everything looks healthy");
@@ -155,7 +94,11 @@ function NotificationsPage() {
     const q = search.trim().toLowerCase();
     if (!q) return data;
     return data.filter((n) =>
-      [n.title, n.message, n.type].some((v) => String(v ?? "").toLowerCase().includes(q)),
+      [n.title, n.message, n.type].some((v) =>
+        String(v ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
   }, [data, search]);
 
@@ -175,7 +118,8 @@ function NotificationsPage() {
                 onClick={() => scan.mutate()}
                 disabled={scan.isPending}
               >
-                <RefreshCw className="size-4" /> {scan.isPending ? "Scanning..." : "Scan for alerts"}
+                <RefreshCw className="size-4" />{" "}
+                {scan.isPending ? "Scanning..." : "Scan for alerts"}
               </Button>
             )}
             {canWrite && unread > 0 && (
@@ -210,7 +154,9 @@ function NotificationsPage() {
         <EmptyState
           title="No notifications"
           description="Run a scan to generate low-stock and overdue payment alerts."
-          action={canWrite ? <Button onClick={() => scan.mutate()}>Scan for alerts</Button> : undefined}
+          action={
+            canWrite ? <Button onClick={() => scan.mutate()}>Scan for alerts</Button> : undefined
+          }
         />
       ) : (
         <div className="space-y-2">
@@ -234,7 +180,12 @@ function NotificationsPage() {
                   <Button variant="ghost" size="sm" onClick={() => toggleRead.mutate(n)}>
                     {n.is_read ? "Unread" : "Read"}
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => remove.mutate(n)} aria-label="Delete">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove.mutate(n)}
+                    aria-label="Delete"
+                  >
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>

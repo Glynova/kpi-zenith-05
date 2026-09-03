@@ -511,6 +511,7 @@ export type Database = {
           costing_method: string
           created_at: string
           discount_limit_percent: number
+          enable_alerts: boolean
           enable_assets: boolean
           enable_barcode: boolean
           enable_bom: boolean
@@ -537,6 +538,7 @@ export type Database = {
           id: string
           low_stock_rule: string
           payment_methods: Json
+          po_approval_threshold: number
           production_mode: string
           sales_bom_mode: string
           sales_channels: Json
@@ -560,6 +562,7 @@ export type Database = {
           costing_method?: string
           created_at?: string
           discount_limit_percent?: number
+          enable_alerts?: boolean
           enable_assets?: boolean
           enable_barcode?: boolean
           enable_bom?: boolean
@@ -586,6 +589,7 @@ export type Database = {
           id?: string
           low_stock_rule?: string
           payment_methods?: Json
+          po_approval_threshold?: number
           production_mode?: string
           sales_bom_mode?: string
           sales_channels?: Json
@@ -609,6 +613,7 @@ export type Database = {
           costing_method?: string
           created_at?: string
           discount_limit_percent?: number
+          enable_alerts?: boolean
           enable_assets?: boolean
           enable_barcode?: boolean
           enable_bom?: boolean
@@ -635,6 +640,7 @@ export type Database = {
           id?: string
           low_stock_rule?: string
           payment_methods?: Json
+          po_approval_threshold?: number
           production_mode?: string
           sales_bom_mode?: string
           sales_channels?: Json
@@ -4306,6 +4312,16 @@ export type Database = {
         Args: { _business_id: string; _prefix: string }
         Returns: string
       }
+      notify_business: {
+        Args: {
+          _business_id: string
+          _link: string
+          _message: string
+          _title: string
+          _type: string
+        }
+        Returns: undefined
+      }
       payment_terms_days: { Args: { _terms: string }; Returns: number }
       post_purchase_return: { Args: { _return_id: string }; Returns: undefined }
       post_sales_return: { Args: { _return_id: string }; Returns: undefined }
@@ -4317,6 +4333,7 @@ export type Database = {
         Args: { _product_id: string }
         Returns: undefined
       }
+      scan_business_alerts: { Args: { _business_id: string }; Returns: number }
       seed_business_defaults: {
         Args: { _business_id: string }
         Returns: undefined
