@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Factory } from "lucide-react";
+import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
@@ -165,14 +166,39 @@ export function useProductBom(businessId: string | null, currency: string) {
 
   function Section({
     excludeProductId,
+    productName,
     onCostChange,
   }: {
     excludeProductId?: string | null;
+    productName?: string;
     onCostChange: (cost: number) => void;
   }) {
+    const [batches, setBatches] = useState(1);
+    const [producing, setProducing] = useState(false);
+
     function update(next: BomComponent[]) {
       setComponents(next);
       onCostChange(bomUnitCost(next, outputQuantity, costOf));
+    }
+
+    async function produce() {
+      if (!bomId) return;
+      setProducing(true);
+      try {
+        const { data, error } = await db.rpc("produce_from_bom", {
+          _bom_id: bomId,
+          _batches: Number(batches),
+        });
+        if (error) throw error;
+        toast.success(`Produced ${Number(data ?? 0)} units of ${productName || "this product"}`);
+        queryClient.invalidateQueries({ queryKey: ["resource", "products", businessId] });
+        queryClient.invalidateQueries({ queryKey: ["bom-component-products", businessId] });
+        queryClient.invalidateQueries({ queryKey: ["products-lite", businessId] });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Production failed");
+      } finally {
+        setProducing(false);
+      }
     }
 
     const options = products.filter((p) => p.id !== excludeProductId);
@@ -180,17 +206,42 @@ export function useProductBom(businessId: string | null, currency: string) {
 
     return (
       <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Label className="text-xs font-semibold">Components</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => update([...components, newComponent()])}
-          >
-            <Plus className="size-4" /> Add component
-          </Button>
+          <div className="flex items-center gap-2">
+            {bomId && (
+              <>
+                <Label className="text-[11px] text-muted-foreground">Batches</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="any"
+                  className="h-9 w-20"
+                  value={batches}
+                  onChange={(e) => setBatches(Number(e.target.value))}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={producing || !(Number(batches) > 0)}
+                  onClick={() => void produce()}
+                >
+                  <Factory className="size-4" /> {producing ? "Producing…" : "Produce"}
+                </Button>
+              </>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => update([...components, newComponent()])}
+            >
+              <Plus className="size-4" /> Add component
+            </Button>
+          </div>
         </div>
+
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>

@@ -4309,6 +4309,10 @@ export type Database = {
       payment_terms_days: { Args: { _terms: string }; Returns: number }
       post_purchase_return: { Args: { _return_id: string }; Returns: undefined }
       post_sales_return: { Args: { _return_id: string }; Returns: undefined }
+      produce_from_bom: {
+        Args: { _batches?: number; _bom_id: string }
+        Returns: number
+      }
       recalc_product_cost_from_bom: {
         Args: { _product_id: string }
         Returns: undefined

@@ -58,7 +58,7 @@ function newComponent(): Component {
 }
 
 function BomPage() {
-  const { businessId, currency, canWrite, userId } = useBusiness();
+  const { businessId, currency, canWrite } = useBusiness();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -169,49 +169,24 @@ function BomPage() {
 
   const produce = useMutation({
     mutationFn: async ({ bom, qty }: { bom: Row; qty: number }) => {
-      const bomItems = itemsByBom[bom.id] ?? [];
-      if (!bomItems.length) throw new Error("This BOM has no components");
-      const short = bomItems.find(
-        (i) => Number(i.products?.stock ?? 0) < Number(i.quantity) * qty,
-      );
-      if (short) throw new Error(`Not enough stock of ${short.products?.name ?? "a component"}`);
-
-      const { error } = await db.from("inventory_movements").insert([
-        ...bomItems.map((i) => ({
-          business_id: businessId,
-          product_id: i.component_product_id,
-          type: "production_out",
-          quantity: Number(i.quantity) * qty,
-          unit_cost: Number(i.products?.cost_price ?? 0),
-          reference: bom.name,
-          notes: "Consumed by production run",
-          created_by: userId,
-        })),
-        {
-          business_id: businessId,
-          product_id: bom.product_id,
-          type: "stock_in",
-          quantity: Number(bom.output_quantity ?? 1) * qty,
-          unit_cost: bomItems.reduce(
-            (sum, i) => sum + Number(i.quantity) * Number(i.products?.cost_price ?? 0),
-            0,
-          ) / Math.max(1, Number(bom.output_quantity ?? 1)),
-          reference: bom.name,
-          notes: "Produced from bill of materials",
-          created_by: userId,
-        },
-      ]);
+      const { data, error } = await db.rpc("produce_from_bom", {
+        _bom_id: bom.id,
+        _batches: qty,
+      });
       if (error) throw error;
+      return { produced: Number(data ?? 0), name: bom.products?.name ?? bom.name };
     },
-    onSuccess: () => {
-      toast.success("Production posted — components deducted, finished goods added");
+    onSuccess: (res) => {
+      toast.success(`Produced ${formatNumber(res.produced, 2)} units of ${res.name}`);
       queryClient.invalidateQueries({ queryKey: ["boms", businessId] });
       queryClient.invalidateQueries({ queryKey: ["bom-items", businessId] });
       queryClient.invalidateQueries({ queryKey: ["products-lite", businessId] });
+      queryClient.invalidateQueries({ queryKey: ["resource", "products", businessId] });
       setProducing(null);
     },
     onError: (e: any) => toast.error(e.message ?? "Production failed"),
   });
+
 
   const remove = useMutation({
     mutationFn: async (row: Row) => {
