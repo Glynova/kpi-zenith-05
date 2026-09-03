@@ -73,8 +73,13 @@ export type Field = {
   required?: boolean;
   default?: any;
   placeholder?: string;
+  /** Image field options. */
+  maxSizeMB?: number;
+  uploadVariant?: "inline" | "dropzone";
+  uploadHint?: string;
   /** Replace the default input with a custom control. */
   render?: (ctx: FormCtx) => ReactNode;
+
   /** Hide the field entirely for the current form state. */
   hidden?: (ctx: FormCtx) => boolean;
 };
@@ -584,9 +589,13 @@ export function ResourcePage({
                     <ImageUpload
                       id={field.key}
                       businessId={businessId}
+                      maxSizeMB={field.maxSizeMB}
+                      variant={field.uploadVariant}
+                      hint={field.uploadHint}
                       value={form[field.key] ?? null}
                       onChange={(v) => setForm({ ...form, [field.key]: v })}
                     />
+
                   ) : field.type === "boolean" ? (
                     <div className="flex h-9 items-center">
                       <Switch

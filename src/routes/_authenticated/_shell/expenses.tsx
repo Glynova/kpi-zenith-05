@@ -112,9 +112,13 @@ const fields: Field[] = [
   },
   {
     "key": "attachment_url",
-    "label": "Attachment URL",
-    "type": "text"
+    "label": "Receipt / Attachment",
+    "type": "image",
+    "maxSizeMB": 5,
+    "uploadVariant": "dropzone",
+    "uploadHint": "Upload receipt or image"
   }
+
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/expenses")({

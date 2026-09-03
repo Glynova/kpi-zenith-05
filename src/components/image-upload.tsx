@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -55,12 +55,32 @@ type Props = {
   /** Used to scope uploads per tenant — required by storage access rules. */
   businessId?: string | null;
   id?: string;
+  /** Max file size in MB (default 10). */
+  maxSizeMB?: number;
+  /** Visual style: compact inline control or a large dropzone. */
+  variant?: "inline" | "dropzone";
+  /** Dropzone copy. */
+  hint?: string;
+  subHint?: string;
 };
 
+const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+
 /** Upload control that stores the image in cloud storage and shows a live preview. */
-export function ImageUpload({ value, onChange, businessId, id }: Props) {
+export function ImageUpload({
+  value,
+  onChange,
+  businessId,
+  id,
+  maxSizeMB = 10,
+  variant = "inline",
+  hint = "Upload receipt or image",
+  subHint,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
   const src = useImageSrc(value);
 
   const pick = async (file?: File | null) => {
@@ -69,12 +89,12 @@ export function ImageUpload({ value, onChange, businessId, id }: Props) {
       toast.error("Select a business first");
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file");
+    if (!ACCEPTED.includes(file.type.toLowerCase())) {
+      toast.error("Please choose a PNG, JPG or WEBP image");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be smaller than 10MB");
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      toast.error(`Image must be smaller than ${maxSizeMB}MB`);
       return;
     }
     setUploading(true);
@@ -88,6 +108,7 @@ export function ImageUpload({ value, onChange, businessId, id }: Props) {
       });
       if (error) throw error;
       onChange(path);
+      setFileName(file.name);
       toast.success("Image uploaded");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Upload failed");
@@ -96,6 +117,87 @@ export function ImageUpload({ value, onChange, businessId, id }: Props) {
       if (inputRef.current) inputRef.current.value = "";
     }
   };
+
+  const input = (
+    <input
+      id={id}
+      ref={inputRef}
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      className="hidden"
+      onChange={(e) => pick(e.target.files?.[0])}
+    />
+  );
+
+  if (variant === "dropzone") {
+    const displayName = fileName ?? (value ? value.split("/").pop() : null);
+    return (
+      <div>
+        {input}
+        {value ? (
+          <div className="flex items-center gap-3 rounded-xl border bg-card p-3 shadow-elevate-1">
+            <div className="size-14 shrink-0 overflow-hidden rounded-md border bg-muted">
+              {src ? (
+                <img src={src} alt="Attachment" className="size-full object-cover" />
+              ) : (
+                <div className="flex size-full items-center justify-center text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">Attached</p>
+            </div>
+            <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()}>
+              Replace
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Remove attachment"
+              onClick={() => {
+                onChange(null);
+                setFileName(null);
+              }}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              pick(e.dataTransfer.files?.[0]);
+            }}
+            className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed px-4 py-7 text-center transition-colors press ${
+              dragging ? "border-primary bg-accent/40" : "bg-muted/30 hover:bg-accent/30"
+            }`}
+          >
+            {uploading ? (
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            ) : (
+              <UploadCloud className="size-5 text-muted-foreground" />
+            )}
+            <span className="text-sm font-medium">{uploading ? "Uploading…" : hint}</span>
+            <span className="text-xs text-muted-foreground">
+              {subHint ?? `PNG, JPG, WEBP up to ${maxSizeMB}MB`}
+            </span>
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3">
@@ -109,14 +211,7 @@ export function ImageUpload({ value, onChange, businessId, id }: Props) {
         )}
       </div>
       <div className="flex flex-wrap gap-2">
-        <input
-          id={id}
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => pick(e.target.files?.[0])}
-        />
+        {input}
         <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()}>
           {uploading ? <Loader2 className="mr-1 size-4 animate-spin" /> : <ImagePlus className="mr-1 size-4" />}
           {value ? "Replace" : "Upload image"}
@@ -131,3 +226,4 @@ export function ImageUpload({ value, onChange, businessId, id }: Props) {
     </div>
   );
 }
+
