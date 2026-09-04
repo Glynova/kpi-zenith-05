@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
@@ -88,6 +89,11 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   id: '/setup',
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedShellAnalyticsRoute =
   AuthenticatedShellAnalyticsRouteImport.update({
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -333,6 +340,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -420,6 +429,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/onboarding'
     | '/setup'
+    | '/r/$code'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -461,6 +471,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/onboarding'
     | '/setup'
+    | '/r/$code'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -504,6 +515,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell'
     | '/_authenticated/onboarding'
     | '/_authenticated/setup'
+    | '/r/$code'
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
@@ -545,6 +557,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RCodeRoute: typeof RCodeRoute
   ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
 
@@ -605,6 +618,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/setup'
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_shell/analytics': {
       id: '/_authenticated/_shell/analytics'
@@ -940,6 +960,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RCodeRoute: RCodeRoute,
   ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
 export const routeTree = rootRouteImport
