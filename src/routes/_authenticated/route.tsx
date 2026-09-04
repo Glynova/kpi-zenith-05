@@ -8,14 +8,19 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {
-      // Admin portal has its own restricted sign-in; keep the intended path.
+      // Admin and partner portals have their own sign-in surfaces; keep the
+      // intended path so the user lands where they meant to go.
       if (location.pathname.startsWith("/admin")) {
         throw redirect({ to: "/admin/login", search: { redirect: location.href } });
+      }
+      if (location.pathname.startsWith("/affiliate")) {
+        throw redirect({ to: "/affiliate/login", search: { redirect: location.href } });
       }
       throw redirect({ to: "/auth" });
     }
     return { user: data.user };
   },
+
   component: () => (
     <BusinessProvider>
       <Outlet />

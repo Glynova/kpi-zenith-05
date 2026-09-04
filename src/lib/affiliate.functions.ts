@@ -12,6 +12,24 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * Resolves the caller's partner record and refuses anything but an *approved*
+ * (status = 'active') partner. The database enforces the same rule through
+ * `current_partner_id()`, so a suspended or pending partner sees no rows even
+ * if this check were bypassed.
+ */
+async function requireActivePartner(context: any) {
+  const { data, error } = await context.supabase
+    .from("affiliate_partners")
+    .select("*")
+    .eq("user_id", context.userId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: approved affiliate partners only");
+  return data as any;
+}
+
 /* ------------------------------------------------------- public: referrals */
 
 /** Records a referral-link click. Public by design (no account required). */
@@ -37,7 +55,11 @@ export const recordReferralClick = createServerFn({ method: "POST" })
       landing_path: data.landingPath ?? null,
       referrer: data.referrer ?? null,
     });
-    return { valid: true as const, partnerName: partner.display_name as string, code: partner.referral_code as string };
+    return {
+      valid: true as const,
+      partnerName: partner.display_name as string,
+      code: partner.referral_code as string,
+    };
   });
 
 /**
@@ -118,7 +140,11 @@ export const previewPromoCode = createServerFn({ method: "POST" })
     });
     const { DISCOUNT_SETTLEMENT_NOTE, PROVIDER_APPLIES_DISCOUNTS } = await import("@/lib/billing");
     if (!check.ok)
-      return { ok: false as const, message: PROMO_ERROR_MESSAGE[check.error], reason: PROMO_ERROR_MESSAGE[check.error] };
+      return {
+        ok: false as const,
+        message: PROMO_ERROR_MESSAGE[check.error],
+        reason: PROMO_ERROR_MESSAGE[check.error],
+      };
     return {
       ok: true as const,
       code: check.promo.code as string,
@@ -163,7 +189,8 @@ export const applyAsAffiliate = createServerFn({ method: "POST" })
       motivation: data.motivation ?? null,
     });
     if (error) {
-      if ((error as any).code === "23505") throw new Error("You already have an application under review.");
+      if ((error as any).code === "23505")
+        throw new Error("You already have an application under review.");
       throw new Error(error.message);
     }
     return { ok: true };
@@ -174,7 +201,11 @@ export const getMyAffiliateStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const [{ data: partner }, { data: application }] = await Promise.all([
-      context.supabase.from("affiliate_partners").select("*").eq("user_id", context.userId).maybeSingle(),
+      context.supabase
+        .from("affiliate_partners")
+        .select("*")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
       context.supabase
         .from("affiliate_applications")
         .select("*")
@@ -192,13 +223,8 @@ export const getPartnerDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    const { data: partner } = await supabase
-      .from("affiliate_partners")
-      .select("*")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (!partner) throw new Error("Not an affiliate partner");
-    const partnerId = (partner as any).id as string;
+    const partner = await requireActivePartner(context);
+    const partnerId = partner.id as string;
 
     const [{ data: referrals }, { data: commissions }, { data: payouts }, { count: clicks }] =
       await Promise.all([
@@ -246,7 +272,9 @@ export const getPartnerDashboard = createServerFn({ method: "GET" })
         admin.from("businesses").select("id, name, created_at").in("id", ids),
         admin
           .from("subscriptions")
-          .select("business_id, status, plan_id, current_period_end, trial_ends_at, subscription_plans(name, price)")
+          .select(
+            "business_id, status, plan_id, current_period_end, trial_ends_at, subscription_plans(name, price)",
+          )
           .in("business_id", ids),
       ]);
       businesses = b ?? [];
@@ -287,6 +315,9 @@ export const updatePartnerProfile = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Approved partners only; privileged columns are additionally frozen by a
+    // database trigger so a profile save can never change programme terms.
+    await requireActivePartner(context);
     const { error } = await context.supabase
       .from("affiliate_partners")
       .update({

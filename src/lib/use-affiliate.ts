@@ -8,9 +8,15 @@ import { amIPlatformAdmin } from "@/lib/billing.functions";
 /** Is the signed-in user an approved affiliate partner (and/or an applicant)? */
 export function useAffiliateStatus() {
   const fetchStatus = useServerFn(getMyAffiliateStatus);
+  // Re-verified server-side on focus and on an interval so suspending or
+  // revoking a partner ends an already-open portal session.
   const query = useQuery({
     queryKey: ["affiliate-status"],
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
+    retry: false,
     queryFn: () => fetchStatus(),
   });
   return {

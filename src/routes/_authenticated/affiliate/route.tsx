@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
@@ -9,6 +10,7 @@ import {
   Image as ImageIcon,
   Link2,
   Loader2,
+  LogOut,
   Receipt,
   Settings,
   Ticket,
@@ -24,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import { applyAsAffiliate } from "@/lib/affiliate.functions";
 import { useAffiliateStatus } from "@/lib/use-affiliate";
 
@@ -45,6 +48,15 @@ const NAV: PortalNavItem[] = [
 
 function AffiliateLayout() {
   const { isPartner, application, loading, refetch } = useAffiliateStatus();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  async function signOutPartner() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/affiliate/login", replace: true });
+  }
 
   if (loading) {
     return (
@@ -57,10 +69,28 @@ function AffiliateLayout() {
 
   // Partner portal access is gated on an *approved* partner record; the server
   // functions behind every page enforce the same rule through RLS.
-  if (!isPartner) return <ApplyScreen application={application} onApplied={refetch} />;
+  if (!isPartner)
+    return (
+      <div className="space-y-4">
+        <ApplyScreen application={application} onApplied={refetch} />
+        <div className="flex justify-center">
+          <Button variant="ghost" size="sm" onClick={signOutPartner}>
+            <LogOut className="mr-2 size-4" /> Sign out
+          </Button>
+        </div>
+      </div>
+    );
 
   return (
     <PortalShell label="Affiliate Partner Portal" tone="partner" items={NAV}>
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <Button asChild variant="outline" size="sm">
+          <a href="/dashboard">Workspace</a>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={signOutPartner}>
+          <LogOut className="mr-2 size-4" /> Sign out
+        </Button>
+      </div>
       <Outlet />
     </PortalShell>
   );
@@ -115,7 +145,10 @@ function ApplyScreen({ application, onApplied }: { application: any; onApplied: 
       <StatusCard
         badge="Not approved"
         title="Your partner application wasn't approved"
-        body={application.review_notes ?? "You can apply again later with more detail about your audience."}
+        body={
+          application.review_notes ??
+          "You can apply again later with more detail about your audience."
+        }
       />
     );
   }
@@ -127,8 +160,8 @@ function ApplyScreen({ application, onApplied }: { application: any; onApplied: 
           <Badge className="w-fit">Affiliate programme</Badge>
           <CardTitle className="font-display text-2xl">Become a Daraven partner</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Earn recurring commission on every business you bring to Daraven ERP. Commission is
-            paid on collected subscription revenue — not on trials.
+            Earn recurring commission on every business you bring to Daraven ERP. Commission is paid
+            on collected subscription revenue — not on trials.
           </p>
         </CardHeader>
         <CardContent>
