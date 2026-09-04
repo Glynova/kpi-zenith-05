@@ -50,6 +50,7 @@ import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
+import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
@@ -285,6 +286,12 @@ const AuthenticatedShellVariantsRoute =
     path: '/variants',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedAffiliateIndexRoute =
+  AuthenticatedAffiliateIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
 const AuthenticatedShellProductsProductIdRoute =
   AuthenticatedShellProductsProductIdRouteImport.update({
     id: '/products_/$productId',
@@ -303,7 +310,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/affiliate': typeof AuthenticatedAffiliateRouteRoute
+  '/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/r/$code': typeof RCodeRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -346,7 +354,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/affiliate': typeof AuthenticatedAffiliateRouteRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/r/$code': typeof RCodeRoute
@@ -381,6 +388,7 @@ export interface FileRoutesByTo {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/affiliate': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -392,7 +400,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
-  '/_authenticated/affiliate': typeof AuthenticatedAffiliateRouteRoute
+  '/_authenticated/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/r/$code': typeof RCodeRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -472,6 +481,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/affiliate/'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesByTo: FileRoutesByTo
@@ -480,7 +490,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pricing'
     | '/reset-password'
-    | '/affiliate'
     | '/onboarding'
     | '/setup'
     | '/r/$code'
@@ -515,6 +524,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/affiliate'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   id:
@@ -560,6 +570,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/affiliate/'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesById: FileRoutesById
@@ -863,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/affiliate/': {
+      id: '/_authenticated/affiliate/'
+      path: '/'
+      fullPath: '/affiliate/'
+      preLoaderRoute: typeof AuthenticatedAffiliateIndexRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
     '/_authenticated/_shell/products_/$productId': {
       id: '/_authenticated/_shell/products_/$productId'
       path: '/products/$productId'
@@ -959,16 +977,31 @@ const AuthenticatedShellRouteRouteWithChildren =
     AuthenticatedShellRouteRouteChildren,
   )
 
+interface AuthenticatedAffiliateRouteRouteChildren {
+  AuthenticatedAffiliateIndexRoute: typeof AuthenticatedAffiliateIndexRoute
+}
+
+const AuthenticatedAffiliateRouteRouteChildren: AuthenticatedAffiliateRouteRouteChildren =
+  {
+    AuthenticatedAffiliateIndexRoute: AuthenticatedAffiliateIndexRoute,
+  }
+
+const AuthenticatedAffiliateRouteRouteWithChildren =
+  AuthenticatedAffiliateRouteRoute._addFileChildren(
+    AuthenticatedAffiliateRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
-  AuthenticatedAffiliateRouteRoute: typeof AuthenticatedAffiliateRouteRoute
+  AuthenticatedAffiliateRouteRoute: typeof AuthenticatedAffiliateRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
-  AuthenticatedAffiliateRouteRoute: AuthenticatedAffiliateRouteRoute,
+  AuthenticatedAffiliateRouteRoute:
+    AuthenticatedAffiliateRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
 }
