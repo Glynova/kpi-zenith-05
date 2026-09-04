@@ -309,3 +309,17 @@ export const PLAN_HIGHLIGHTS: Record<string, string[]> = {
     "Priority support",
   ],
 };
+
+
+/**
+ * PayMongo recurring plans have fixed provider-side pricing: there is no API
+ * to charge a discounted amount for a subscription plan. Promo codes are
+ * therefore validated and recorded, but the provider charges the full plan
+ * price and the discount is settled as a manual credit. Flip this only when
+ * true discounted recurring billing becomes available.
+ */
+export const PROVIDER_APPLIES_DISCOUNTS = false;
+
+export const DISCOUNT_SETTLEMENT_NOTE = PROVIDER_APPLIES_DISCOUNTS
+  ? "The payment provider will charge the discounted amount."
+  : "PayMongo bills recurring plans at a fixed price, so checkout charges the full plan amount and this discount is recorded as a credit for manual settlement.";

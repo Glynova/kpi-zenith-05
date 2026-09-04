@@ -3,8 +3,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { DISCOUNT_SETTLEMENT_NOTE, PROVIDER_APPLIES_DISCOUNTS } from "@/lib/billing";
 
 const businessInput = z.object({ businessId: z.string().uuid() });
+
+
 
 async function assertAdmin(supabase: any, userId: string, businessId: string) {
   const { data, error } = await supabase
@@ -291,6 +294,7 @@ export const startSubscription = createServerFn({ method: "POST" })
         .maybeSingle();
       await redeemPromoCode(admin, {
         check: promoCheck,
+        providerApplied: PROVIDER_APPLIES_DISCOUNTS,
         businessId: data.businessId,
         subscriptionId: fresh?.id ?? null,
         planId: plan.id,
@@ -308,6 +312,8 @@ export const startSubscription = createServerFn({ method: "POST" })
             code: promoCheck.promo.code as string,
             discountAmount: promoCheck.discountAmount,
             finalAmount: promoCheck.finalAmount,
+            providerApplied: PROVIDER_APPLIES_DISCOUNTS,
+            settlement: DISCOUNT_SETTLEMENT_NOTE,
           }
         : null,
     };

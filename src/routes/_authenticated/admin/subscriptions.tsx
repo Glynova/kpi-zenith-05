@@ -14,6 +14,16 @@ import { adminSubscriptions } from "@/lib/platform-admin.functions";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/admin/subscriptions")({
+  head: () => ({
+    meta: [
+      { title: "Subscriptions — Daraven ERP" },
+      { name: "description", content: "Subscriptions, invoices and payments across all workspaces." },
+      { property: "og:title", content: "Subscriptions — Daraven ERP" },
+      { property: "og:description", content: "Subscriptions, invoices and payments across all workspaces." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminSubscriptions,
 });
 

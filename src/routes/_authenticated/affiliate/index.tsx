@@ -11,6 +11,16 @@ import { usePartnerDashboard } from "@/lib/use-affiliate";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/affiliate/")({
+  head: () => ({
+    meta: [
+      { title: "Partner Overview — Daraven ERP" },
+      { name: "description", content: "Your referrals, conversions and commission balance." },
+      { property: "og:title", content: "Partner Overview — Daraven ERP" },
+      { property: "og:description", content: "Your referrals, conversions and commission balance." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PartnerOverview,
 });
 

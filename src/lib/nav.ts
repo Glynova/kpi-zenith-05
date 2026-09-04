@@ -1,4 +1,5 @@
 import {
+  Sparkles,
   LayoutDashboard,
   Package,
   Tags,
@@ -134,6 +135,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Settings", url: "/settings", icon: Settings, keywords: "preferences access team" },
       { title: "Billing", url: "/billing", icon: CreditCard, keywords: "subscription plan invoice upgrade payment" },
+      { title: "Upgrade Plan", url: "/upgrade", icon: Sparkles, keywords: "plan pro business promo code checkout" },
       { title: "Notifications", url: "/notifications", icon: Bell, keywords: "alerts" },
 
       { title: "Audit Logs", url: "/audit-logs", icon: ScrollText, keywords: "history trail" },

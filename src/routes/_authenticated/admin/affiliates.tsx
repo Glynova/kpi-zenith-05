@@ -39,6 +39,16 @@ import {
 } from "@/lib/platform-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/affiliates")({
+  head: () => ({
+    meta: [
+      { title: "Affiliate Programme — Daraven ERP" },
+      { name: "description", content: "Review partner applications and manage commission settings." },
+      { property: "og:title", content: "Affiliate Programme — Daraven ERP" },
+      { property: "og:description", content: "Review partner applications and manage commission settings." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminAffiliates,
 });
 

@@ -50,6 +50,7 @@ import { Route as AuthenticatedShellStockCountsRouteImport } from './routes/_aut
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
+import { Route as AuthenticatedShellUpgradeRouteImport } from './routes/_authenticated/_shell/upgrade'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin/activity'
@@ -302,6 +303,12 @@ const AuthenticatedShellUnitsRoute = AuthenticatedShellUnitsRouteImport.update({
   path: '/units',
   getParentRoute: () => AuthenticatedShellRouteRoute,
 } as any)
+const AuthenticatedShellUpgradeRoute =
+  AuthenticatedShellUpgradeRouteImport.update({
+    id: '/upgrade',
+    path: '/upgrade',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellVariantsRoute =
   AuthenticatedShellVariantsRouteImport.update({
     id: '/variants',
@@ -461,6 +468,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
+  '/upgrade': typeof AuthenticatedShellUpgradeRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
@@ -520,6 +528,7 @@ export interface FileRoutesByTo {
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
+  '/upgrade': typeof AuthenticatedShellUpgradeRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
@@ -584,6 +593,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
+  '/_authenticated/_shell/upgrade': typeof AuthenticatedShellUpgradeRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
   '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
   '/_authenticated/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
@@ -647,6 +657,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/transfers'
     | '/units'
+    | '/upgrade'
     | '/variants'
     | '/admin/activity'
     | '/admin/affiliates'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/transfers'
     | '/units'
+    | '/upgrade'
     | '/variants'
     | '/admin/activity'
     | '/admin/affiliates'
@@ -769,6 +781,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/suppliers'
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
+    | '/_authenticated/_shell/upgrade'
     | '/_authenticated/_shell/variants'
     | '/_authenticated/admin/activity'
     | '/_authenticated/admin/affiliates'
@@ -1090,6 +1103,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellUnitsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/upgrade': {
+      id: '/_authenticated/_shell/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedShellUpgradeRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/variants': {
       id: '/_authenticated/_shell/variants'
       path: '/variants'
@@ -1264,6 +1284,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
   AuthenticatedShellTransfersRoute: typeof AuthenticatedShellTransfersRoute
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
+  AuthenticatedShellUpgradeRoute: typeof AuthenticatedShellUpgradeRoute
   AuthenticatedShellVariantsRoute: typeof AuthenticatedShellVariantsRoute
   AuthenticatedShellProductsProductIdRoute: typeof AuthenticatedShellProductsProductIdRoute
 }
@@ -1302,6 +1323,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
     AuthenticatedShellTransfersRoute: AuthenticatedShellTransfersRoute,
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
+    AuthenticatedShellUpgradeRoute: AuthenticatedShellUpgradeRoute,
     AuthenticatedShellVariantsRoute: AuthenticatedShellVariantsRoute,
     AuthenticatedShellProductsProductIdRoute:
       AuthenticatedShellProductsProductIdRoute,

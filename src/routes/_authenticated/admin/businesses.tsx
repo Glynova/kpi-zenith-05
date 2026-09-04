@@ -12,6 +12,16 @@ import { adminBusinesses } from "@/lib/platform-admin.functions";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/admin/businesses")({
+  head: () => ({
+    meta: [
+      { title: "Workspaces — Daraven ERP" },
+      { name: "description", content: "Every workspace on the platform with plan, status and owner." },
+      { property: "og:title", content: "Workspaces — Daraven ERP" },
+      { property: "og:description", content: "Every workspace on the platform with plan, status and owner." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminBusinesses,
 });
 

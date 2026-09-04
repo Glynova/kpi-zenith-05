@@ -116,7 +116,9 @@ export const previewPromoCode = createServerFn({ method: "POST" })
       planSlug: data.planSlug,
       amount: Number(plan.price),
     });
-    if (!check.ok) return { ok: false as const, message: PROMO_ERROR_MESSAGE[check.error] };
+    const { DISCOUNT_SETTLEMENT_NOTE, PROVIDER_APPLIES_DISCOUNTS } = await import("@/lib/billing");
+    if (!check.ok)
+      return { ok: false as const, message: PROMO_ERROR_MESSAGE[check.error], reason: PROMO_ERROR_MESSAGE[check.error] };
     return {
       ok: true as const,
       code: check.promo.code as string,
@@ -127,6 +129,10 @@ export const previewPromoCode = createServerFn({ method: "POST" })
       originalAmount: check.originalAmount,
       discountAmount: check.discountAmount,
       finalAmount: check.finalAmount,
+      // Honest provider truth: never claim a discounted charge that PayMongo
+      // will not actually make.
+      providerApplied: PROVIDER_APPLIES_DISCOUNTS,
+      settlement: DISCOUNT_SETTLEMENT_NOTE,
     };
   });
 

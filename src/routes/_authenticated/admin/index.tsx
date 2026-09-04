@@ -19,6 +19,16 @@ import { adminOverview } from "@/lib/platform-admin.functions";
 import { peso } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [
+      { title: "Platform Overview — Daraven ERP" },
+      { name: "description", content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions." },
+      { property: "og:title", content: "Platform Overview — Daraven ERP" },
+      { property: "og:description", content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminOverview,
 });
 

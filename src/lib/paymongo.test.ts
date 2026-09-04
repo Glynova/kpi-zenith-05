@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { verifyWebhookSignature } from "./paymongo.server";
+import { cycleKeyFor } from "./paymongo-events";
 
 const SECRET = "whsk_test_dummy_secret_for_unit_test";
 
@@ -83,5 +84,28 @@ describe("PayMongo event mapping", () => {
     expect(nextStatusAfterFailure("trialing")).toBe("past_due");
     expect(nextStatusAfterFailure("past_due")).toBe("unpaid");
     expect(nextStatusAfterFailure("unpaid")).toBe("unpaid");
+  });
+});
+
+describe("cycleKeyFor", () => {
+  it("gives invoice.paid and payment.paid the same key within one cycle", () => {
+    const sub = { id: "s1", current_period_start: "2026-09-01T00:00:00.000Z" };
+    expect(cycleKeyFor(sub, { amount: 99900 }, "inv_1")).toBe(
+      cycleKeyFor(sub, { amount: 99900 }, null),
+    );
+  });
+
+  it("changes key when the billing period advances", () => {
+    const a = cycleKeyFor({ id: "s1", current_period_start: "2026-09-01T00:00:00.000Z" }, {});
+    const b = cycleKeyFor({ id: "s1", current_period_start: "2026-10-01T00:00:00.000Z" }, {});
+    expect(a).not.toBe(b);
+  });
+
+  it("falls back to the invoice id when no period is known", () => {
+    expect(cycleKeyFor({ id: "s1", current_period_start: null }, {}, "inv_9")).toBe("invoice:inv_9");
+  });
+
+  it("returns null without a subscription", () => {
+    expect(cycleKeyFor(null, {})).toBeNull();
   });
 });

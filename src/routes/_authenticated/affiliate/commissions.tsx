@@ -17,6 +17,16 @@ import { usePartnerDashboard } from "@/lib/use-affiliate";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/affiliate/commissions")({
+  head: () => ({
+    meta: [
+      { title: "Commission Ledger — Daraven ERP" },
+      { name: "description", content: "Every commission earning, reversal and payout linkage." },
+      { property: "og:title", content: "Commission Ledger — Daraven ERP" },
+      { property: "og:description", content: "Every commission earning, reversal and payout linkage." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: CommissionsPage,
 });
 

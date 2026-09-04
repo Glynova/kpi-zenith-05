@@ -8,6 +8,16 @@ import { usePartnerDashboard } from "@/lib/use-affiliate";
 import { dateTime, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/affiliate/referrals")({
+  head: () => ({
+    meta: [
+      { title: "Referrals — Daraven ERP" },
+      { name: "description", content: "Workspaces attributed to your partner account." },
+      { property: "og:title", content: "Referrals — Daraven ERP" },
+      { property: "og:description", content: "Workspaces attributed to your partner account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ReferralsPage,
 });
 

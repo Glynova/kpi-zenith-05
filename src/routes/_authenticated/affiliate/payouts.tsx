@@ -10,6 +10,16 @@ import { usePartnerDashboard } from "@/lib/use-affiliate";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/affiliate/payouts")({
+  head: () => ({
+    meta: [
+      { title: "Partner Payouts — Daraven ERP" },
+      { name: "description", content: "Your payout batches and settlement status." },
+      { property: "og:title", content: "Partner Payouts — Daraven ERP" },
+      { property: "og:description", content: "Your payout batches and settlement status." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PayoutsPage,
 });
 

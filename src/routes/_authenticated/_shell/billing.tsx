@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -214,9 +214,16 @@ function BillingPage() {
         title="Billing & Subscription"
         description="Your plan, invoices and payment status."
         actions={
-          <Button variant="outline" size="sm" onClick={refreshAll}>
-            <RefreshCw className="size-4" /> Refresh
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCw className="size-4" /> Refresh
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/upgrade">
+                <Sparkles className="size-4" /> Upgrade plan
+              </Link>
+            </Button>
+          </div>
         }
       />
 
