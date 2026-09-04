@@ -41,7 +41,9 @@ function Onboarding() {
   const { refresh, switchBusiness } = useBusiness();
   const [name, setName] = useState("");
   const [type, setType] = useState("retail");
+  const attachReferral = useServerFn(attachReferralToBusiness);
   const [currency, setCurrency] = useState("USD");
+
   const [taxRate, setTaxRate] = useState("0");
   const [loading, setLoading] = useState(false);
 
