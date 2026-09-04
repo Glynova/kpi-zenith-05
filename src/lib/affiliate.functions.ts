@@ -12,7 +12,26 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * Resolves the caller's partner record and refuses anything but an *approved*
+ * (status = 'active') partner. The database enforces the same rule through
+ * `current_partner_id()`, so a suspended or pending partner sees no rows even
+ * if this check were bypassed.
+ */
+async function requireActivePartner(context: any) {
+  const { data, error } = await context.supabase
+    .from("affiliate_partners")
+    .select("*")
+    .eq("user_id", context.userId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: approved affiliate partners only");
+  return data as any;
+}
+
 /* ------------------------------------------------------- public: referrals */
+
 
 /** Records a referral-link click. Public by design (no account required). */
 export const recordReferralClick = createServerFn({ method: "POST" })
