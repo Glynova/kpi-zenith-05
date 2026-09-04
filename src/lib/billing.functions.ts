@@ -143,7 +143,12 @@ export const syncPaymongoPlans = createServerFn({ method: "POST" })
 export const startSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    businessInput.extend({ planSlug: z.enum(["free", "pro", "business"]) }).parse(d),
+    businessInput
+      .extend({
+        planSlug: z.enum(["free", "pro", "business"]),
+        promoCode: z.string().max(40).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
@@ -156,6 +161,29 @@ export const startSubscription = createServerFn({ method: "POST" })
       .eq("slug", data.planSlug)
       .maybeSingle();
     if (!plan) throw new Error("Plan not found");
+
+    // Promo codes are always validated server-side; a client-supplied discount
+    // is never trusted.
+    const { validatePromoCode, redeemPromoCode } = await import("@/lib/affiliate.server");
+    const { PROMO_ERROR_MESSAGE } = await import("@/lib/affiliate");
+    let promoCheck: Awaited<ReturnType<typeof validatePromoCode>> | null = null;
+    if (data.promoCode && Number(plan.price) > 0) {
+      promoCheck = await validatePromoCode(admin, {
+        code: data.promoCode,
+        businessId: data.businessId,
+        planSlug: data.planSlug,
+        amount: Number(plan.price),
+      });
+      if (!promoCheck.ok) {
+        return {
+          ok: false,
+          configured: true,
+          reason: PROMO_ERROR_MESSAGE[promoCheck.error],
+          checkoutUrl: null,
+        };
+      }
+    }
+
 
     const { data: sub } = await admin
       .from("subscriptions")
