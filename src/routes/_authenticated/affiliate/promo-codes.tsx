@@ -60,7 +60,7 @@ function PartnerPromoCodes() {
             </TableCell>
             <TableCell>{shortDate(row.ends_at)}</TableCell>
             <TableCell>
-              <StatusBadge status={row.is_active ? "active" : "inactive"} />
+              <StatusBadge status={row.active ? "active" : "inactive"} />
             </TableCell>
           </TableRow>
         )}
