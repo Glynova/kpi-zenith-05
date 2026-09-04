@@ -29,6 +29,7 @@ async function assertPlatformAdmin(supabase: any, userId: string) {
     .from("platform_admins")
     .select("user_id")
     .eq("user_id", userId)
+    .eq("status", "active")
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
