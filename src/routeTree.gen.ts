@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAffiliateRouteRouteImport } from './routes/_authenticated/affiliate/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
@@ -88,6 +89,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 } as any)
 const AuthenticatedShellRouteRoute = AuthenticatedShellRouteRouteImport.update({
   id: '/_shell',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAffiliateRouteRoute =
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRouteRoute
   '/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRouteRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/r/$code': typeof RCodeRoute
@@ -472,6 +480,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRoute
   '/_authenticated/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
@@ -526,6 +535,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pricing'
     | '/reset-password'
+    | '/admin'
     | '/affiliate'
     | '/onboarding'
     | '/setup'
@@ -578,6 +588,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pricing'
     | '/reset-password'
+    | '/admin'
     | '/onboarding'
     | '/setup'
     | '/r/$code'
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/reset-password'
     | '/_authenticated/_shell'
+    | '/_authenticated/admin'
     | '/_authenticated/affiliate'
     | '/_authenticated/onboarding'
     | '/_authenticated/setup'
@@ -731,6 +743,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedShellRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/affiliate': {
@@ -1171,6 +1190,7 @@ const AuthenticatedAffiliateRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRoute
   AuthenticatedAffiliateRouteRoute: typeof AuthenticatedAffiliateRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -1178,6 +1198,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRoute,
   AuthenticatedAffiliateRouteRoute:
     AuthenticatedAffiliateRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
