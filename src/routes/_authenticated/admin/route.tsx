@@ -1,15 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import {
-  Activity,
   Building2,
-  CreditCard,
-  Handshake,
   LayoutDashboard,
   ShieldAlert,
-  Ticket,
   Users,
-  Wallet,
 } from "lucide-react";
+
 
 import { PortalShell, type PortalNavItem } from "@/components/portal-shell";
 import { Button } from "@/components/ui/button";
