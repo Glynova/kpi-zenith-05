@@ -97,9 +97,10 @@ export const logAdminAuthEvent = createServerFn({ method: "POST" })
 
 /**
  * Safe initial-admin setup. No credentials live in source:
- *  - if there is no active platform admin yet, the signed-in caller claims it;
- *  - otherwise a bootstrap token matching the PLATFORM_ADMIN_BOOTSTRAP_TOKEN
- *    server secret is required.
+ *  - the caller's verified email must appear in public.platform_admin_allowlist
+ *    (a database trigger enforces the same rule on every insert/activation);
+ *  - if an active platform admin already exists, a bootstrap token matching the
+ *    PLATFORM_ADMIN_BOOTSTRAP_TOKEN server secret is required as well.
  */
 export const bootstrapPlatformAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -109,7 +110,37 @@ export const bootstrapPlatformAdmin = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
-    const email = ((context.claims as any)?.email ?? null) as string | null;
+    const claims = context.claims as any;
+    const email = (claims?.email ?? null) as string | null;
+    const emailVerified = claims?.email_verified !== false;
+
+    const deny = async (reason: string, message: string) => {
+      await writeAudit({
+        user_id: context.userId,
+        email,
+        action: "admin_bootstrap",
+        success: false,
+        detail: { reason },
+      });
+      throw new Error(message);
+    };
+
+    // Identity allowlist: only explicitly listed addresses may ever be granted
+    // platform administration, regardless of workspace role.
+    if (!email || !emailVerified) {
+      await deny("unverified_email", "A verified email address is required.");
+    }
+    const { data: allowed } = await admin
+      .from("platform_admin_allowlist")
+      .select("email")
+      .ilike("email", email!)
+      .maybeSingle();
+    if (!allowed) {
+      await deny(
+        "not_allowlisted",
+        "This account is not authorized for platform administration.",
+      );
+    }
 
     const { count } = await admin
       .from("platform_admins")
@@ -119,18 +150,13 @@ export const bootstrapPlatformAdmin = createServerFn({ method: "POST" })
     if ((count ?? 0) > 0) {
       const expected = process.env["PLATFORM_ADMIN_BOOTSTRAP_TOKEN"];
       if (!expected || !data.token || data.token !== expected) {
-        await writeAudit({
-          user_id: context.userId,
-          email,
-          action: "admin_bootstrap",
-          success: false,
-          detail: { reason: "invalid_or_missing_bootstrap_token" },
-        });
-        throw new Error(
+        await deny(
+          "invalid_or_missing_bootstrap_token",
           "The platform already has an administrator. A valid bootstrap token is required.",
         );
       }
     }
+
 
     const { error } = await admin
       .from("platform_admins")
