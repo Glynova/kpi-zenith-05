@@ -58,6 +58,7 @@ import { Route as AuthenticatedAffiliateLinkRouteImport } from './routes/_authen
 import { Route as AuthenticatedAffiliatePayoutsRouteImport } from './routes/_authenticated/affiliate/payouts'
 import { Route as AuthenticatedAffiliatePromoCodesRouteImport } from './routes/_authenticated/affiliate/promo-codes'
 import { Route as AuthenticatedAffiliateReferralsRouteImport } from './routes/_authenticated/affiliate/referrals'
+import { Route as AuthenticatedAffiliateSettingsRouteImport } from './routes/_authenticated/affiliate/settings'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
@@ -341,6 +342,12 @@ const AuthenticatedAffiliateReferralsRoute =
     path: '/referrals',
     getParentRoute: () => AuthenticatedAffiliateRouteRoute,
   } as any)
+const AuthenticatedAffiliateSettingsRoute =
+  AuthenticatedAffiliateSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
 const AuthenticatedShellProductsProductIdRoute =
   AuthenticatedShellProductsProductIdRouteImport.update({
     id: '/products_/$productId',
@@ -401,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
   '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -451,6 +459,7 @@ export interface FileRoutesByTo {
   '/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
   '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/affiliate': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -505,6 +514,7 @@ export interface FileRoutesById {
   '/_authenticated/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
   '/_authenticated/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/_authenticated/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/_authenticated/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -558,6 +568,7 @@ export interface FileRouteTypes {
     | '/affiliate/payouts'
     | '/affiliate/promo-codes'
     | '/affiliate/referrals'
+    | '/affiliate/settings'
     | '/affiliate/'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -608,6 +619,7 @@ export interface FileRouteTypes {
     | '/affiliate/payouts'
     | '/affiliate/promo-codes'
     | '/affiliate/referrals'
+    | '/affiliate/settings'
     | '/affiliate'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -661,6 +673,7 @@ export interface FileRouteTypes {
     | '/_authenticated/affiliate/payouts'
     | '/_authenticated/affiliate/promo-codes'
     | '/_authenticated/affiliate/referrals'
+    | '/_authenticated/affiliate/settings'
     | '/_authenticated/affiliate/'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
@@ -1021,6 +1034,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAffiliateReferralsRouteImport
       parentRoute: typeof AuthenticatedAffiliateRouteRoute
     }
+    '/_authenticated/affiliate/settings': {
+      id: '/_authenticated/affiliate/settings'
+      path: '/settings'
+      fullPath: '/affiliate/settings'
+      preLoaderRoute: typeof AuthenticatedAffiliateSettingsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
     '/_authenticated/_shell/products_/$productId': {
       id: '/_authenticated/_shell/products_/$productId'
       path: '/products/$productId'
@@ -1125,6 +1145,7 @@ interface AuthenticatedAffiliateRouteRouteChildren {
   AuthenticatedAffiliatePayoutsRoute: typeof AuthenticatedAffiliatePayoutsRoute
   AuthenticatedAffiliatePromoCodesRoute: typeof AuthenticatedAffiliatePromoCodesRoute
   AuthenticatedAffiliateReferralsRoute: typeof AuthenticatedAffiliateReferralsRoute
+  AuthenticatedAffiliateSettingsRoute: typeof AuthenticatedAffiliateSettingsRoute
   AuthenticatedAffiliateIndexRoute: typeof AuthenticatedAffiliateIndexRoute
 }
 
@@ -1139,6 +1160,7 @@ const AuthenticatedAffiliateRouteRouteChildren: AuthenticatedAffiliateRouteRoute
     AuthenticatedAffiliatePromoCodesRoute:
       AuthenticatedAffiliatePromoCodesRoute,
     AuthenticatedAffiliateReferralsRoute: AuthenticatedAffiliateReferralsRoute,
+    AuthenticatedAffiliateSettingsRoute: AuthenticatedAffiliateSettingsRoute,
     AuthenticatedAffiliateIndexRoute: AuthenticatedAffiliateIndexRoute,
   }
 
