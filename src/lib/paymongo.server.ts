@@ -406,11 +406,19 @@ export function paymongoClient(mode?: PayMongoMode) {
   };
 }
 
-/** Client bound to the currently configured mode. */
+/** Client bound to the currently configured mode (delegates lazily so env is read per call). */
 export const paymongo = {
   isConfigured: () => readConfig().configured,
   mode: () => readConfig().mode,
   client: paymongoClient,
+  createPlan: (...a: Parameters<ReturnType<typeof paymongoClient>["createPlan"]>) =>
+    paymongoClient().createPlan(...a),
+  createCustomer: (...a: Parameters<ReturnType<typeof paymongoClient>["createCustomer"]>) =>
+    paymongoClient().createCustomer(...a),
+  createSubscription: (...a: Parameters<ReturnType<typeof paymongoClient>["createSubscription"]>) =>
+    paymongoClient().createSubscription(...a),
+  getSubscription: (id: string) => paymongoClient().getSubscription(id),
+  cancelSubscription: (id: string) => paymongoClient().cancelSubscription(id),
 };
 
 /** Parse `t=<ts>,te=<sig>,li=<sig>` into its parts. */
