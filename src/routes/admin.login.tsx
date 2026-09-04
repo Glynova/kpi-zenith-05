@@ -239,7 +239,16 @@ function AdminLoginPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="admin-password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="admin-password">Password</Label>
+                    <button
+                      type="button"
+                      onClick={sendReset}
+                      className="text-xs text-primary underline-offset-4 hover:underline"
+                    >
+                      Set / reset password
+                    </button>
+                  </div>
                   <Input
                     id="admin-password"
                     type="password"
@@ -249,6 +258,7 @@ function AdminLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
+
                 {error ? (
                   <p role="alert" className="text-sm text-destructive">
                     {error}
