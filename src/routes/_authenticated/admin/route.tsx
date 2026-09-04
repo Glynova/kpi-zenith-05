@@ -1,9 +1,14 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import {
+  Activity,
   Building2,
+  CreditCard,
+  Handshake,
   LayoutDashboard,
   ShieldAlert,
+  Tag,
   Users,
+  Wallet,
 } from "lucide-react";
 
 
@@ -21,6 +26,11 @@ const NAV: PortalNavItem[] = [
   { title: "Overview", url: "/admin", icon: LayoutDashboard },
   { title: "Businesses", url: "/admin/businesses", icon: Building2 },
   { title: "Users", url: "/admin/users", icon: Users },
+  { title: "Subscriptions", url: "/admin/subscriptions", icon: CreditCard },
+  { title: "Affiliates", url: "/admin/affiliates", icon: Handshake },
+  { title: "Payouts", url: "/admin/payouts", icon: Wallet },
+  { title: "Promo codes", url: "/admin/promo-codes", icon: Tag },
+  { title: "Activity", url: "/admin/activity", icon: Activity },
 ];
 
 

@@ -52,7 +52,12 @@ import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin/activity'
+import { Route as AuthenticatedAdminAffiliatesRouteImport } from './routes/_authenticated/admin/affiliates'
 import { Route as AuthenticatedAdminBusinessesRouteImport } from './routes/_authenticated/admin/businesses'
+import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
+import { Route as AuthenticatedAdminPromoCodesRouteImport } from './routes/_authenticated/admin/promo-codes'
+import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_authenticated/admin/subscriptions'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
 import { Route as AuthenticatedAffiliateAssetsRouteImport } from './routes/_authenticated/affiliate/assets'
@@ -308,10 +313,40 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminActivityRoute =
+  AuthenticatedAdminActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminAffiliatesRoute =
+  AuthenticatedAdminAffiliatesRouteImport.update({
+    id: '/affiliates',
+    path: '/affiliates',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminBusinessesRoute =
   AuthenticatedAdminBusinessesRouteImport.update({
     id: '/businesses',
     path: '/businesses',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminPayoutsRoute =
+  AuthenticatedAdminPayoutsRouteImport.update({
+    id: '/payouts',
+    path: '/payouts',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminPromoCodesRoute =
+  AuthenticatedAdminPromoCodesRouteImport.update({
+    id: '/promo-codes',
+    path: '/promo-codes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSubscriptionsRoute =
+  AuthenticatedAdminSubscriptionsRouteImport.update({
+    id: '/subscriptions',
+    path: '/subscriptions',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
@@ -427,7 +462,12 @@ export interface FileRoutesByFullPath {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
+  '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
   '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
@@ -481,7 +521,12 @@ export interface FileRoutesByTo {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
+  '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
   '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
@@ -540,7 +585,12 @@ export interface FileRoutesById {
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/_authenticated/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/_authenticated/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
+  '/_authenticated/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
   '/_authenticated/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
@@ -598,7 +648,12 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/activity'
+    | '/admin/affiliates'
     | '/admin/businesses'
+    | '/admin/payouts'
+    | '/admin/promo-codes'
+    | '/admin/subscriptions'
     | '/admin/users'
     | '/affiliate/assets'
     | '/affiliate/commissions'
@@ -652,7 +707,12 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/activity'
+    | '/admin/affiliates'
     | '/admin/businesses'
+    | '/admin/payouts'
+    | '/admin/promo-codes'
+    | '/admin/subscriptions'
     | '/admin/users'
     | '/affiliate/assets'
     | '/affiliate/commissions'
@@ -710,7 +770,12 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/admin/activity'
+    | '/_authenticated/admin/affiliates'
     | '/_authenticated/admin/businesses'
+    | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/promo-codes'
+    | '/_authenticated/admin/subscriptions'
     | '/_authenticated/admin/users'
     | '/_authenticated/affiliate/assets'
     | '/_authenticated/affiliate/commissions'
@@ -1039,11 +1104,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/activity': {
+      id: '/_authenticated/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AuthenticatedAdminActivityRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/affiliates': {
+      id: '/_authenticated/admin/affiliates'
+      path: '/affiliates'
+      fullPath: '/admin/affiliates'
+      preLoaderRoute: typeof AuthenticatedAdminAffiliatesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/businesses': {
       id: '/_authenticated/admin/businesses'
       path: '/businesses'
       fullPath: '/admin/businesses'
       preLoaderRoute: typeof AuthenticatedAdminBusinessesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/payouts': {
+      id: '/_authenticated/admin/payouts'
+      path: '/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/promo-codes': {
+      id: '/_authenticated/admin/promo-codes'
+      path: '/promo-codes'
+      fullPath: '/admin/promo-codes'
+      preLoaderRoute: typeof AuthenticatedAdminPromoCodesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/subscriptions': {
+      id: '/_authenticated/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AuthenticatedAdminSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/users': {
@@ -1213,14 +1313,24 @@ const AuthenticatedShellRouteRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
+  AuthenticatedAdminAffiliatesRoute: typeof AuthenticatedAdminAffiliatesRoute
   AuthenticatedAdminBusinessesRoute: typeof AuthenticatedAdminBusinessesRoute
+  AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminPromoCodesRoute: typeof AuthenticatedAdminPromoCodesRoute
+  AuthenticatedAdminSubscriptionsRoute: typeof AuthenticatedAdminSubscriptionsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
+    AuthenticatedAdminAffiliatesRoute: AuthenticatedAdminAffiliatesRoute,
     AuthenticatedAdminBusinessesRoute: AuthenticatedAdminBusinessesRoute,
+    AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+    AuthenticatedAdminPromoCodesRoute: AuthenticatedAdminPromoCodesRoute,
+    AuthenticatedAdminSubscriptionsRoute: AuthenticatedAdminSubscriptionsRoute,
     AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
