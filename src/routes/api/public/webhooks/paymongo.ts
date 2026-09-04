@@ -155,7 +155,22 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 .from("subscriptions")
                 .update({ status: "active", cancelled_at: null })
                 .eq("id", sub.id);
+              // Affiliate engine: collected revenue -> commission ledger entry.
+              const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
+              await recordCommissionForPayment(admin, {
+                businessId: sub.business_id,
+                subscriptionId: sub.id,
+                collectedAmount: Number(attrs["amount"] ?? attrs["total"] ?? 0) / 100,
+                currency: (attrs["currency"] as string) ?? "PHP",
+                externalReference: `invoice:${resource.id}`,
+                sourceType: "invoice",
+              });
             }
+            if (invoiceStatus === "void") {
+              const { reverseCommissionFor } = await import("@/lib/affiliate.server");
+              await reverseCommissionFor(admin, `invoice:${resource.id}`, "Invoice voided");
+            }
+
             if (invoiceStatus === "payment_failed") {
               // Retries are handled by PayMongo; we escalate past_due -> unpaid
               // on a second failure. Tenant data is never removed.
