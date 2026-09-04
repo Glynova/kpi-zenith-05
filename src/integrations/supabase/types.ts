@@ -829,45 +829,156 @@ export type Database = {
           },
         ]
       }
+      billing_checkouts: {
+        Row: {
+          amount: number
+          attempts: number
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          expires_at: string
+          failure_code: string | null
+          failure_reason: string | null
+          id: string
+          next_action_url: string | null
+          payment_method_type: string | null
+          paymongo_customer_id: string | null
+          paymongo_invoice_id: string | null
+          paymongo_payment_intent_id: string | null
+          paymongo_payment_method_id: string | null
+          paymongo_subscription_id: string | null
+          plan_id: string
+          promo_code: string | null
+          promo_snapshot: Json | null
+          status: string
+          test_mode: boolean
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          attempts?: number
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string
+          expires_at?: string
+          failure_code?: string | null
+          failure_reason?: string | null
+          id?: string
+          next_action_url?: string | null
+          payment_method_type?: string | null
+          paymongo_customer_id?: string | null
+          paymongo_invoice_id?: string | null
+          paymongo_payment_intent_id?: string | null
+          paymongo_payment_method_id?: string | null
+          paymongo_subscription_id?: string | null
+          plan_id: string
+          promo_code?: string | null
+          promo_snapshot?: Json | null
+          status?: string
+          test_mode?: boolean
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          attempts?: number
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          expires_at?: string
+          failure_code?: string | null
+          failure_reason?: string | null
+          id?: string
+          next_action_url?: string | null
+          payment_method_type?: string | null
+          paymongo_customer_id?: string | null
+          paymongo_invoice_id?: string | null
+          paymongo_payment_intent_id?: string | null
+          paymongo_payment_method_id?: string | null
+          paymongo_subscription_id?: string | null
+          plan_id?: string
+          promo_code?: string | null
+          promo_snapshot?: Json | null
+          status?: string
+          test_mode?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_checkouts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_checkouts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_invoices: {
         Row: {
           amount: number
+          attempt_count: number
           business_id: string
           created_at: string
           currency: string
+          description: string | null
           due_date: string | null
           external_invoice_id: string | null
           id: string
           invoice_number: string | null
+          next_retry_at: string | null
           paid_at: string | null
+          payment_intent_id: string | null
           status: string
           subscription_id: string | null
+          updated_at: string
         }
         Insert: {
           amount?: number
+          attempt_count?: number
           business_id: string
           created_at?: string
           currency?: string
+          description?: string | null
           due_date?: string | null
           external_invoice_id?: string | null
           id?: string
           invoice_number?: string | null
+          next_retry_at?: string | null
           paid_at?: string | null
+          payment_intent_id?: string | null
           status?: string
           subscription_id?: string | null
+          updated_at?: string
         }
         Update: {
           amount?: number
+          attempt_count?: number
           business_id?: string
           created_at?: string
           currency?: string
+          description?: string | null
           due_date?: string | null
           external_invoice_id?: string | null
           id?: string
           invoice_number?: string | null
+          next_retry_at?: string | null
           paid_at?: string | null
+          payment_intent_id?: string | null
           status?: string
           subscription_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -4540,28 +4651,37 @@ export type Database = {
         Row: {
           business_id: string | null
           created_at: string
+          error: string | null
           event_type: string
           external_event_id: string | null
           id: string
+          livemode: boolean | null
           payload: Json | null
+          processed_at: string | null
           subscription_id: string | null
         }
         Insert: {
           business_id?: string | null
           created_at?: string
+          error?: string | null
           event_type: string
           external_event_id?: string | null
           id?: string
+          livemode?: boolean | null
           payload?: Json | null
+          processed_at?: string | null
           subscription_id?: string | null
         }
         Update: {
           business_id?: string | null
           created_at?: string
+          error?: string | null
           event_type?: string
           external_event_id?: string | null
           id?: string
+          livemode?: boolean | null
           payload?: Json | null
+          processed_at?: string | null
           subscription_id?: string | null
         }
         Relationships: [
@@ -4587,10 +4707,16 @@ export type Database = {
           business_id: string
           created_at: string
           currency: string
+          description: string | null
           failure_reason: string | null
           id: string
+          invoice_id: string | null
+          method_brand: string | null
+          method_last4: string | null
           paid_at: string | null
+          payment_intent_id: string | null
           paymongo_payment_id: string | null
+          refunded_amount: number
           status: string
           subscription_id: string | null
         }
@@ -4599,10 +4725,16 @@ export type Database = {
           business_id: string
           created_at?: string
           currency?: string
+          description?: string | null
           failure_reason?: string | null
           id?: string
+          invoice_id?: string | null
+          method_brand?: string | null
+          method_last4?: string | null
           paid_at?: string | null
+          payment_intent_id?: string | null
           paymongo_payment_id?: string | null
+          refunded_amount?: number
           status?: string
           subscription_id?: string | null
         }
@@ -4611,10 +4743,16 @@ export type Database = {
           business_id?: string
           created_at?: string
           currency?: string
+          description?: string | null
           failure_reason?: string | null
           id?: string
+          invoice_id?: string | null
+          method_brand?: string | null
+          method_last4?: string | null
           paid_at?: string | null
+          payment_intent_id?: string | null
           paymongo_payment_id?: string | null
+          refunded_amount?: number
           status?: string
           subscription_id?: string | null
         }
@@ -4624,6 +4762,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
             referencedColumns: ["id"]
           },
           {
@@ -4644,6 +4789,8 @@ export type Database = {
           id: string
           name: string
           paymongo_plan_id: string | null
+          paymongo_synced_at: string | null
+          paymongo_test_plan_id: string | null
           price: number
           slug: string
           sort_order: number
@@ -4659,6 +4806,8 @@ export type Database = {
           id?: string
           name: string
           paymongo_plan_id?: string | null
+          paymongo_synced_at?: string | null
+          paymongo_test_plan_id?: string | null
           price?: number
           slug: string
           sort_order?: number
@@ -4674,6 +4823,8 @@ export type Database = {
           id?: string
           name?: string
           paymongo_plan_id?: string | null
+          paymongo_synced_at?: string | null
+          paymongo_test_plan_id?: string | null
           price?: number
           slug?: string
           sort_order?: number
@@ -4685,16 +4836,23 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          activated_at: string | null
           business_id: string
           cancel_at_period_end: boolean
           cancelled_at: string | null
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          ended_at: string | null
           id: string
+          last_synced_at: string | null
+          latest_invoice_id: string | null
+          latest_payment_intent_id: string | null
           payment_method_brand: string | null
           payment_method_last4: string | null
+          payment_method_type: string | null
           paymongo_customer_id: string | null
+          paymongo_plan_id: string | null
           paymongo_subscription_id: string | null
           pending_plan_effective_at: string | null
           pending_plan_id: string | null
@@ -4706,16 +4864,23 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activated_at?: string | null
           business_id: string
           cancel_at_period_end?: boolean
           cancelled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          ended_at?: string | null
           id?: string
+          last_synced_at?: string | null
+          latest_invoice_id?: string | null
+          latest_payment_intent_id?: string | null
           payment_method_brand?: string | null
           payment_method_last4?: string | null
+          payment_method_type?: string | null
           paymongo_customer_id?: string | null
+          paymongo_plan_id?: string | null
           paymongo_subscription_id?: string | null
           pending_plan_effective_at?: string | null
           pending_plan_id?: string | null
@@ -4727,16 +4892,23 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activated_at?: string | null
           business_id?: string
           cancel_at_period_end?: boolean
           cancelled_at?: string | null
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          ended_at?: string | null
           id?: string
+          last_synced_at?: string | null
+          latest_invoice_id?: string | null
+          latest_payment_intent_id?: string | null
           payment_method_brand?: string | null
           payment_method_last4?: string | null
+          payment_method_type?: string | null
           paymongo_customer_id?: string | null
+          paymongo_plan_id?: string | null
           paymongo_subscription_id?: string | null
           pending_plan_effective_at?: string | null
           pending_plan_id?: string | null
@@ -5377,6 +5549,14 @@ export type Database = {
         Returns: undefined
       }
       current_partner_id: { Args: never; Returns: string }
+      expire_subscriptions: {
+        Args: never
+        Returns: {
+          checkouts_expired: number
+          subscriptions_ended: number
+          trials_expired: number
+        }[]
+      }
       gen_referral_code: { Args: { _len?: number }; Returns: string }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
