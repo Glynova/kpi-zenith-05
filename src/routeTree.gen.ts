@@ -51,6 +51,7 @@ import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
+import { Route as AuthenticatedAffiliateCommissionsRouteImport } from './routes/_authenticated/affiliate/commissions'
 import { Route as AuthenticatedAffiliateCustomersRouteImport } from './routes/_authenticated/affiliate/customers'
 import { Route as AuthenticatedAffiliateLinkRouteImport } from './routes/_authenticated/affiliate/link'
 import { Route as AuthenticatedAffiliateReferralsRouteImport } from './routes/_authenticated/affiliate/referrals'
@@ -295,6 +296,12 @@ const AuthenticatedAffiliateIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAffiliateRouteRoute,
   } as any)
+const AuthenticatedAffiliateCommissionsRoute =
+  AuthenticatedAffiliateCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
 const AuthenticatedAffiliateCustomersRoute =
   AuthenticatedAffiliateCustomersRouteImport.update({
     id: '/customers',
@@ -366,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
   '/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
   '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
@@ -412,6 +420,7 @@ export interface FileRoutesByTo {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
   '/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
   '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
@@ -462,6 +471,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
   '/_authenticated/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
   '/_authenticated/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
   '/_authenticated/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/affiliate/commissions'
     | '/affiliate/customers'
     | '/affiliate/link'
     | '/affiliate/referrals'
@@ -557,6 +568,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/affiliate/commissions'
     | '/affiliate/customers'
     | '/affiliate/link'
     | '/affiliate/referrals'
@@ -606,6 +618,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/affiliate/commissions'
     | '/_authenticated/affiliate/customers'
     | '/_authenticated/affiliate/link'
     | '/_authenticated/affiliate/referrals'
@@ -920,6 +933,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAffiliateIndexRouteImport
       parentRoute: typeof AuthenticatedAffiliateRouteRoute
     }
+    '/_authenticated/affiliate/commissions': {
+      id: '/_authenticated/affiliate/commissions'
+      path: '/commissions'
+      fullPath: '/affiliate/commissions'
+      preLoaderRoute: typeof AuthenticatedAffiliateCommissionsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
     '/_authenticated/affiliate/customers': {
       id: '/_authenticated/affiliate/customers'
       path: '/customers'
@@ -1038,6 +1058,7 @@ const AuthenticatedShellRouteRouteWithChildren =
   )
 
 interface AuthenticatedAffiliateRouteRouteChildren {
+  AuthenticatedAffiliateCommissionsRoute: typeof AuthenticatedAffiliateCommissionsRoute
   AuthenticatedAffiliateCustomersRoute: typeof AuthenticatedAffiliateCustomersRoute
   AuthenticatedAffiliateLinkRoute: typeof AuthenticatedAffiliateLinkRoute
   AuthenticatedAffiliateReferralsRoute: typeof AuthenticatedAffiliateReferralsRoute
@@ -1046,6 +1067,8 @@ interface AuthenticatedAffiliateRouteRouteChildren {
 
 const AuthenticatedAffiliateRouteRouteChildren: AuthenticatedAffiliateRouteRouteChildren =
   {
+    AuthenticatedAffiliateCommissionsRoute:
+      AuthenticatedAffiliateCommissionsRoute,
     AuthenticatedAffiliateCustomersRoute: AuthenticatedAffiliateCustomersRoute,
     AuthenticatedAffiliateLinkRoute: AuthenticatedAffiliateLinkRoute,
     AuthenticatedAffiliateReferralsRoute: AuthenticatedAffiliateReferralsRoute,
