@@ -52,6 +52,7 @@ import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
 import { Route as AuthenticatedAffiliateLinkRouteImport } from './routes/_authenticated/affiliate/link'
+import { Route as AuthenticatedAffiliateReferralsRouteImport } from './routes/_authenticated/affiliate/referrals'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
@@ -299,6 +300,12 @@ const AuthenticatedAffiliateLinkRoute =
     path: '/link',
     getParentRoute: () => AuthenticatedAffiliateRouteRoute,
   } as any)
+const AuthenticatedAffiliateReferralsRoute =
+  AuthenticatedAffiliateReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
 const AuthenticatedShellProductsProductIdRoute =
   AuthenticatedShellProductsProductIdRouteImport.update({
     id: '/products_/$productId',
@@ -353,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -397,6 +405,7 @@ export interface FileRoutesByTo {
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
   '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/affiliate': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -445,6 +454,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
   '/_authenticated/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/_authenticated/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -492,6 +502,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/affiliate/link'
+    | '/affiliate/referrals'
     | '/affiliate/'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/units'
     | '/variants'
     | '/affiliate/link'
+    | '/affiliate/referrals'
     | '/affiliate'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -583,6 +595,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
     | '/_authenticated/affiliate/link'
+    | '/_authenticated/affiliate/referrals'
     | '/_authenticated/affiliate/'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
@@ -901,6 +914,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAffiliateLinkRouteImport
       parentRoute: typeof AuthenticatedAffiliateRouteRoute
     }
+    '/_authenticated/affiliate/referrals': {
+      id: '/_authenticated/affiliate/referrals'
+      path: '/referrals'
+      fullPath: '/affiliate/referrals'
+      preLoaderRoute: typeof AuthenticatedAffiliateReferralsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
     '/_authenticated/_shell/products_/$productId': {
       id: '/_authenticated/_shell/products_/$productId'
       path: '/products/$productId'
@@ -999,12 +1019,14 @@ const AuthenticatedShellRouteRouteWithChildren =
 
 interface AuthenticatedAffiliateRouteRouteChildren {
   AuthenticatedAffiliateLinkRoute: typeof AuthenticatedAffiliateLinkRoute
+  AuthenticatedAffiliateReferralsRoute: typeof AuthenticatedAffiliateReferralsRoute
   AuthenticatedAffiliateIndexRoute: typeof AuthenticatedAffiliateIndexRoute
 }
 
 const AuthenticatedAffiliateRouteRouteChildren: AuthenticatedAffiliateRouteRouteChildren =
   {
     AuthenticatedAffiliateLinkRoute: AuthenticatedAffiliateLinkRoute,
+    AuthenticatedAffiliateReferralsRoute: AuthenticatedAffiliateReferralsRoute,
     AuthenticatedAffiliateIndexRoute: AuthenticatedAffiliateIndexRoute,
   }
 
