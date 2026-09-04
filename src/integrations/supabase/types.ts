@@ -2570,17 +2570,59 @@ export type Database = {
           },
         ]
       }
+      platform_admin_audit: {
+        Row: {
+          action: string
+          created_at: string
+          detail: Json | null
+          email: string | null
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: Json | null
+          email?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           created_at: string
+          role: string
+          status: string
+          updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          role?: string
+          status?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          role?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
