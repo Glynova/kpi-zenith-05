@@ -431,6 +431,7 @@ export const amIPlatformAdmin = createServerFn({ method: "GET" })
       .from("platform_admins")
       .select("user_id")
       .eq("user_id", context.userId)
+      .eq("status", "active")
       .maybeSingle();
     return { isPlatformAdmin: !!data };
   });
