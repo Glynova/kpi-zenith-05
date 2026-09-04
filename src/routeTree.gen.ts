@@ -55,6 +55,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminAffiliatesRouteImport } from './routes/_authenticated/admin/affiliates'
 import { Route as AuthenticatedAdminBusinessesRouteImport } from './routes/_authenticated/admin/businesses'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
+import { Route as AuthenticatedAdminPromoCodesRouteImport } from './routes/_authenticated/admin/promo-codes'
 import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_authenticated/admin/subscriptions'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
@@ -329,6 +330,12 @@ const AuthenticatedAdminPayoutsRoute =
     path: '/payouts',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPromoCodesRoute =
+  AuthenticatedAdminPromoCodesRouteImport.update({
+    id: '/promo-codes',
+    path: '/promo-codes',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSubscriptionsRoute =
   AuthenticatedAdminSubscriptionsRouteImport.update({
     id: '/subscriptions',
@@ -451,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
@@ -508,6 +516,7 @@ export interface FileRoutesByTo {
   '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
@@ -570,6 +579,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/_authenticated/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/promo-codes': typeof AuthenticatedAdminPromoCodesRoute
   '/_authenticated/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
@@ -631,6 +641,7 @@ export interface FileRouteTypes {
     | '/admin/affiliates'
     | '/admin/businesses'
     | '/admin/payouts'
+    | '/admin/promo-codes'
     | '/admin/subscriptions'
     | '/admin/users'
     | '/affiliate/assets'
@@ -688,6 +699,7 @@ export interface FileRouteTypes {
     | '/admin/affiliates'
     | '/admin/businesses'
     | '/admin/payouts'
+    | '/admin/promo-codes'
     | '/admin/subscriptions'
     | '/admin/users'
     | '/affiliate/assets'
@@ -749,6 +761,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/affiliates'
     | '/_authenticated/admin/businesses'
     | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/promo-codes'
     | '/_authenticated/admin/subscriptions'
     | '/_authenticated/admin/users'
     | '/_authenticated/affiliate/assets'
@@ -1099,6 +1112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/promo-codes': {
+      id: '/_authenticated/admin/promo-codes'
+      path: '/promo-codes'
+      fullPath: '/admin/promo-codes'
+      preLoaderRoute: typeof AuthenticatedAdminPromoCodesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/subscriptions': {
       id: '/_authenticated/admin/subscriptions'
       path: '/subscriptions'
@@ -1276,6 +1296,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAffiliatesRoute: typeof AuthenticatedAdminAffiliatesRoute
   AuthenticatedAdminBusinessesRoute: typeof AuthenticatedAdminBusinessesRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminPromoCodesRoute: typeof AuthenticatedAdminPromoCodesRoute
   AuthenticatedAdminSubscriptionsRoute: typeof AuthenticatedAdminSubscriptionsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1286,6 +1307,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminAffiliatesRoute: AuthenticatedAdminAffiliatesRoute,
     AuthenticatedAdminBusinessesRoute: AuthenticatedAdminBusinessesRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+    AuthenticatedAdminPromoCodesRoute: AuthenticatedAdminPromoCodesRoute,
     AuthenticatedAdminSubscriptionsRoute: AuthenticatedAdminSubscriptionsRoute,
     AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
