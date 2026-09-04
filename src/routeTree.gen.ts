@@ -15,8 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedShellRouteRouteImport } from './routes/_authenticated/_shell/route'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedAffiliateRouteRouteImport } from './routes/_authenticated/affiliate/route'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
@@ -48,6 +51,18 @@ import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminBusinessesRouteImport } from './routes/_authenticated/admin/businesses'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
+import { Route as AuthenticatedAffiliateAssetsRouteImport } from './routes/_authenticated/affiliate/assets'
+import { Route as AuthenticatedAffiliateCommissionsRouteImport } from './routes/_authenticated/affiliate/commissions'
+import { Route as AuthenticatedAffiliateCustomersRouteImport } from './routes/_authenticated/affiliate/customers'
+import { Route as AuthenticatedAffiliateLinkRouteImport } from './routes/_authenticated/affiliate/link'
+import { Route as AuthenticatedAffiliatePayoutsRouteImport } from './routes/_authenticated/affiliate/payouts'
+import { Route as AuthenticatedAffiliatePromoCodesRouteImport } from './routes/_authenticated/affiliate/promo-codes'
+import { Route as AuthenticatedAffiliateReferralsRouteImport } from './routes/_authenticated/affiliate/referrals'
+import { Route as AuthenticatedAffiliateSettingsRouteImport } from './routes/_authenticated/affiliate/settings'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
@@ -79,6 +94,17 @@ const AuthenticatedShellRouteRoute = AuthenticatedShellRouteRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAffiliateRouteRoute =
+  AuthenticatedAffiliateRouteRouteImport.update({
+    id: '/affiliate',
+    path: '/affiliate',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -88,6 +114,11 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
   id: '/setup',
   path: '/setup',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedShellAnalyticsRoute =
   AuthenticatedShellAnalyticsRouteImport.update({
@@ -272,6 +303,76 @@ const AuthenticatedShellVariantsRoute =
     path: '/variants',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminBusinessesRoute =
+  AuthenticatedAdminBusinessesRouteImport.update({
+    id: '/businesses',
+    path: '/businesses',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAffiliateIndexRoute =
+  AuthenticatedAffiliateIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateAssetsRoute =
+  AuthenticatedAffiliateAssetsRouteImport.update({
+    id: '/assets',
+    path: '/assets',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateCommissionsRoute =
+  AuthenticatedAffiliateCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateCustomersRoute =
+  AuthenticatedAffiliateCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateLinkRoute =
+  AuthenticatedAffiliateLinkRouteImport.update({
+    id: '/link',
+    path: '/link',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliatePayoutsRoute =
+  AuthenticatedAffiliatePayoutsRouteImport.update({
+    id: '/payouts',
+    path: '/payouts',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliatePromoCodesRoute =
+  AuthenticatedAffiliatePromoCodesRouteImport.update({
+    id: '/promo-codes',
+    path: '/promo-codes',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateReferralsRoute =
+  AuthenticatedAffiliateReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
+const AuthenticatedAffiliateSettingsRoute =
+  AuthenticatedAffiliateSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAffiliateRouteRoute,
+  } as any)
 const AuthenticatedShellProductsProductIdRoute =
   AuthenticatedShellProductsProductIdRouteImport.update({
     id: '/products_/$productId',
@@ -290,8 +391,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -323,6 +427,18 @@ export interface FileRoutesByFullPath {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
+  '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
+  '/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
+  '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
+  '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
+  '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -333,6 +449,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -364,6 +481,18 @@ export interface FileRoutesByTo {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
+  '/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
+  '/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
+  '/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
+  '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
+  '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/affiliate': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -375,8 +504,11 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/r/$code': typeof RCodeRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
@@ -408,6 +540,18 @@ export interface FileRoutesById {
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/affiliate/assets': typeof AuthenticatedAffiliateAssetsRoute
+  '/_authenticated/affiliate/commissions': typeof AuthenticatedAffiliateCommissionsRoute
+  '/_authenticated/affiliate/customers': typeof AuthenticatedAffiliateCustomersRoute
+  '/_authenticated/affiliate/link': typeof AuthenticatedAffiliateLinkRoute
+  '/_authenticated/affiliate/payouts': typeof AuthenticatedAffiliatePayoutsRoute
+  '/_authenticated/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
+  '/_authenticated/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
+  '/_authenticated/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -418,8 +562,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pricing'
     | '/reset-password'
+    | '/admin'
+    | '/affiliate'
     | '/onboarding'
     | '/setup'
+    | '/r/$code'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -451,6 +598,18 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/businesses'
+    | '/admin/users'
+    | '/affiliate/assets'
+    | '/affiliate/commissions'
+    | '/affiliate/customers'
+    | '/affiliate/link'
+    | '/affiliate/payouts'
+    | '/affiliate/promo-codes'
+    | '/affiliate/referrals'
+    | '/affiliate/settings'
+    | '/admin/'
+    | '/affiliate/'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesByTo: FileRoutesByTo
@@ -461,6 +620,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/onboarding'
     | '/setup'
+    | '/r/$code'
     | '/analytics'
     | '/attendance'
     | '/audit-logs'
@@ -492,6 +652,18 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/businesses'
+    | '/admin/users'
+    | '/affiliate/assets'
+    | '/affiliate/commissions'
+    | '/affiliate/customers'
+    | '/affiliate/link'
+    | '/affiliate/payouts'
+    | '/affiliate/promo-codes'
+    | '/affiliate/referrals'
+    | '/affiliate/settings'
+    | '/admin'
+    | '/affiliate'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   id:
@@ -502,8 +674,11 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/reset-password'
     | '/_authenticated/_shell'
+    | '/_authenticated/admin'
+    | '/_authenticated/affiliate'
     | '/_authenticated/onboarding'
     | '/_authenticated/setup'
+    | '/r/$code'
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
@@ -535,6 +710,18 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/admin/businesses'
+    | '/_authenticated/admin/users'
+    | '/_authenticated/affiliate/assets'
+    | '/_authenticated/affiliate/commissions'
+    | '/_authenticated/affiliate/customers'
+    | '/_authenticated/affiliate/link'
+    | '/_authenticated/affiliate/payouts'
+    | '/_authenticated/affiliate/promo-codes'
+    | '/_authenticated/affiliate/referrals'
+    | '/_authenticated/affiliate/settings'
+    | '/_authenticated/admin/'
+    | '/_authenticated/affiliate/'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesById: FileRoutesById
@@ -545,6 +732,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RCodeRoute: typeof RCodeRoute
   ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
 
@@ -592,6 +780,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/affiliate': {
+      id: '/_authenticated/affiliate'
+      path: '/affiliate'
+      fullPath: '/affiliate'
+      preLoaderRoute: typeof AuthenticatedAffiliateRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -605,6 +807,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/setup'
       preLoaderRoute: typeof AuthenticatedSetupRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_shell/analytics': {
       id: '/_authenticated/_shell/analytics'
@@ -823,6 +1032,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/businesses': {
+      id: '/_authenticated/admin/businesses'
+      path: '/businesses'
+      fullPath: '/admin/businesses'
+      preLoaderRoute: typeof AuthenticatedAdminBusinessesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/affiliate/': {
+      id: '/_authenticated/affiliate/'
+      path: '/'
+      fullPath: '/affiliate/'
+      preLoaderRoute: typeof AuthenticatedAffiliateIndexRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/assets': {
+      id: '/_authenticated/affiliate/assets'
+      path: '/assets'
+      fullPath: '/affiliate/assets'
+      preLoaderRoute: typeof AuthenticatedAffiliateAssetsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/commissions': {
+      id: '/_authenticated/affiliate/commissions'
+      path: '/commissions'
+      fullPath: '/affiliate/commissions'
+      preLoaderRoute: typeof AuthenticatedAffiliateCommissionsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/customers': {
+      id: '/_authenticated/affiliate/customers'
+      path: '/customers'
+      fullPath: '/affiliate/customers'
+      preLoaderRoute: typeof AuthenticatedAffiliateCustomersRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/link': {
+      id: '/_authenticated/affiliate/link'
+      path: '/link'
+      fullPath: '/affiliate/link'
+      preLoaderRoute: typeof AuthenticatedAffiliateLinkRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/payouts': {
+      id: '/_authenticated/affiliate/payouts'
+      path: '/payouts'
+      fullPath: '/affiliate/payouts'
+      preLoaderRoute: typeof AuthenticatedAffiliatePayoutsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/promo-codes': {
+      id: '/_authenticated/affiliate/promo-codes'
+      path: '/promo-codes'
+      fullPath: '/affiliate/promo-codes'
+      preLoaderRoute: typeof AuthenticatedAffiliatePromoCodesRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/referrals': {
+      id: '/_authenticated/affiliate/referrals'
+      path: '/referrals'
+      fullPath: '/affiliate/referrals'
+      preLoaderRoute: typeof AuthenticatedAffiliateReferralsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
+    '/_authenticated/affiliate/settings': {
+      id: '/_authenticated/affiliate/settings'
+      path: '/settings'
+      fullPath: '/affiliate/settings'
+      preLoaderRoute: typeof AuthenticatedAffiliateSettingsRouteImport
+      parentRoute: typeof AuthenticatedAffiliateRouteRoute
+    }
     '/_authenticated/_shell/products_/$productId': {
       id: '/_authenticated/_shell/products_/$productId'
       path: '/products/$productId'
@@ -919,14 +1212,69 @@ const AuthenticatedShellRouteRouteWithChildren =
     AuthenticatedShellRouteRouteChildren,
   )
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminBusinessesRoute: typeof AuthenticatedAdminBusinessesRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminBusinessesRoute: AuthenticatedAdminBusinessesRoute,
+    AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedAffiliateRouteRouteChildren {
+  AuthenticatedAffiliateAssetsRoute: typeof AuthenticatedAffiliateAssetsRoute
+  AuthenticatedAffiliateCommissionsRoute: typeof AuthenticatedAffiliateCommissionsRoute
+  AuthenticatedAffiliateCustomersRoute: typeof AuthenticatedAffiliateCustomersRoute
+  AuthenticatedAffiliateLinkRoute: typeof AuthenticatedAffiliateLinkRoute
+  AuthenticatedAffiliatePayoutsRoute: typeof AuthenticatedAffiliatePayoutsRoute
+  AuthenticatedAffiliatePromoCodesRoute: typeof AuthenticatedAffiliatePromoCodesRoute
+  AuthenticatedAffiliateReferralsRoute: typeof AuthenticatedAffiliateReferralsRoute
+  AuthenticatedAffiliateSettingsRoute: typeof AuthenticatedAffiliateSettingsRoute
+  AuthenticatedAffiliateIndexRoute: typeof AuthenticatedAffiliateIndexRoute
+}
+
+const AuthenticatedAffiliateRouteRouteChildren: AuthenticatedAffiliateRouteRouteChildren =
+  {
+    AuthenticatedAffiliateAssetsRoute: AuthenticatedAffiliateAssetsRoute,
+    AuthenticatedAffiliateCommissionsRoute:
+      AuthenticatedAffiliateCommissionsRoute,
+    AuthenticatedAffiliateCustomersRoute: AuthenticatedAffiliateCustomersRoute,
+    AuthenticatedAffiliateLinkRoute: AuthenticatedAffiliateLinkRoute,
+    AuthenticatedAffiliatePayoutsRoute: AuthenticatedAffiliatePayoutsRoute,
+    AuthenticatedAffiliatePromoCodesRoute:
+      AuthenticatedAffiliatePromoCodesRoute,
+    AuthenticatedAffiliateReferralsRoute: AuthenticatedAffiliateReferralsRoute,
+    AuthenticatedAffiliateSettingsRoute: AuthenticatedAffiliateSettingsRoute,
+    AuthenticatedAffiliateIndexRoute: AuthenticatedAffiliateIndexRoute,
+  }
+
+const AuthenticatedAffiliateRouteRouteWithChildren =
+  AuthenticatedAffiliateRouteRoute._addFileChildren(
+    AuthenticatedAffiliateRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedAffiliateRouteRoute: typeof AuthenticatedAffiliateRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedAffiliateRouteRoute:
+    AuthenticatedAffiliateRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
 }
@@ -940,6 +1288,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RCodeRoute: RCodeRoute,
   ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
 export const routeTree = rootRouteImport

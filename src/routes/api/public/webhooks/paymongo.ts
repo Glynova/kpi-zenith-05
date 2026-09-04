@@ -155,7 +155,22 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 .from("subscriptions")
                 .update({ status: "active", cancelled_at: null })
                 .eq("id", sub.id);
+              // Affiliate engine: collected revenue -> commission ledger entry.
+              const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
+              await recordCommissionForPayment(admin, {
+                businessId: sub.business_id,
+                subscriptionId: sub.id,
+                collectedAmount: Number(attrs["amount"] ?? attrs["total"] ?? 0) / 100,
+                currency: (attrs["currency"] as string) ?? "PHP",
+                externalReference: `invoice:${resource.id}`,
+                sourceType: "invoice",
+              });
             }
+            if (invoiceStatus === "void") {
+              const { reverseCommissionFor } = await import("@/lib/affiliate.server");
+              await reverseCommissionFor(admin, `invoice:${resource.id}`, "Invoice voided");
+            }
+
             if (invoiceStatus === "payment_failed") {
               // Retries are handled by PayMongo; we escalate past_due -> unpaid
               // on a second failure. Tenant data is never removed.
@@ -164,34 +179,74 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
             }
           }
 
-          // 4c. Individual payments.
-          if (type.startsWith("payment.")) {
+          // 4c. Refunds / reversals clawback the matching commission entry.
+          if (type.startsWith("payment.refunded") || type.startsWith("payment.reversed") || type.startsWith("refund.")) {
+            const { reverseCommissionFor } = await import("@/lib/affiliate.server");
+            const paymentRef = (attrs["payment_id"] as string) ?? resource?.id;
+            const invoiceRef = attrs["invoice_id"] as string | undefined;
+            if (paymentRef) await reverseCommissionFor(admin, `payment:${paymentRef}`, "Payment refunded");
+            if (invoiceRef) await reverseCommissionFor(admin, `invoice:${invoiceRef}`, "Payment refunded");
+            if (paymentRef) {
+              await admin
+                .from("subscription_payments")
+                .update({ status: "refunded" })
+                .eq("paymongo_payment_id", paymentRef);
+            }
+          } else if (type.startsWith("payment.")) {
+            // 4d. Individual payments.
             const paid = type === "payment.paid";
-            await admin.from("subscription_payments").upsert(
-              {
-                business_id: sub.business_id,
-                subscription_id: sub.id,
-                paymongo_payment_id: resource?.id ?? null,
-                amount: Number(attrs["amount"] ?? 0) / 100,
-                currency: (attrs["currency"] as string) ?? "PHP",
-                status: paid ? "paid" : "failed",
-                paid_at: paid ? new Date().toISOString() : null,
-                failure_reason: paid
-                  ? null
-                  : ((attrs["last_payment_error"] as string) ?? "Payment failed"),
-              },
-              { onConflict: "paymongo_payment_id" },
-            );
+            const { data: paymentRow } = await admin
+              .from("subscription_payments")
+              .upsert(
+                {
+                  business_id: sub.business_id,
+                  subscription_id: sub.id,
+                  paymongo_payment_id: resource?.id ?? null,
+                  amount: Number(attrs["amount"] ?? 0) / 100,
+                  currency: (attrs["currency"] as string) ?? "PHP",
+                  status: paid ? "paid" : "failed",
+                  paid_at: paid ? new Date().toISOString() : null,
+                  failure_reason: paid
+                    ? null
+                    : ((attrs["last_payment_error"] as string) ?? "Payment failed"),
+                },
+                { onConflict: "paymongo_payment_id" },
+              )
+              .select("id")
+              .maybeSingle();
             if (paid) {
               await admin
                 .from("subscriptions")
                 .update({ status: "active", cancelled_at: null })
                 .eq("id", sub.id);
+              // Only when the payment is not already covered by a subscription
+              // invoice event, so a cycle can never be commissioned twice.
+              if (!attrs["invoice_id"]) {
+                const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
+                await recordCommissionForPayment(admin, {
+                  businessId: sub.business_id,
+                  subscriptionId: sub.id,
+                  paymentId: paymentRow?.id ?? null,
+                  collectedAmount: Number(attrs["amount"] ?? 0) / 100,
+                  currency: (attrs["currency"] as string) ?? "PHP",
+                  externalReference: `payment:${resource?.id}`,
+                  sourceType: "payment",
+                });
+              }
             } else {
               const next = nextStatusAfterFailure(sub.status);
               await admin.from("subscriptions").update({ status: next }).eq("id", sub.id);
             }
           }
+
+          // 4e. Referral status mirrors the subscription lifecycle.
+          {
+            const { setReferralStatus } = await import("@/lib/affiliate.server");
+            const mappedStatus = SUBSCRIPTION_STATUS_MAP[type];
+            if (mappedStatus === "cancelled") await setReferralStatus(admin, sub.business_id, "cancelled");
+            else if (mappedStatus === "past_due") await setReferralStatus(admin, sub.business_id, "past_due");
+          }
+
         }
 
         // 5. Unrecognised events are acknowledged so PayMongo stops retrying.
