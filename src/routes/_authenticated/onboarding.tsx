@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
 import { db } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
+import { attachReferralToBusiness } from "@/lib/affiliate.functions";
+import { clearReferralCode, readReferralCode } from "@/lib/referral-storage";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
