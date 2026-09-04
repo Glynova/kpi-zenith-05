@@ -142,6 +142,424 @@ export type Database = {
           },
         ]
       }
+      affiliate_applications: {
+        Row: {
+          audience: string | null
+          company: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          motivation: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          audience?: string | null
+          company?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          motivation?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          audience?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          motivation?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          landing_path: string | null
+          partner_id: string | null
+          referral_code: string
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          landing_path?: string | null
+          partner_id?: string | null
+          referral_code: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          landing_path?: string | null
+          partner_id?: string | null
+          referral_code?: string
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_commissions: {
+        Row: {
+          business_id: string | null
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          currency: string
+          discount_amount: number
+          entry_type: string
+          external_reference: string | null
+          gross_amount: number
+          id: string
+          invoice_id: string | null
+          net_amount: number
+          note: string | null
+          partner_id: string
+          payment_id: string | null
+          payout_id: string | null
+          period_index: number
+          referral_id: string | null
+          reverses_id: string | null
+          source_type: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          entry_type?: string
+          external_reference?: string | null
+          gross_amount?: number
+          id?: string
+          invoice_id?: string | null
+          net_amount?: number
+          note?: string | null
+          partner_id: string
+          payment_id?: string | null
+          payout_id?: string | null
+          period_index?: number
+          referral_id?: string | null
+          reverses_id?: string | null
+          source_type?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          discount_amount?: number
+          entry_type?: string
+          external_reference?: string | null
+          gross_amount?: number
+          id?: string
+          invoice_id?: string | null
+          net_amount?: number
+          note?: string | null
+          partner_id?: string
+          payment_id?: string | null
+          payout_id?: string | null
+          period_index?: number
+          referral_id?: string | null
+          reverses_id?: string | null
+          source_type?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_payouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_reverses_id_fkey"
+            columns: ["reverses_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_commissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_partners: {
+        Row: {
+          application_id: string | null
+          approved_at: string
+          commission_duration: string
+          commission_rate: number
+          company: string | null
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          notes: string | null
+          payout_details: Json
+          payout_method: string | null
+          referral_code: string
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          approved_at?: string
+          commission_duration?: string
+          commission_rate?: number
+          company?: string | null
+          created_at?: string
+          display_name: string
+          email: string
+          id?: string
+          notes?: string | null
+          payout_details?: Json
+          payout_method?: string | null
+          referral_code: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          approved_at?: string
+          commission_duration?: string
+          commission_rate?: number
+          company?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          payout_details?: Json
+          payout_method?: string | null
+          referral_code?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_partners_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: string | null
+          notes: string | null
+          paid_at: string | null
+          partner_id: string
+          period_end: string | null
+          period_start: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          partner_id: string
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string
+          period_end?: string | null
+          period_start?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_referrals: {
+        Row: {
+          attribution_source: string
+          business_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          first_paid_at: string | null
+          id: string
+          partner_id: string
+          promo_code_id: string | null
+          referral_code: string
+          signed_up_at: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attribution_source?: string
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          first_paid_at?: string | null
+          id?: string
+          partner_id: string
+          promo_code_id?: string | null
+          referral_code: string
+          signed_up_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attribution_source?: string
+          business_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          first_paid_at?: string | null
+          id?: string
+          partner_id?: string
+          promo_code_id?: string | null
+          referral_code?: string
+          signed_up_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_referrals_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           business_id: string
@@ -2164,6 +2582,24 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       price_history: {
         Row: {
           business_id: string
@@ -2650,6 +3086,148 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      promo_code_redemptions: {
+        Row: {
+          business_id: string
+          code: string
+          created_at: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          original_amount: number
+          plan_id: string | null
+          promo_code_id: string
+          redeemed_by: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          business_id: string
+          code: string
+          created_at?: string
+          discount_amount: number
+          final_amount: number
+          id?: string
+          original_amount: number
+          plan_id?: string | null
+          promo_code_id: string
+          redeemed_by?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          code?: string
+          created_at?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          original_amount?: number
+          plan_id?: string | null
+          promo_code_id?: string
+          redeemed_by?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          affiliate_partner_id: string | null
+          applicable_plans: string[]
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          duration: string
+          ends_at: string | null
+          id: string
+          max_per_business: number
+          max_redemptions: number | null
+          min_amount: number | null
+          redemption_count: number
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          affiliate_partner_id?: string | null
+          applicable_plans?: string[]
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          duration?: string
+          ends_at?: string | null
+          id?: string
+          max_per_business?: number
+          max_redemptions?: number | null
+          min_amount?: number | null
+          redemption_count?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          affiliate_partner_id?: string | null
+          applicable_plans?: string[]
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          duration?: string
+          ends_at?: string | null
+          id?: string
+          max_per_business?: number
+          max_redemptions?: number | null
+          min_amount?: number | null
+          redemption_count?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_affiliate_partner_id_fkey"
+            columns: ["affiliate_partner_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_order_items: {
         Row: {
@@ -3807,6 +4385,88 @@ export type Database = {
           },
         ]
       }
+      subscription_discounts: {
+        Row: {
+          active: boolean
+          business_id: string
+          code: string
+          created_at: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
+          duration: string
+          ends_at: string | null
+          final_amount: number
+          id: string
+          original_amount: number
+          promo_code_id: string | null
+          remaining_cycles: number | null
+          starts_at: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          business_id: string
+          code: string
+          created_at?: string
+          discount_amount: number
+          discount_type: string
+          discount_value: number
+          duration?: string
+          ends_at?: string | null
+          final_amount: number
+          id?: string
+          original_amount: number
+          promo_code_id?: string | null
+          remaining_cycles?: number | null
+          starts_at?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          business_id?: string
+          code?: string
+          created_at?: string
+          discount_amount?: number
+          discount_type?: string
+          discount_value?: number
+          duration?: string
+          ends_at?: string | null
+          final_amount?: number
+          id?: string
+          original_amount?: number
+          promo_code_id?: string | null
+          remaining_cycles?: number | null
+          starts_at?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_discounts_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_discounts_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_discounts_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           business_id: string | null
@@ -4647,6 +5307,8 @@ export type Database = {
         Args: { _receipt_id: string }
         Returns: undefined
       }
+      current_partner_id: { Args: never; Returns: string }
+      gen_referral_code: { Args: { _len?: number }; Returns: string }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
