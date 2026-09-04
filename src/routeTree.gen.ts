@@ -51,6 +51,7 @@ import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAffiliateIndexRouteImport } from './routes/_authenticated/affiliate/index'
 import { Route as AuthenticatedAffiliateAssetsRouteImport } from './routes/_authenticated/affiliate/assets'
 import { Route as AuthenticatedAffiliateCommissionsRouteImport } from './routes/_authenticated/affiliate/commissions'
@@ -300,6 +301,11 @@ const AuthenticatedShellVariantsRoute =
     path: '/variants',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAffiliateIndexRoute =
   AuthenticatedAffiliateIndexRouteImport.update({
     id: '/',
@@ -372,7 +378,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRouteRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
@@ -416,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -425,7 +432,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRouteRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/r/$code': typeof RCodeRoute
@@ -468,6 +474,7 @@ export interface FileRoutesByTo {
   '/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/affiliate': typeof AuthenticatedAffiliateIndexRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -480,7 +487,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteRouteWithChildren
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/affiliate': typeof AuthenticatedAffiliateRouteRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
@@ -524,6 +531,7 @@ export interface FileRoutesById {
   '/_authenticated/affiliate/promo-codes': typeof AuthenticatedAffiliatePromoCodesRoute
   '/_authenticated/affiliate/referrals': typeof AuthenticatedAffiliateReferralsRoute
   '/_authenticated/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
@@ -579,6 +587,7 @@ export interface FileRouteTypes {
     | '/affiliate/promo-codes'
     | '/affiliate/referrals'
     | '/affiliate/settings'
+    | '/admin/'
     | '/affiliate/'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -588,7 +597,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/pricing'
     | '/reset-password'
-    | '/admin'
     | '/onboarding'
     | '/setup'
     | '/r/$code'
@@ -631,6 +639,7 @@ export interface FileRouteTypes {
     | '/affiliate/promo-codes'
     | '/affiliate/referrals'
     | '/affiliate/settings'
+    | '/admin'
     | '/affiliate'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/_authenticated/affiliate/promo-codes'
     | '/_authenticated/affiliate/referrals'
     | '/_authenticated/affiliate/settings'
+    | '/_authenticated/admin/'
     | '/_authenticated/affiliate/'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
@@ -997,6 +1007,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellVariantsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/affiliate/': {
       id: '/_authenticated/affiliate/'
       path: '/'
@@ -1156,6 +1173,20 @@ const AuthenticatedShellRouteRouteWithChildren =
     AuthenticatedShellRouteRouteChildren,
   )
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
 interface AuthenticatedAffiliateRouteRouteChildren {
   AuthenticatedAffiliateAssetsRoute: typeof AuthenticatedAffiliateAssetsRoute
   AuthenticatedAffiliateCommissionsRoute: typeof AuthenticatedAffiliateCommissionsRoute
@@ -1190,7 +1221,7 @@ const AuthenticatedAffiliateRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRouteRoute: typeof AuthenticatedShellRouteRouteWithChildren
-  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRoute
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedAffiliateRouteRoute: typeof AuthenticatedAffiliateRouteRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
@@ -1198,7 +1229,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRouteRoute: AuthenticatedShellRouteRouteWithChildren,
-  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRoute,
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedAffiliateRouteRoute:
     AuthenticatedAffiliateRouteRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
