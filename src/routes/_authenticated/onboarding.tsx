@@ -50,14 +50,30 @@ function Onboarding() {
       .insert({ name: name.trim(), type, currency, tax_rate: Number(taxRate) || 0 })
       .select()
       .single();
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+
+    // Persist referral attribution against the business itself (never cookie-only).
+    const code = readReferralCode();
+    if (code) {
+      try {
+        await attachReferral({ data: { businessId: data.id, code } });
+      } catch {
+        /* attribution is best-effort and must never block onboarding */
+      }
+      clearReferralCode();
+    }
+
     setLoading(false);
-    if (error) return toast.error(error.message);
     switchBusiness(data.id);
     refresh();
     toast.success("Business created");
     navigate({ to: "/setup", replace: true });
 
   }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
