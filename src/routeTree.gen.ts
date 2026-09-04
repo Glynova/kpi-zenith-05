@@ -52,6 +52,7 @@ import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellVariantsRouteImport } from './routes/_authenticated/_shell/variants'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminAffiliatesRouteImport } from './routes/_authenticated/admin/affiliates'
 import { Route as AuthenticatedAdminBusinessesRouteImport } from './routes/_authenticated/admin/businesses'
 import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_authenticated/admin/subscriptions'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
@@ -309,6 +310,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminAffiliatesRoute =
+  AuthenticatedAdminAffiliatesRouteImport.update({
+    id: '/affiliates',
+    path: '/affiliates',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminBusinessesRoute =
   AuthenticatedAdminBusinessesRouteImport.update({
     id: '/businesses',
@@ -434,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -489,6 +497,7 @@ export interface FileRoutesByTo {
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/variants': typeof AuthenticatedShellVariantsRoute
+  '/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -549,6 +558,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/variants': typeof AuthenticatedShellVariantsRoute
+  '/_authenticated/admin/affiliates': typeof AuthenticatedAdminAffiliatesRoute
   '/_authenticated/admin/businesses': typeof AuthenticatedAdminBusinessesRoute
   '/_authenticated/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/affiliates'
     | '/admin/businesses'
     | '/admin/subscriptions'
     | '/admin/users'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/transfers'
     | '/units'
     | '/variants'
+    | '/admin/affiliates'
     | '/admin/businesses'
     | '/admin/subscriptions'
     | '/admin/users'
@@ -722,6 +734,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/variants'
+    | '/_authenticated/admin/affiliates'
     | '/_authenticated/admin/businesses'
     | '/_authenticated/admin/subscriptions'
     | '/_authenticated/admin/users'
@@ -1052,6 +1065,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/affiliates': {
+      id: '/_authenticated/admin/affiliates'
+      path: '/affiliates'
+      fullPath: '/admin/affiliates'
+      preLoaderRoute: typeof AuthenticatedAdminAffiliatesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/businesses': {
       id: '/_authenticated/admin/businesses'
       path: '/businesses'
@@ -1233,6 +1253,7 @@ const AuthenticatedShellRouteRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminAffiliatesRoute: typeof AuthenticatedAdminAffiliatesRoute
   AuthenticatedAdminBusinessesRoute: typeof AuthenticatedAdminBusinessesRoute
   AuthenticatedAdminSubscriptionsRoute: typeof AuthenticatedAdminSubscriptionsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
@@ -1241,6 +1262,7 @@ interface AuthenticatedAdminRouteRouteChildren {
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminAffiliatesRoute: AuthenticatedAdminAffiliatesRoute,
     AuthenticatedAdminBusinessesRoute: AuthenticatedAdminBusinessesRoute,
     AuthenticatedAdminSubscriptionsRoute: AuthenticatedAdminSubscriptionsRoute,
     AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
