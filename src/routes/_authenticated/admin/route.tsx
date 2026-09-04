@@ -44,11 +44,22 @@ function AdminLayout() {
   const fetchSession = useServerFn(getPlatformAdminSession);
   const logEvent = useServerFn(logAdminAuthEvent);
 
-  const { data, isLoading } = useQuery({
+  // Re-verified server-side on an interval and on focus so that revoking
+  // platform-admin access ends an already-open admin session.
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["platform-admin-session"],
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
+    retry: false,
     queryFn: () => fetchSession(),
   });
+
+  // Expired/invalid session (token no longer valid) → back to admin sign-in.
+  useEffect(() => {
+    if (isError) navigate({ to: "/admin/login", replace: true });
+  }, [isError, navigate]);
 
   const denied = !isLoading && data && !data.isPlatformAdmin;
 
@@ -58,6 +69,7 @@ function AdminLayout() {
       data: { action: "admin_access_denied", success: false, path: pathname },
     });
   }, [denied, logEvent, pathname]);
+
 
   async function signOutAdmin() {
     void logEvent({ data: { action: "admin_logout", success: true } });
