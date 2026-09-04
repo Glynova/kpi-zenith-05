@@ -20,6 +20,7 @@ import { Route as AuthenticatedAffiliateRouteRouteImport } from './routes/_authe
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AffiliateLoginRouteImport } from './routes/affiliate.login'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
@@ -125,6 +126,11 @@ const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AffiliateLoginRoute = AffiliateLoginRouteImport.update({
+  id: '/affiliate/login',
+  path: '/affiliate/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -444,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/affiliate/login': typeof AffiliateLoginRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
@@ -505,6 +512,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/affiliate/login': typeof AffiliateLoginRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
@@ -571,6 +579,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/affiliate/login': typeof AffiliateLoginRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
@@ -636,6 +645,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/admin/login'
+    | '/affiliate/login'
     | '/r/$code'
     | '/analytics'
     | '/attendance'
@@ -697,6 +707,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/setup'
     | '/admin/login'
+    | '/affiliate/login'
     | '/r/$code'
     | '/analytics'
     | '/attendance'
@@ -762,6 +773,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/setup'
     | '/admin/login'
+    | '/affiliate/login'
     | '/r/$code'
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/attendance'
@@ -823,6 +835,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AffiliateLoginRoute: typeof AffiliateLoginRoute
   RCodeRoute: typeof RCodeRoute
   ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -904,6 +917,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/affiliate/login': {
+      id: '/affiliate/login'
+      path: '/affiliate/login'
+      fullPath: '/affiliate/login'
+      preLoaderRoute: typeof AffiliateLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -1441,6 +1461,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AffiliateLoginRoute: AffiliateLoginRoute,
   RCodeRoute: RCodeRoute,
   ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
