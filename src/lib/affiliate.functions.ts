@@ -211,13 +211,8 @@ export const getPartnerDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    const { data: partner } = await supabase
-      .from("affiliate_partners")
-      .select("*")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    if (!partner) throw new Error("Not an affiliate partner");
-    const partnerId = (partner as any).id as string;
+    const partner = await requireActivePartner(context);
+    const partnerId = partner.id as string;
 
     const [{ data: referrals }, { data: commissions }, { data: payouts }, { count: clicks }] =
       await Promise.all([
@@ -306,6 +301,9 @@ export const updatePartnerProfile = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Approved partners only; privileged columns are additionally frozen by a
+    // database trigger so a profile save can never change programme terms.
+    await requireActivePartner(context);
     const { error } = await context.supabase
       .from("affiliate_partners")
       .update({
