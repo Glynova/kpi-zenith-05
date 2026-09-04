@@ -238,6 +238,7 @@ export type Database = {
           commission_rate: number
           created_at: string
           currency: string
+          cycle_key: string | null
           discount_amount: number
           entry_type: string
           external_reference: string | null
@@ -263,6 +264,7 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           currency?: string
+          cycle_key?: string | null
           discount_amount?: number
           entry_type?: string
           external_reference?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           commission_rate?: number
           created_at?: string
           currency?: string
+          cycle_key?: string | null
           discount_amount?: number
           entry_type?: string
           external_reference?: string | null
@@ -4397,9 +4400,11 @@ export type Database = {
           duration: string
           ends_at: string | null
           final_amount: number
+          fulfilment_status: string
           id: string
           original_amount: number
           promo_code_id: string | null
+          provider_applied: boolean
           remaining_cycles: number | null
           starts_at: string
           subscription_id: string | null
@@ -4416,9 +4421,11 @@ export type Database = {
           duration?: string
           ends_at?: string | null
           final_amount: number
+          fulfilment_status?: string
           id?: string
           original_amount: number
           promo_code_id?: string | null
+          provider_applied?: boolean
           remaining_cycles?: number | null
           starts_at?: string
           subscription_id?: string | null
@@ -4435,9 +4442,11 @@ export type Database = {
           duration?: string
           ends_at?: string | null
           final_amount?: number
+          fulfilment_status?: string
           id?: string
           original_amount?: number
           promo_code_id?: string | null
+          provider_applied?: boolean
           remaining_cycles?: number | null
           starts_at?: string
           subscription_id?: string | null

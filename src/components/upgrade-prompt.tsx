@@ -33,7 +33,7 @@ export function UpgradePrompt({
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Button asChild>
-            <Link to="/billing">
+            <Link to="/upgrade">
               <Sparkles className="size-4" /> Upgrade to {plan}
             </Link>
           </Button>

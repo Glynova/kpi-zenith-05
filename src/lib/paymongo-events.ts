@@ -41,3 +41,28 @@ export function toIso(value: unknown): string | undefined {
   if (typeof value === "string" && value) return value;
   return undefined;
 }
+
+/**
+ * Deterministic identity for one paid billing cycle of a subscription.
+ *
+ * Both `subscription.invoice.paid` and `payment.paid` for the same cycle must
+ * resolve to the same key so the commission ledger's partial unique index
+ * (subscription_id, cycle_key) collapses them into a single earning. Preference
+ * order is stable and time-independent:
+ *   1. the subscription's current period start (unchanged within a cycle)
+ *   2. the provider invoice id, when the period is unknown
+ *   3. the period start carried on the event payload
+ */
+export function cycleKeyFor(
+  sub: { id: string; current_period_start?: string | null } | null | undefined,
+  attrs: Record<string, unknown>,
+  invoiceId?: string | null,
+): string | null {
+  if (!sub) return null;
+  const periodStart = toIso(sub.current_period_start ?? undefined);
+  if (periodStart) return `period:${periodStart}`;
+  if (invoiceId) return `invoice:${invoiceId}`;
+  const eventPeriod = toIso(attrs["period_start"] ?? attrs["current_period_start"]);
+  if (eventPeriod) return `period:${eventPeriod}`;
+  return null;
+}

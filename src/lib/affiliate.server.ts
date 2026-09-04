@@ -150,6 +150,12 @@ export async function redeemPromoCode(
     subscriptionId: string | null;
     planId: string | null;
     userId: string | null;
+    /**
+     * True only when the payment provider actually charged the discounted
+     * amount. PayMongo recurring plans have fixed provider-side pricing, so
+     * this is false today and the discount is settled as a manual credit.
+     */
+    providerApplied?: boolean;
   },
 ) {
   const { promo, originalAmount, discountAmount, finalAmount } = args.check;
@@ -189,6 +195,9 @@ export async function redeemPromoCode(
     original_amount: originalAmount,
     final_amount: finalAmount,
     duration: promo.duration,
+    provider_applied: args.providerApplied === true,
+    fulfilment_status:
+      args.providerApplied === true ? "provider_applied" : "manual_credit_pending",
   });
 
   // A promo code owned by a partner also attributes the business to them when
@@ -279,6 +288,13 @@ export async function recordCommissionForPayment(
     paymentId?: string | null;
     invoiceId?: string | null;
     sourceType?: "payment" | "invoice";
+    /**
+     * Deterministic billing-cycle identity. Both `subscription.invoice.paid`
+     * and `payment.paid` for the same cycle resolve to the same key, and a
+     * partial unique index makes the second insert a no-op. No time heuristics.
+     */
+    cycleKey?: string | null;
+
   },
 ) {
   const collected = round2(Number(args.collectedAmount) || 0);
@@ -309,14 +325,28 @@ export async function recordCommissionForPayment(
     return null;
   }
 
-  // Discount actually applied to this business (frozen snapshot).
+  // Deterministic guard: one earning per subscription billing cycle.
+  if (args.cycleKey && args.subscriptionId) {
+    const { count: existing } = await admin
+      .from("affiliate_commissions")
+      .select("id", { count: "exact", head: true })
+      .eq("subscription_id", args.subscriptionId)
+      .eq("entry_type", "earning")
+      .eq("cycle_key", args.cycleKey);
+    if ((existing ?? 0) > 0) return null;
+  }
+
+  // Only a discount the payment provider actually charged reduces the gross;
+  // recorded-but-unapplied promo credits must not inflate the ledger.
   const { data: discount } = await admin
     .from("subscription_discounts")
-    .select("discount_amount")
+    .select("discount_amount, provider_applied")
     .eq("business_id", args.businessId)
     .eq("active", true)
     .maybeSingle();
-  const discountAmount = round2(Number(discount?.discount_amount ?? 0));
+  const discountAmount = discount?.provider_applied
+    ? round2(Number(discount?.discount_amount ?? 0))
+    : 0;
 
   const rate = Number(partner.commission_rate ?? 0);
   const commission = computeCommission(collected, rate);
@@ -330,6 +360,7 @@ export async function recordCommissionForPayment(
     invoice_id: args.invoiceId ?? null,
     source_type: args.sourceType ?? "payment",
     external_reference: args.externalReference,
+    cycle_key: args.cycleKey ?? null,
     entry_type: "earning",
     gross_amount: round2(collected + discountAmount),
     discount_amount: discountAmount,
@@ -340,8 +371,10 @@ export async function recordCommissionForPayment(
     period_index: periodIndex,
     status: "pending",
   });
-  // 23505 = replayed webhook delivery; already recorded.
-  if (error && (error as any).code !== "23505") throw new Error(error.message);
+  // 23505 = replayed webhook delivery or same cycle from a second event source.
+  if (error && (error as any).code === "23505") return null;
+  if (error) throw new Error(error.message);
+
 
   await admin
     .from("affiliate_referrals")

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
+  cycleKeyFor,
   INVOICE_STATUS_MAP,
   nextStatusAfterFailure,
   SUBSCRIPTION_STATUS_MAP,
@@ -88,7 +89,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
         if (subscriptionExternalId) {
           const { data } = await admin
             .from("subscriptions")
-            .select("id, business_id, plan_id, status")
+            .select("id, business_id, plan_id, status, current_period_start")
             .eq("paymongo_subscription_id", subscriptionExternalId)
             .maybeSingle();
           sub = data;
@@ -163,9 +164,11 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 collectedAmount: Number(attrs["amount"] ?? attrs["total"] ?? 0) / 100,
                 currency: (attrs["currency"] as string) ?? "PHP",
                 externalReference: `invoice:${resource.id}`,
+                cycleKey: cycleKeyFor(sub, attrs, resource?.id),
                 sourceType: "invoice",
               });
             }
+
             if (invoiceStatus === "void") {
               const { reverseCommissionFor } = await import("@/lib/affiliate.server");
               await reverseCommissionFor(admin, `invoice:${resource.id}`, "Invoice voided");
@@ -219,21 +222,22 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 .from("subscriptions")
                 .update({ status: "active", cancelled_at: null })
                 .eq("id", sub.id);
-              // Only when the payment is not already covered by a subscription
-              // invoice event, so a cycle can never be commissioned twice.
-              if (!attrs["invoice_id"]) {
-                const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
-                await recordCommissionForPayment(admin, {
-                  businessId: sub.business_id,
-                  subscriptionId: sub.id,
-                  paymentId: paymentRow?.id ?? null,
-                  collectedAmount: Number(attrs["amount"] ?? 0) / 100,
-                  currency: (attrs["currency"] as string) ?? "PHP",
-                  externalReference: `payment:${resource?.id}`,
-                  sourceType: "payment",
-                });
-              }
+              // The cycle key is shared with the invoice path, so a cycle can
+              // never be commissioned twice regardless of event ordering or
+              // whether PayMongo links the payment to an invoice.
+              const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
+              await recordCommissionForPayment(admin, {
+                businessId: sub.business_id,
+                subscriptionId: sub.id,
+                paymentId: paymentRow?.id ?? null,
+                collectedAmount: Number(attrs["amount"] ?? 0) / 100,
+                currency: (attrs["currency"] as string) ?? "PHP",
+                externalReference: `payment:${resource?.id}`,
+                cycleKey: cycleKeyFor(sub, attrs, (attrs["invoice_id"] as string) ?? null),
+                sourceType: "payment",
+              });
             } else {
+
               const next = nextStatusAfterFailure(sub.status);
               await admin.from("subscriptions").update({ status: next }).eq("id", sub.id);
             }
