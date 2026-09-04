@@ -158,6 +158,25 @@ function AdminLoginPage() {
     }
   }
 
+  /** Supabase Auth sends the reset link; no credential is ever created here. */
+  async function sendReset() {
+    if (!email) {
+      setError("Enter your work email first, then request a reset link.");
+      return;
+    }
+    setLoading(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (resetError) {
+      setError("Could not send the reset link. Try again shortly.");
+      return;
+    }
+    toast.success("If that address is registered, a password reset link is on its way.");
+  }
+
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-16">
       <div className="pointer-events-none absolute -top-40 left-1/2 size-[38rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
