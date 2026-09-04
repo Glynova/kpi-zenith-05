@@ -101,20 +101,21 @@ function AdminSubscriptions() {
         <TabsContent value="invoices">
           <DataCard
             title="Recent invoices"
-            columns={["Workspace", "Amount", "Status", "Period", "Created"]}
+            columns={["Workspace", "Invoice", "Amount", "Status", "Due", "Paid"]}
             rows={(data.invoices ?? []) as any[]}
             empty={{ title: "No invoices yet" }}
             renderRow={(i: any) => (
               <TableRow key={i.id}>
                 <TableCell className="font-medium">{i.business_name}</TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {i.invoice_number ?? i.external_invoice_id ?? "—"}
+                </TableCell>
                 <TableCell className="tabular-nums">{peso(i.amount)}</TableCell>
                 <TableCell>
                   <StatusBadge status={i.status} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {shortDate(i.period_start)} – {shortDate(i.period_end)}
-                </TableCell>
-                <TableCell className="text-muted-foreground">{shortDate(i.created_at)}</TableCell>
+                <TableCell className="text-muted-foreground">{shortDate(i.due_date)}</TableCell>
+                <TableCell className="text-muted-foreground">{shortDate(i.paid_at)}</TableCell>
               </TableRow>
             )}
           />
