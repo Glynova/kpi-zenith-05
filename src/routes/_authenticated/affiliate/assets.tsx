@@ -13,6 +13,16 @@ import { referralUrl } from "@/lib/affiliate";
 import { usePartnerDashboard } from "@/lib/use-affiliate";
 
 export const Route = createFileRoute("/_authenticated/affiliate/assets")({
+  head: () => ({
+    meta: [
+      { title: "Marketing Assets — Daraven ERP" },
+      { name: "description", content: "Brand assets and copy for promoting Daraven." },
+      { property: "og:title", content: "Marketing Assets — Daraven ERP" },
+      { property: "og:description", content: "Brand assets and copy for promoting Daraven." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AssetsPage,
 });
 

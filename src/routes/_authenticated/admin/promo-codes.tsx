@@ -39,6 +39,16 @@ import {
 } from "@/lib/platform-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/promo-codes")({
+  head: () => ({
+    meta: [
+      { title: "Promo Codes — Daraven ERP" },
+      { name: "description", content: "Create, edit and disable promo codes and review redemptions." },
+      { property: "og:title", content: "Promo Codes — Daraven ERP" },
+      { property: "og:description", content: "Create, edit and disable promo codes and review redemptions." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminPromoCodes,
 });
 

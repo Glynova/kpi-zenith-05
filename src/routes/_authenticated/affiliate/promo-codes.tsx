@@ -11,6 +11,16 @@ import { usePartnerDashboard } from "@/lib/use-affiliate";
 import { peso, shortDate } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/affiliate/promo-codes")({
+  head: () => ({
+    meta: [
+      { title: "Partner Promo Codes — Daraven ERP" },
+      { name: "description", content: "Promo codes attributed to your partner account." },
+      { property: "og:title", content: "Partner Promo Codes — Daraven ERP" },
+      { property: "og:description", content: "Promo codes attributed to your partner account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PartnerPromoCodes,
 });
 

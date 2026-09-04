@@ -14,6 +14,16 @@ import { adminEvents } from "@/lib/platform-admin.functions";
 import { dateTime } from "@/lib/partner-format";
 
 export const Route = createFileRoute("/_authenticated/admin/activity")({
+  head: () => ({
+    meta: [
+      { title: "Platform Activity — Daraven ERP" },
+      { name: "description", content: "Billing webhook events and the platform audit log." },
+      { property: "og:title", content: "Platform Activity — Daraven ERP" },
+      { property: "og:description", content: "Billing webhook events and the platform audit log." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminActivity,
 });
 

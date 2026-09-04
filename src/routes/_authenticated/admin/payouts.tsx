@@ -36,6 +36,16 @@ import {
 } from "@/lib/platform-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
+  head: () => ({
+    meta: [
+      { title: "Affiliate Payouts — Daraven ERP" },
+      { name: "description", content: "Pending partner balances and payout batch processing." },
+      { property: "og:title", content: "Affiliate Payouts — Daraven ERP" },
+      { property: "og:description", content: "Pending partner balances and payout batch processing." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminPayouts,
 });
 

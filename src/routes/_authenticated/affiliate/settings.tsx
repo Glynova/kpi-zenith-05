@@ -22,6 +22,16 @@ import { updatePartnerProfile } from "@/lib/affiliate.functions";
 import { usePartnerDashboard } from "@/lib/use-affiliate";
 
 export const Route = createFileRoute("/_authenticated/affiliate/settings")({
+  head: () => ({
+    meta: [
+      { title: "Partner Settings — Daraven ERP" },
+      { name: "description", content: "Your payout details and partner profile." },
+      { property: "og:title", content: "Partner Settings — Daraven ERP" },
+      { property: "og:description", content: "Your payout details and partner profile." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: PartnerSettings,
 });
 

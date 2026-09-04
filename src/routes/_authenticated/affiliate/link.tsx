@@ -14,6 +14,16 @@ import { referralUrl } from "@/lib/affiliate";
 import { usePartnerDashboard } from "@/lib/use-affiliate";
 
 export const Route = createFileRoute("/_authenticated/affiliate/link")({
+  head: () => ({
+    meta: [
+      { title: "Referral Link — Daraven ERP" },
+      { name: "description", content: "Your referral link, QR code and campaign tags." },
+      { property: "og:title", content: "Referral Link — Daraven ERP" },
+      { property: "og:description", content: "Your referral link, QR code and campaign tags." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ReferralLinkPage,
 });
 

@@ -14,6 +14,16 @@ import { shortDate } from "@/lib/partner-format";
 import { ROLE_LABEL } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
+  head: () => ({
+    meta: [
+      { title: "Platform Users — Daraven ERP" },
+      { name: "description", content: "All user accounts and their workspace memberships." },
+      { property: "og:title", content: "Platform Users — Daraven ERP" },
+      { property: "og:description", content: "All user accounts and their workspace memberships." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminUsers,
 });
 
