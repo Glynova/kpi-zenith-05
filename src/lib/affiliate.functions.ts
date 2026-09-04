@@ -32,7 +32,6 @@ async function requireActivePartner(context: any) {
 
 /* ------------------------------------------------------- public: referrals */
 
-
 /** Records a referral-link click. Public by design (no account required). */
 export const recordReferralClick = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -56,7 +55,11 @@ export const recordReferralClick = createServerFn({ method: "POST" })
       landing_path: data.landingPath ?? null,
       referrer: data.referrer ?? null,
     });
-    return { valid: true as const, partnerName: partner.display_name as string, code: partner.referral_code as string };
+    return {
+      valid: true as const,
+      partnerName: partner.display_name as string,
+      code: partner.referral_code as string,
+    };
   });
 
 /**
@@ -137,7 +140,11 @@ export const previewPromoCode = createServerFn({ method: "POST" })
     });
     const { DISCOUNT_SETTLEMENT_NOTE, PROVIDER_APPLIES_DISCOUNTS } = await import("@/lib/billing");
     if (!check.ok)
-      return { ok: false as const, message: PROMO_ERROR_MESSAGE[check.error], reason: PROMO_ERROR_MESSAGE[check.error] };
+      return {
+        ok: false as const,
+        message: PROMO_ERROR_MESSAGE[check.error],
+        reason: PROMO_ERROR_MESSAGE[check.error],
+      };
     return {
       ok: true as const,
       code: check.promo.code as string,
@@ -182,7 +189,8 @@ export const applyAsAffiliate = createServerFn({ method: "POST" })
       motivation: data.motivation ?? null,
     });
     if (error) {
-      if ((error as any).code === "23505") throw new Error("You already have an application under review.");
+      if ((error as any).code === "23505")
+        throw new Error("You already have an application under review.");
       throw new Error(error.message);
     }
     return { ok: true };
@@ -193,7 +201,11 @@ export const getMyAffiliateStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const [{ data: partner }, { data: application }] = await Promise.all([
-      context.supabase.from("affiliate_partners").select("*").eq("user_id", context.userId).maybeSingle(),
+      context.supabase
+        .from("affiliate_partners")
+        .select("*")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
       context.supabase
         .from("affiliate_applications")
         .select("*")
@@ -260,7 +272,9 @@ export const getPartnerDashboard = createServerFn({ method: "GET" })
         admin.from("businesses").select("id, name, created_at").in("id", ids),
         admin
           .from("subscriptions")
-          .select("business_id, status, plan_id, current_period_end, trial_ends_at, subscription_plans(name, price)")
+          .select(
+            "business_id, status, plan_id, current_period_end, trial_ends_at, subscription_plans(name, price)",
+          )
           .in("business_id", ids),
       ]);
       businesses = b ?? [];

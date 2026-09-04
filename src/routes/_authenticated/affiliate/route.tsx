@@ -145,7 +145,10 @@ function ApplyScreen({ application, onApplied }: { application: any; onApplied: 
       <StatusCard
         badge="Not approved"
         title="Your partner application wasn't approved"
-        body={application.review_notes ?? "You can apply again later with more detail about your audience."}
+        body={
+          application.review_notes ??
+          "You can apply again later with more detail about your audience."
+        }
       />
     );
   }
@@ -157,8 +160,8 @@ function ApplyScreen({ application, onApplied }: { application: any; onApplied: 
           <Badge className="w-fit">Affiliate programme</Badge>
           <CardTitle className="font-display text-2xl">Become a Daraven partner</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Earn recurring commission on every business you bring to Daraven ERP. Commission is
-            paid on collected subscription revenue — not on trials.
+            Earn recurring commission on every business you bring to Daraven ERP. Commission is paid
+            on collected subscription revenue — not on trials.
           </p>
         </CardHeader>
         <CardContent>
