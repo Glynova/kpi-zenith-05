@@ -281,13 +281,38 @@ export const startSubscription = createServerFn({ method: "POST" })
       payload: { plan: plan.slug, paymongo_subscription_id: created.data.id },
     });
 
+    // Freeze the applied discount against the subscription so later edits to
+    // the promo code cannot rewrite historical billing.
+    if (promoCheck?.ok) {
+      const { data: fresh } = await admin
+        .from("subscriptions")
+        .select("id")
+        .eq("business_id", data.businessId)
+        .maybeSingle();
+      await redeemPromoCode(admin, {
+        check: promoCheck,
+        businessId: data.businessId,
+        subscriptionId: fresh?.id ?? null,
+        planId: plan.id,
+        userId: context.userId,
+      });
+    }
+
     return {
       ok: true,
       configured: true,
       checkoutUrl: (attrs["checkout_url"] as string) ?? null,
       effectiveAt: new Date().toISOString(),
+      discountApplied: promoCheck?.ok
+        ? {
+            code: promoCheck.promo.code as string,
+            discountAmount: promoCheck.discountAmount,
+            finalAmount: promoCheck.finalAmount,
+          }
+        : null,
     };
   });
+
 
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
