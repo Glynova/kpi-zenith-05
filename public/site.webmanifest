@@ -1,0 +1,17 @@
+{
+  "name": "Daraven ERP",
+  "short_name": "Daraven",
+  "description": "Daraven ERP — Smarter Decisions. Better Performance. Inventory, sales, finance, payroll and KPI analytics in one workspace.",
+  "id": "/",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#0a1016",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

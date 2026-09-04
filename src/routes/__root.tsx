@@ -86,7 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Daraven ERP unifies inventory, finance, KPIs and business performance management for every type of business.",
       },
+      { name: "application-name", content: "Daraven ERP" },
+      { name: "apple-mobile-web-app-title", content: "Daraven" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Daraven ERP" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -97,7 +100,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      // Daraven ERP raven mark — replaces the template favicon everywhere.
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
+      { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/favicon.png" },
+      { rel: "shortcut icon", href: "/favicon.ico" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
