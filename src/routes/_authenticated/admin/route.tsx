@@ -1,22 +1,26 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Activity,
   Building2,
   CreditCard,
   Handshake,
   LayoutDashboard,
+  LogOut,
   ShieldAlert,
   Tag,
   Users,
   Wallet,
 } from "lucide-react";
 
-
 import { PortalShell, type PortalNavItem } from "@/components/portal-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePlatformAdmin } from "@/lib/use-affiliate";
+import { supabase } from "@/integrations/supabase/client";
+import { getPlatformAdminSession, logAdminAuthEvent } from "@/lib/platform-auth.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -33,11 +37,37 @@ const NAV: PortalNavItem[] = [
   { title: "Activity", url: "/admin/activity", icon: Activity },
 ];
 
-
 function AdminLayout() {
-  const { isPlatformAdmin, loading } = usePlatformAdmin();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const fetchSession = useServerFn(getPlatformAdminSession);
+  const logEvent = useServerFn(logAdminAuthEvent);
 
-  if (loading) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["platform-admin-session"],
+    staleTime: 60_000,
+    queryFn: () => fetchSession(),
+  });
+
+  const denied = !isLoading && data && !data.isPlatformAdmin;
+
+  useEffect(() => {
+    if (!denied) return;
+    void logEvent({
+      data: { action: "admin_access_denied", success: false, path: pathname },
+    });
+  }, [denied, logEvent, pathname]);
+
+  async function signOutAdmin() {
+    void logEvent({ data: { action: "admin_logout", success: true } });
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/admin/login", replace: true });
+  }
+
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-4xl space-y-4 p-8">
         <Skeleton className="h-10 w-64" />
@@ -48,7 +78,7 @@ function AdminLayout() {
 
   // Every admin server function re-verifies platform admin server-side; this
   // check only decides what the UI offers.
-  if (!isPlatformAdmin) {
+  if (denied) {
     return (
       <div className="mx-auto max-w-md px-4 py-24">
         <Card className="text-center shadow-elevate-2">
@@ -56,11 +86,16 @@ function AdminLayout() {
             <ShieldAlert className="mx-auto size-8 text-destructive" />
             <h1 className="font-display text-xl font-semibold">Platform admins only</h1>
             <p className="text-sm text-muted-foreground">
-              This area is restricted to the Daraven platform team.
+              This area is restricted to the Daraven platform team. Your account is not authorized.
             </p>
-            <Button asChild variant="outline">
-              <a href="/dashboard">Back to workspace</a>
-            </Button>
+            <div className="flex justify-center gap-2 pt-2">
+              <Button asChild variant="outline">
+                <a href="/dashboard">Back to workspace</a>
+              </Button>
+              <Button asChild>
+                <a href="/admin/login">Admin sign-in</a>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -69,6 +104,14 @@ function AdminLayout() {
 
   return (
     <PortalShell label="Platform Admin" tone="admin" items={NAV}>
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        <Button asChild variant="outline" size="sm">
+          <a href="/dashboard">Back to workspace</a>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={signOutAdmin}>
+          <LogOut className="mr-2 size-4" /> Sign out
+        </Button>
+      </div>
       <Outlet />
     </PortalShell>
   );

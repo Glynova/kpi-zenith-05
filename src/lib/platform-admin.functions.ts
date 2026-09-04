@@ -16,6 +16,7 @@ async function requirePlatformAdmin(context: any) {
     .from("platform_admins")
     .select("user_id")
     .eq("user_id", context.userId)
+    .eq("status", "active")
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Forbidden");
