@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.enforce_platform_admin_allowlist() FROM PUBLIC, anon, authenticated;
