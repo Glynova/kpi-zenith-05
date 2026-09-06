@@ -63,6 +63,13 @@
 
 :root {
   --radius: 0.7rem;
+  /* Brand constants — identical in both themes (marketing surfaces are always dark). */
+  --navy: oklch(0.27 0.06 262);
+  --navy-deep: oklch(0.16 0.04 264);
+  --ink: oklch(0.11 0.02 264);
+  --gold: oklch(0.79 0.12 85);
+  --gold-foreground: oklch(0.18 0.03 264);
+
   --background: oklch(0.995 0.002 240);
   --foreground: oklch(0.21 0.02 250);
   --card: oklch(1 0 0);
