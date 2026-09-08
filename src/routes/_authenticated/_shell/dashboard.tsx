@@ -42,6 +42,8 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KpiOrb } from "@/components/kpi-orb";
+import { StatCard } from "@/components/stat-card";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -73,57 +75,36 @@ const RANGES = [
   { value: "365", label: "Last 12 months" },
 ];
 
-function KpiCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: any;
-  tone?: "default" | "success" | "warning" | "destructive";
-}) {
-  const toneClass =
-    tone === "success"
-      ? "text-success"
-      : tone === "warning"
-        ? "text-warning"
-        : tone === "destructive"
-          ? "text-destructive"
-          : "text-primary";
-  return (
-    <Card className="surface-card border-0">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <Icon className={`size-4 shrink-0 ${toneClass}`} />
-        </div>
-        <p className="mt-3 truncate font-display text-2xl font-semibold">{value}</p>
-        {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
+/** Percent change vs. the previous period; null when there is no baseline. */
+function pctChange(current: number, previous: number): number | null {
+  if (!Number.isFinite(previous) || previous === 0) return null;
+  return ((current - previous) / Math.abs(previous)) * 100;
 }
+
 
 function Dashboard() {
   const { businessId, currency } = useBusiness();
   const [range, setRange] = useState("30");
-  const from = daysAgoISO(Number(range));
+  const days = Number(range);
+  const from = daysAgoISO(days);
+  // Same-length window immediately before the selected one, used purely for
+  // period-over-period comparison. Business calculations are unchanged.
+  const prevFrom = daysAgoISO(days * 2);
   const today = todayISO();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dashboard", businessId, range],
     enabled: !!businessId,
     queryFn: async () => {
       const [sales, expenses, products, ar, ap, cash, saleItems, customers, logs] =
         await Promise.all([
-          db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", from),
-          db.from("expenses").select("*").eq("business_id", businessId).gte("expense_date", from),
+          db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", prevFrom),
+          db
+            .from("expenses")
+            .select("*")
+            .eq("business_id", businessId)
+            .gte("expense_date", prevFrom),
+
           db.from("products").select("*").eq("business_id", businessId),
           db.from("accounts_receivable").select("*").eq("business_id", businessId),
           db.from("accounts_payable").select("*").eq("business_id", businessId),
@@ -156,16 +137,26 @@ function Dashboard() {
     if (!d) return null;
     const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
 
-    const todayRows = d.sales.filter((s) => s.sale_date === today);
-    const todayExpenses = d.expenses.filter((e) => e.expense_date === today);
-    const period = salesMetrics(d.sales);
+    // The query fetches two windows; everything below the split uses the
+    // current window only, so no existing calculation changes.
+    const curSales = d.sales.filter((s) => String(s.sale_date) >= from);
+    const prevSales = d.sales.filter((s) => String(s.sale_date) < from);
+    const curExpenses = d.expenses.filter((e) => String(e.expense_date) >= from);
+    const prevExpenses = d.expenses.filter((e) => String(e.expense_date) < from);
+
+    const todayRows = curSales.filter((s) => s.sale_date === today);
+    const todayExpenses = curExpenses.filter((e) => e.expense_date === today);
+    const period = salesMetrics(curSales);
+    const prevPeriod = salesMetrics(prevSales);
     const todayM = salesMetrics(todayRows);
 
     const revenue = period.revenue;
-    const cogs = period.cogs;
-    const expenseTotal = sum(d.expenses, "amount");
+    const expenseTotal = sum(curExpenses, "amount");
+    const prevExpenseTotal = sum(prevExpenses, "amount");
     const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
+    const prevNetProfit = prevPeriod.grossProfit - prevExpenseTotal;
+
     const cashIn = sum(
       d.cash.filter((c) => c.type === "in"),
       "amount",
@@ -184,7 +175,8 @@ function Dashboard() {
 
     // time series
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
-    for (const s of d.sales) {
+    for (const s of curSales) {
+
       const net = saleNetRevenue(s);
       if (!net) continue;
       const k = s.sale_date;
@@ -192,7 +184,8 @@ function Dashboard() {
       e.sales += net;
       byDay.set(k, e);
     }
-    for (const x of d.expenses) {
+    for (const x of curExpenses) {
+
       const k = x.expense_date;
       const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
       e.expenses += Number(x.amount ?? 0);
@@ -215,7 +208,7 @@ function Dashboard() {
 
     // expense mix
     const byCat = new Map<string, number>();
-    for (const x of d.expenses) {
+    for (const x of curExpenses) {
       byCat.set(
         x.category ?? "other",
         (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
@@ -225,7 +218,7 @@ function Dashboard() {
 
     // top customers
     const byCustomer = new Map<string, number>();
-    for (const s of d.sales) {
+    for (const s of curSales) {
       if (!s.customer_id) continue;
       const net = saleNetRevenue(s);
       if (!net) continue;
@@ -253,6 +246,10 @@ function Dashboard() {
       payables,
     });
 
+    const revenueTrend = series.map((p) => p.sales);
+    const expenseTrend = series.map((p) => p.expenses);
+    const profitTrend = series.map((p) => p.sales - p.expenses);
+
     return {
       todaySales: todayM.revenue,
       todayExpenses: sum(todayExpenses, "amount"),
@@ -260,6 +257,7 @@ function Dashboard() {
       revenue,
       netProfit,
       grossProfit,
+      expenseTotal,
       cashOnHand: cashIn - cashOut,
       inventoryValue,
       receivables,
@@ -267,6 +265,14 @@ function Dashboard() {
       lowStock,
       outOfStock,
       series,
+      revenueTrend,
+      expenseTrend,
+      profitTrend,
+      revenueDelta: pctChange(revenue, prevPeriod.revenue),
+      profitDelta: pctChange(netProfit, prevNetProfit),
+      expenseDelta: pctChange(expenseTotal, prevExpenseTotal),
+      ordersDelta: pctChange(curSales.length, prevSales.length),
+      orders: curSales.length,
       bestSellers,
       expenseMix,
       topCustomers,
@@ -276,7 +282,8 @@ function Dashboard() {
       health,
       logs: d.logs,
     };
-  }, [data, today]);
+  }, [data, today, from]);
+
 
   if (isLoading || !m) {
     return (
