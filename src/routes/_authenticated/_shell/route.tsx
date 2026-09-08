@@ -57,6 +57,11 @@ function Shell() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const allowed = canAccessRoute(role, pathname);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, []);
+
   // Role decides *who* may open a module; the subscription decides *whether*
   // the business has the capability at all.
   const billing = useSubscription();
