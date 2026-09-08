@@ -217,7 +217,7 @@ function Shell() {
           <div className="border-b border-border/60 bg-background/60 px-4 py-2 sm:px-6 lg:px-8">
             <Breadcrumbs />
           </div>
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          <main className="flex-1 p-4 pb-24 sm:p-6 lg:p-8 md:pb-8">
             {allowed && entitled ? (
               <div className="page-enter">
                 <Outlet />
