@@ -75,42 +75,12 @@ const RANGES = [
   { value: "365", label: "Last 12 months" },
 ];
 
-function KpiCard({
-  label,
-  value,
-  sub,
-  icon: Icon,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: any;
-  tone?: "default" | "success" | "warning" | "destructive";
-}) {
-  const toneClass =
-    tone === "success"
-      ? "text-success"
-      : tone === "warning"
-        ? "text-warning"
-        : tone === "destructive"
-          ? "text-destructive"
-          : "text-primary";
-  return (
-    <Card className="surface-card border-0">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <Icon className={`size-4 shrink-0 ${toneClass}`} />
-        </div>
-        <p className="mt-3 truncate font-display text-2xl font-semibold">{value}</p>
-        {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
-      </CardContent>
-    </Card>
-  );
+/** Percent change vs. the previous period; null when there is no baseline. */
+function pctChange(current: number, previous: number): number | null {
+  if (!Number.isFinite(previous) || previous === 0) return null;
+  return ((current - previous) / Math.abs(previous)) * 100;
 }
+
 
 function Dashboard() {
   const { businessId, currency } = useBusiness();
