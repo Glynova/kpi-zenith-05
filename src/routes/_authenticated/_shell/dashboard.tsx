@@ -137,16 +137,26 @@ function Dashboard() {
     if (!d) return null;
     const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
 
-    const todayRows = d.sales.filter((s) => s.sale_date === today);
-    const todayExpenses = d.expenses.filter((e) => e.expense_date === today);
-    const period = salesMetrics(d.sales);
+    // The query fetches two windows; everything below the split uses the
+    // current window only, so no existing calculation changes.
+    const curSales = d.sales.filter((s) => String(s.sale_date) >= from);
+    const prevSales = d.sales.filter((s) => String(s.sale_date) < from);
+    const curExpenses = d.expenses.filter((e) => String(e.expense_date) >= from);
+    const prevExpenses = d.expenses.filter((e) => String(e.expense_date) < from);
+
+    const todayRows = curSales.filter((s) => s.sale_date === today);
+    const todayExpenses = curExpenses.filter((e) => e.expense_date === today);
+    const period = salesMetrics(curSales);
+    const prevPeriod = salesMetrics(prevSales);
     const todayM = salesMetrics(todayRows);
 
     const revenue = period.revenue;
-    const cogs = period.cogs;
-    const expenseTotal = sum(d.expenses, "amount");
+    const expenseTotal = sum(curExpenses, "amount");
+    const prevExpenseTotal = sum(prevExpenses, "amount");
     const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
+    const prevNetProfit = prevPeriod.grossProfit - prevExpenseTotal;
+
     const cashIn = sum(
       d.cash.filter((c) => c.type === "in"),
       "amount",
@@ -165,7 +175,8 @@ function Dashboard() {
 
     // time series
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
-    for (const s of d.sales) {
+    for (const s of curSales) {
+
       const net = saleNetRevenue(s);
       if (!net) continue;
       const k = s.sale_date;
@@ -173,7 +184,8 @@ function Dashboard() {
       e.sales += net;
       byDay.set(k, e);
     }
-    for (const x of d.expenses) {
+    for (const x of curExpenses) {
+
       const k = x.expense_date;
       const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
       e.expenses += Number(x.amount ?? 0);
@@ -196,7 +208,7 @@ function Dashboard() {
 
     // expense mix
     const byCat = new Map<string, number>();
-    for (const x of d.expenses) {
+    for (const x of curExpenses) {
       byCat.set(
         x.category ?? "other",
         (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
@@ -206,7 +218,7 @@ function Dashboard() {
 
     // top customers
     const byCustomer = new Map<string, number>();
-    for (const s of d.sales) {
+    for (const s of curSales) {
       if (!s.customer_id) continue;
       const net = saleNetRevenue(s);
       if (!net) continue;
@@ -234,6 +246,10 @@ function Dashboard() {
       payables,
     });
 
+    const revenueTrend = series.map((p) => p.sales);
+    const expenseTrend = series.map((p) => p.expenses);
+    const profitTrend = series.map((p) => p.sales - p.expenses);
+
     return {
       todaySales: todayM.revenue,
       todayExpenses: sum(todayExpenses, "amount"),
@@ -241,6 +257,7 @@ function Dashboard() {
       revenue,
       netProfit,
       grossProfit,
+      expenseTotal,
       cashOnHand: cashIn - cashOut,
       inventoryValue,
       receivables,
@@ -248,6 +265,14 @@ function Dashboard() {
       lowStock,
       outOfStock,
       series,
+      revenueTrend,
+      expenseTrend,
+      profitTrend,
+      revenueDelta: pctChange(revenue, prevPeriod.revenue),
+      profitDelta: pctChange(netProfit, prevNetProfit),
+      expenseDelta: pctChange(expenseTotal, prevExpenseTotal),
+      ordersDelta: pctChange(curSales.length, prevSales.length),
+      orders: curSales.length,
       bestSellers,
       expenseMix,
       topCustomers,
@@ -257,7 +282,8 @@ function Dashboard() {
       health,
       logs: d.logs,
     };
-  }, [data, today]);
+  }, [data, today, from]);
+
 
   if (isLoading || !m) {
     return (
