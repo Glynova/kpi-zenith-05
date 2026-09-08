@@ -252,6 +252,8 @@ function Shell() {
           </main>
         </div>
       </div>
+      <MobileBottomNav />
+
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onSignOut={signOut} />
     </SidebarProvider>
   );
