@@ -1,13 +1,27 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Moon, Sun, LogOut, Building2, Plus, ShieldAlert, Search } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  LogOut,
+  Building2,
+  Plus,
+  ShieldAlert,
+  Search,
+  User,
+  Settings as SettingsIcon,
+  CreditCard,
+  ChevronsUpDown,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { CommandPalette } from "@/components/command-palette";
 import { AlertBell } from "@/components/alert-bell";
+import { MobileBottomNav } from "@/components/mobile-nav";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
