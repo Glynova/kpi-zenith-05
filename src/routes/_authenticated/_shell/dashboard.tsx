@@ -85,17 +85,26 @@ function pctChange(current: number, previous: number): number | null {
 function Dashboard() {
   const { businessId, currency } = useBusiness();
   const [range, setRange] = useState("30");
-  const from = daysAgoISO(Number(range));
+  const days = Number(range);
+  const from = daysAgoISO(days);
+  // Same-length window immediately before the selected one, used purely for
+  // period-over-period comparison. Business calculations are unchanged.
+  const prevFrom = daysAgoISO(days * 2);
   const today = todayISO();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dashboard", businessId, range],
     enabled: !!businessId,
     queryFn: async () => {
       const [sales, expenses, products, ar, ap, cash, saleItems, customers, logs] =
         await Promise.all([
-          db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", from),
-          db.from("expenses").select("*").eq("business_id", businessId).gte("expense_date", from),
+          db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", prevFrom),
+          db
+            .from("expenses")
+            .select("*")
+            .eq("business_id", businessId)
+            .gte("expense_date", prevFrom),
+
           db.from("products").select("*").eq("business_id", businessId),
           db.from("accounts_receivable").select("*").eq("business_id", businessId),
           db.from("accounts_payable").select("*").eq("business_id", businessId),
