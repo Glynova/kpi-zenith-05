@@ -47,10 +47,17 @@ export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
 });
 
-
 function Shell() {
-  const { loading, memberships, business, role, switchBusiness, onboarding, onboardingLoaded, isAdmin } =
-    useBusiness();
+  const {
+    loading,
+    memberships,
+    business,
+    role,
+    switchBusiness,
+    onboarding,
+    onboardingLoaded,
+    isAdmin,
+  } = useBusiness();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -68,7 +75,6 @@ function Shell() {
   const requiredFeature = ROUTE_FEATURE[pathname];
   const entitled = !requiredFeature || billing.loading || billing.can(requiredFeature);
 
-
   useEffect(() => {
     if (!loading && memberships.length === 0) {
       navigate({ to: "/onboarding", replace: true });
@@ -78,7 +84,6 @@ function Shell() {
       navigate({ to: "/setup", replace: true });
     }
   }, [loading, memberships.length, navigate, onboardingLoaded, onboarding?.completed, isAdmin]);
-
 
   async function signOut() {
     await queryClient.cancelQueries();
@@ -227,16 +232,18 @@ function Shell() {
                 <UpgradePrompt
                   feature={requiredFeature}
                   plan={
-                    ["multi_branch", "advanced_permissions", "consolidated_reports", "api_access"].includes(
-                      requiredFeature,
-                    )
+                    [
+                      "multi_branch",
+                      "advanced_permissions",
+                      "consolidated_reports",
+                      "api_access",
+                    ].includes(requiredFeature)
                       ? "Business"
                       : "Pro"
                   }
                 />
               </div>
             ) : (
-
               <div className="mx-auto max-w-md space-y-3 py-16 text-center">
                 <ShieldAlert className="mx-auto size-10 text-muted-foreground" />
                 <h1 className="font-display text-xl font-semibold">No access to this module</h1>

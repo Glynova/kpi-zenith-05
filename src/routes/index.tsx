@@ -190,7 +190,11 @@ function Landing() {
             >
               Pricing
             </Link>
-            <Button asChild size="sm" className="ml-2 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90">
+            <Button
+              asChild
+              size="sm"
+              className="ml-2 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90"
+            >
               <Link to="/auth">Sign in</Link>
             </Button>
           </nav>
@@ -230,7 +234,10 @@ function Landing() {
               >
                 Pricing
               </Link>
-              <Button asChild className="mt-2 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90">
+              <Button
+                asChild
+                className="mt-2 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90"
+              >
                 <Link to="/auth" onClick={() => setMenuOpen(false)}>
                   Sign in
                 </Link>
@@ -308,7 +315,11 @@ function Landing() {
                 </dl>
               </div>
 
-              <div data-reveal style={{ ["--reveal-delay" as string]: "140ms" }} className="min-w-0">
+              <div
+                data-reveal
+                style={{ ["--reveal-delay" as string]: "140ms" }}
+                className="min-w-0"
+              >
                 <WorkspaceMockup />
               </div>
             </div>
@@ -339,8 +350,6 @@ function Landing() {
 
         {/* ---------------- Sticky scroll storytelling ---------------- */}
         <ScrollStory />
-
-
 
         {/* ---------------- Capabilities ---------------- */}
         <section id="platform" className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
@@ -386,7 +395,9 @@ function Landing() {
                   <h3 className="mt-3 font-display text-2xl font-semibold text-white sm:text-3xl">
                     {m.label}
                   </h3>
-                  <p className="mt-4 text-sm leading-relaxed text-white/60 sm:text-base">{m.body}</p>
+                  <p className="mt-4 text-sm leading-relaxed text-white/60 sm:text-base">
+                    {m.body}
+                  </p>
                   <ul className="mt-6 space-y-2">
                     {m.points.map((p) => (
                       <li key={p} className="flex items-start gap-2 text-sm text-white/70">
@@ -427,7 +438,10 @@ function Landing() {
 
         {/* ---------------- Use cases ---------------- */}
         <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
-          <h2 data-reveal className="max-w-2xl font-display text-3xl font-semibold text-white sm:text-4xl">
+          <h2
+            data-reveal
+            className="max-w-2xl font-display text-3xl font-semibold text-white sm:text-4xl"
+          >
             Built for the businesses you actually run.
           </h2>
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -456,17 +470,33 @@ function Landing() {
                 Every business you run, isolated and secure.
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-white/60 sm:text-base">
-                Create or join multiple businesses under one account and switch instantly.
-                Row-level security guarantees each business only ever sees its own data, and nine
-                roles from owner to read-only auditor are enforced at the database level.
+                Create or join multiple businesses under one account and switch instantly. Row-level
+                security guarantees each business only ever sees its own data, and nine roles from
+                owner to read-only auditor are enforced at the database level.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                { icon: Lock, t: "Role enforcement", b: "Permissions checked server-side, not in the browser." },
-                { icon: Database, t: "Tenant isolation", b: "Row-level security on every business-scoped table." },
-                { icon: ShieldCheck, t: "Audit trail", b: "Tamper-resistant audit log of sensitive actions." },
-                { icon: BarChart3, t: "Always current", b: "KPIs recalculated from live transactions." },
+                {
+                  icon: Lock,
+                  t: "Role enforcement",
+                  b: "Permissions checked server-side, not in the browser.",
+                },
+                {
+                  icon: Database,
+                  t: "Tenant isolation",
+                  b: "Row-level security on every business-scoped table.",
+                },
+                {
+                  icon: ShieldCheck,
+                  t: "Audit trail",
+                  b: "Tamper-resistant audit log of sensitive actions.",
+                },
+                {
+                  icon: BarChart3,
+                  t: "Always current",
+                  b: "KPIs recalculated from live transactions.",
+                },
               ].map((c, i) => (
                 <div
                   key={c.t}
@@ -485,7 +515,10 @@ function Landing() {
 
         {/* ---------------- CTA ---------------- */}
         <section className="mx-auto max-w-6xl px-5 py-24 sm:px-6">
-          <div data-reveal className="glass-panel relative overflow-hidden px-6 py-14 text-center sm:px-12">
+          <div
+            data-reveal
+            className="glass-panel relative overflow-hidden px-6 py-14 text-center sm:px-12"
+          >
             <div aria-hidden className="gold-rule absolute inset-x-10 top-0" />
             <h2 className="font-display text-3xl font-semibold text-white sm:text-4xl">
               Start with the free plan. Grow into the platform.
@@ -494,7 +527,11 @@ function Landing() {
               Set up your first business in minutes — inventory, sales and KPIs from day one.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Button asChild size="lg" className="h-12 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 bg-white text-[oklch(0.16_0.04_264)] hover:bg-white/90"
+              >
                 <Link to="/auth">
                   Create your account <ArrowRight className="size-4" />
                 </Link>

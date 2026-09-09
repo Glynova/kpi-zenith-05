@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -80,7 +79,6 @@ function pctChange(current: number, previous: number): number | null {
   if (!Number.isFinite(previous) || previous === 0) return null;
   return ((current - previous) / Math.abs(previous)) * 100;
 }
-
 
 function Dashboard() {
   const { businessId, currency } = useBusiness();
@@ -176,7 +174,6 @@ function Dashboard() {
     // time series
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
     for (const s of curSales) {
-
       const net = saleNetRevenue(s);
       if (!net) continue;
       const k = s.sale_date;
@@ -185,7 +182,6 @@ function Dashboard() {
       byDay.set(k, e);
     }
     for (const x of curExpenses) {
-
       const k = x.expense_date;
       const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
       e.expenses += Number(x.amount ?? 0);
@@ -284,7 +280,6 @@ function Dashboard() {
     };
   }, [data, today, from]);
 
-
   if (isError) {
     return (
       <div className="space-y-6">
@@ -328,7 +323,6 @@ function Dashboard() {
     m.cashOnHand !== 0 ||
     m.receivables !== 0 ||
     m.payables !== 0;
-
 
   const chartColors = [
     "var(--chart-1)",
@@ -412,7 +406,6 @@ function Dashboard() {
         </Card>
       </div>
 
-
       <Collapsible>
         <CollapsibleTrigger asChild>
           <Button variant="outline" size="sm" className="group gap-2">
@@ -479,7 +472,6 @@ function Dashboard() {
               tone="destructive"
             />
           </div>
-
         </CollapsibleContent>
       </Collapsible>
 

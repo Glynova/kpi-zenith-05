@@ -59,10 +59,7 @@ export function ScrollStory() {
   }, []);
 
   return (
-    <section
-      aria-label="How Daraven works"
-      className="border-b border-white/8 bg-black/20"
-    >
+    <section aria-label="How Daraven works" className="border-b border-white/8 bg-black/20">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
         <div data-reveal className="max-w-2xl">
           <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--gold)]">
