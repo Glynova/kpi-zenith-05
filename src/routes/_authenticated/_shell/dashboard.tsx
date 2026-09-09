@@ -285,18 +285,50 @@ function Dashboard() {
   }, [data, today, from]);
 
 
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Dashboard" description="We couldn't load your business data." />
+        <Card className="surface-card border-0">
+          <CardContent className="space-y-3 p-8 text-center">
+            <AlertTriangle className="mx-auto size-8 text-warning" />
+            <p className="text-sm text-muted-foreground">
+              {(error as Error)?.message ?? "Something went wrong while loading your dashboard."}
+            </p>
+            <Button variant="outline" onClick={() => refetch()}>
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading || !m) {
     return (
       <div className="space-y-6">
         <PageHeader title="Dashboard" description="Loading your business performance..." />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Skeleton className="h-72 rounded-2xl lg:col-span-2" />
+          <Skeleton className="h-72 rounded-2xl" />
         </div>
       </div>
     );
   }
+
+  const hasActivity =
+    m.orders > 0 ||
+    m.expenseTotal !== 0 ||
+    m.inventoryValue !== 0 ||
+    m.cashOnHand !== 0 ||
+    m.receivables !== 0 ||
+    m.payables !== 0;
+
 
   const chartColors = [
     "var(--chart-1)",
@@ -327,30 +359,50 @@ function Dashboard() {
         }
       />
 
+      {!hasActivity && (
+        <Card className="surface-card border-0">
+          <CardContent className="space-y-2 p-8 text-center">
+            <Activity className="mx-auto size-8 text-muted-foreground" />
+            <h2 className="font-display text-lg font-semibold">No data yet</h2>
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
+              Once you record sales, expenses or stock for this period, your live performance
+              figures will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="grid gap-4 sm:grid-cols-2 stagger-grid">
-          <KpiCard
+        <div className="stagger-grid grid gap-4 sm:grid-cols-2">
+          <StatCard
             label="Revenue (period)"
             value={formatCurrency(m.revenue, currency)}
             sub={`Avg order ${formatCurrency(m.aov, currency)}`}
             icon={TrendingUp}
+            delta={m.revenueDelta}
+            series={m.revenueTrend}
           />
-          <KpiCard
+          <StatCard
             label="Net Profit (period)"
             value={formatCurrency(m.netProfit, currency)}
             sub={`${m.margin.toFixed(1)}% margin`}
             icon={Activity}
             tone={m.netProfit >= 0 ? "success" : "destructive"}
+            delta={m.profitDelta}
+            series={m.profitTrend}
           />
-          <KpiCard
+          <StatCard
             label="Cash On Hand"
             value={formatCurrency(m.cashOnHand, currency)}
             icon={Wallet}
+            tone="gold"
+            sub={`${formatNumber(m.orders)} orders this period`}
           />
-          <KpiCard
+          <StatCard
             label="Inventory Value"
             value={formatCurrency(m.inventoryValue, currency)}
             icon={Boxes}
+            sub={`${formatNumber(m.lowStock.length)} low · ${formatNumber(m.outOfStock.length)} out`}
           />
         </div>
         <Card className="surface-card overflow-hidden border-0">
@@ -360,6 +412,7 @@ function Dashboard() {
         </Card>
       </div>
 
+
       <Collapsible>
         <CollapsibleTrigger asChild>
           <Button variant="outline" size="sm" className="group gap-2">
@@ -368,54 +421,65 @@ function Dashboard() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-          <div className="mt-4 grid gap-4 stagger-grid sm:grid-cols-2 lg:grid-cols-4">
-            <KpiCard
+          <div className="stagger-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
               label="Today's Sales"
               value={formatCurrency(m.todaySales, currency)}
               icon={TrendingUp}
               tone="success"
             />
-            <KpiCard
+            <StatCard
               label="Today's Expenses"
               value={formatCurrency(m.todayExpenses, currency)}
               icon={TrendingDown}
               tone="warning"
             />
-            <KpiCard
+            <StatCard
               label="Today's Profit"
               value={formatCurrency(m.todayProfit, currency)}
               icon={Activity}
             />
-            <KpiCard
-              label="Cash On Hand"
-              value={formatCurrency(m.cashOnHand, currency)}
-              icon={Wallet}
+            <StatCard
+              label="Expenses (period)"
+              value={formatCurrency(m.expenseTotal, currency)}
+              icon={TrendingDown}
+              tone="warning"
+              delta={m.expenseDelta}
+              invertDelta
+              series={m.expenseTrend}
             />
-            <KpiCard
+            <StatCard
+              label="Orders (period)"
+              value={formatNumber(m.orders)}
+              icon={Activity}
+              delta={m.ordersDelta}
+            />
+            <StatCard
               label="Outstanding Receivables"
               value={formatCurrency(m.receivables, currency)}
               icon={ArrowDownLeft}
               tone="warning"
             />
-            <KpiCard
+            <StatCard
               label="Outstanding Payables"
               value={formatCurrency(m.payables, currency)}
               icon={ArrowUpRight}
               tone="warning"
             />
-            <KpiCard
+            <StatCard
               label="Low Stock Items"
               value={formatNumber(m.lowStock.length)}
               icon={AlertTriangle}
               tone="warning"
             />
-            <KpiCard
+            <StatCard
               label="Out Of Stock"
               value={formatNumber(m.outOfStock.length)}
               icon={PackageX}
               tone="destructive"
             />
           </div>
+
         </CollapsibleContent>
       </Collapsible>
 
