@@ -29,7 +29,7 @@ export function MobileBottomNav() {
       aria-label="Primary"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="flex items-stretch [&>li]:min-w-0 [&>li]:flex-1">
         {tabs.map((t) => {
           const active = pathname === t.url || pathname.startsWith(`${t.url}/`);
           return (

@@ -52,12 +52,7 @@ export function StatCard({
   const DeltaIcon = up ? ArrowUpRight : down ? ArrowDownRight : Minus;
 
   return (
-    <div
-      className={cn(
-        "surface-card relative isolate overflow-hidden p-4 sm:p-5",
-        className,
-      )}
-    >
+    <div className={cn("surface-card relative isolate overflow-hidden p-4 sm:p-5", className)}>
       <div
         aria-hidden
         className={cn(
