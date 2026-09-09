@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { WorkspaceMockup } from "@/components/landing/workspace-mockup";
+import { ScrollStory } from "@/components/landing/scroll-story";
 import { useReveal } from "@/hooks/use-reveal";
 
 export const Route = createFileRoute("/")({
@@ -335,6 +336,11 @@ function Landing() {
             ))}
           </div>
         </section>
+
+        {/* ---------------- Sticky scroll storytelling ---------------- */}
+        <ScrollStory />
+
+
 
         {/* ---------------- Capabilities ---------------- */}
         <section id="platform" className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
