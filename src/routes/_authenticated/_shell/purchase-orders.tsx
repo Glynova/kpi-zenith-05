@@ -357,14 +357,13 @@ function PurchaseOrdersPage() {
       if (status === "closed") patch.closed_at = new Date().toISOString();
       const { error } = await db.from("purchase_orders").update(patch).eq("id", po.id);
       if (error) throw error;
-      await db.from("audit_logs").insert({
-        business_id: businessId,
-        user_id: userId,
-        action: `po_${status}`,
-        module: "purchasing",
-        record_id: po.po_number,
-        old_value: { status: po.status },
-        new_value: { status },
+      await db.rpc("log_audit_event", {
+        _business_id: businessId,
+        _action: `po_${status}`,
+        _module: "purchasing",
+        _record_id: po.po_number,
+        _old_value: { status: po.status },
+        _new_value: { status },
       });
       return status;
     },
