@@ -4,8 +4,11 @@ import { useEffect, useLayoutEffect } from "react";
  * Adds data-visible="true" to every [data-reveal] element once it scrolls into
  * view. One shared IntersectionObserver — no scroll handlers, no re-renders.
  */
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function useReveal(deps: unknown[] = []) {
-  useEffect(() => {
+  // Layout effect: the hidden state is applied before paint, so nothing flashes.
+  useIsomorphicLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const root = document.documentElement;
     const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
