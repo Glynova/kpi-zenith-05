@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 /**
  * Adds data-visible="true" to every [data-reveal] element once it scrolls into
