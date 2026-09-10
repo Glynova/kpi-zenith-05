@@ -478,36 +478,80 @@ export function ResourcePage({
         }
       />
 
-      <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search records..."
-          className="pl-9"
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative min-w-0 flex-1 sm:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <label htmlFor={`${table}-search`} className="sr-only">
+            Search {title.toLowerCase()}
+          </label>
+          <Input
+            id={`${table}-search`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search records..."
+            className="pl-9"
+          />
+        </div>
+        {!isLoading && !isError && (
+          <p className="shrink-0 text-xs text-muted-foreground tabular-nums" aria-live="polite">
+            {rows.length} {rows.length === 1 ? "record" : "records"}
+            {search.trim() && data ? ` of ${data.length}` : ""}
+          </p>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
+        <div className="surface-panel space-y-3 p-4 shadow-elevate-1">
+          <Skeleton className="h-8 w-full" />
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <Skeleton key={i} className="h-10 w-full" />
           ))}
+        </div>
+      ) : isError ? (
+        <div
+          role="alert"
+          className="surface-panel flex flex-col items-start gap-3 border-destructive/40 p-6 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="min-w-0">
+            <h3 className="font-display text-base font-semibold">
+              We could not load {title.toLowerCase()}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {(error as any)?.message ?? "Please check your connection and try again."}
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            {isFetching ? "Retrying..." : "Try again"}
+          </Button>
         </div>
       ) : rows.length === 0 ? (
         <EmptyState
-          title="Nothing here yet"
+          title={search.trim() ? "No matching records" : "Nothing here yet"}
           illustration={illustration}
-          description={`Create your first record to start tracking ${title.toLowerCase()}.`}
-          action={editable ? <Button onClick={openCreate}>Add record</Button> : undefined}
+          description={
+            search.trim()
+              ? "Try a different search term or clear the search box."
+              : `Create your first record to start tracking ${title.toLowerCase()}.`
+          }
+          action={
+            search.trim() ? (
+              <Button variant="outline" onClick={() => setSearch("")}>
+                Clear search
+              </Button>
+            ) : editable ? (
+              <Button onClick={openCreate}>Add record</Button>
+            ) : undefined
+          }
         />
       ) : (
-        <div className="surface-panel overflow-x-auto shadow-elevate-1">
-          <Table>
+        <div className="surface-panel table-scroller shadow-elevate-1">
+          <Table className="sticky-head">
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 {columns.map((c) => (
-                  <TableHead key={c.key}>{c.label}</TableHead>
+                  <TableHead key={c.key} className={cellAlign(c)}>
+                    {c.label}
+                  </TableHead>
                 ))}
                 {(editable || rowActions) && (
                   <TableHead className="w-24 text-right">Actions</TableHead>
@@ -518,23 +562,40 @@ export function ResourcePage({
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   {columns.map((c) => (
-                    <TableCell key={c.key} className="whitespace-nowrap">
+                    <TableCell
+                      key={c.key}
+                      className={`whitespace-nowrap ${cellAlign(c) ?? ""}`}
+                    >
                       {renderCell(row, c)}
                     </TableCell>
                   ))}
                   {(editable || rowActions) && (
                     <TableCell className="whitespace-nowrap text-right">
-                      {rowActions?.(row)}
-                      {editable && (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteRow(row)}>
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
-                        </>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {rowActions?.(row)}
+                        {editable && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Edit ${singularTitle.toLowerCase()}`}
+                              className="size-9"
+                              onClick={() => openEdit(row)}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Delete ${singularTitle.toLowerCase()}`}
+                              className="size-9"
+                              onClick={() => setDeleteRow(row)}
+                            >
+                              <Trash2 className="size-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
