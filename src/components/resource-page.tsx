@@ -160,7 +160,7 @@ export function ResourcePage({
 
   const editable = canWrite && !readOnly;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["resource", table, businessId],
     enabled: !!businessId,
     queryFn: async () => {
@@ -375,6 +375,13 @@ export function ResourcePage({
     },
     onError: (e: any) => toast.error(e.message ?? "Import failed"),
   });
+
+  /** Numbers, money and dates read better right-aligned and tabular. */
+  function cellAlign(col: Column) {
+    return col.format === "currency" || col.format === "number"
+      ? "text-right tabular-nums"
+      : undefined;
+  }
 
   function renderCell(row: Row, col: Column) {
     const value = row[col.key];
