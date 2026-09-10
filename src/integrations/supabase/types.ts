@@ -5561,6 +5561,17 @@ export type Database = {
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _business_id: string
+          _module: string
+          _new_value?: Json
+          _old_value?: Json
+          _record_id?: string
+        }
+        Returns: string
+      }
       movement_sign: { Args: { _type: string }; Returns: number }
       next_doc_number: {
         Args: { _business_id: string; _prefix: string }
