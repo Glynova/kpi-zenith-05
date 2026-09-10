@@ -329,13 +329,12 @@ function PurchaseOrdersPage() {
       );
       if (itemsError) throw itemsError;
 
-      await db.from("audit_logs").insert({
-        business_id: businessId,
-        user_id: userId,
-        action: "po_created",
-        module: "purchasing",
-        record_id: po.po_number,
-        new_value: { total: grandTotal, supplier_id: form.supplier_id },
+      await db.rpc("log_audit_event", {
+        _business_id: businessId,
+        _action: "po_created",
+        _module: "purchasing",
+        _record_id: po.po_number,
+        _new_value: { total: grandTotal, supplier_id: form.supplier_id },
       });
       return po;
     },
