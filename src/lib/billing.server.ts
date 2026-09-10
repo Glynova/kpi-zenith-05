@@ -668,7 +668,7 @@ async function planById(admin: Admin, id: string) {
 export async function recordInvoice(
   admin: Admin,
   input: {
-    sub: { id: string; business_id: string };
+    sub: Record<string, any>;
     invoiceId: string;
     attrs: Record<string, any>;
     statusOverride: string | null;
@@ -716,7 +716,7 @@ export async function recordInvoice(
 export async function recordPayment(
   admin: Admin,
   input: {
-    sub: { id: string; business_id: string };
+    sub: Record<string, any>;
     paymentId: string;
     attrs: Record<string, any>;
     invoiceRowId?: string | null;

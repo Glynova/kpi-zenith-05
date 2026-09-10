@@ -65,7 +65,10 @@ export function WorkspaceMockup() {
             <p className="ml-2 truncate text-[11px] tracking-[0.2em] text-white/45">
               DARAVEN · COMMAND CENTER
             </p>
-            <Bell className="ml-auto size-3.5 shrink-0 text-white/35" />
+            <span className="ml-auto shrink-0 rounded-full border border-white/12 px-2 py-0.5 text-[9px] uppercase tracking-[0.14em] text-white/45">
+              Sample data
+            </span>
+            <Bell className="size-3.5 shrink-0 text-white/35" />
           </div>
 
           <div className="grid gap-3 p-3 sm:p-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
