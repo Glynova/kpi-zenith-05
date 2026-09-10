@@ -7,11 +7,17 @@ import { useEffect } from "react";
 export function useReveal(deps: unknown[] = []) {
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const root = document.documentElement;
     const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const revealAll = () => nodes.forEach((n) => n.setAttribute("data-visible", "true"));
+
     if (!("IntersectionObserver" in window)) {
-      nodes.forEach((n) => n.setAttribute("data-visible", "true"));
+      revealAll();
       return;
     }
+    // Only now is it safe to hide un-revealed content.
+    root.classList.add("reveal-ready");
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -24,7 +30,13 @@ export function useReveal(deps: unknown[] = []) {
       { rootMargin: "0px 0px -10% 0px", threshold: 0.12 },
     );
     nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+
+    // Safety net: nothing may stay hidden, whatever the observer does.
+    const safety = window.setTimeout(revealAll, 1500);
+    return () => {
+      window.clearTimeout(safety);
+      io.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
