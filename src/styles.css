@@ -387,8 +387,10 @@ button:not(:disabled):active {
   background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--gold) 70%, transparent), transparent);
 }
 
-/* Scroll reveal — driven by IntersectionObserver adding [data-visible]. */
-[data-reveal] {
+/* Scroll reveal — driven by IntersectionObserver adding [data-visible].
+   The hidden state only applies once JS has flagged the document as ready, so
+   a failed observer or disabled JS can never leave content invisible. */
+:root.reveal-ready [data-reveal] {
   opacity: 0;
   transform: translateY(22px);
   transition:
@@ -397,9 +399,28 @@ button:not(:disabled):active {
   transition-delay: var(--reveal-delay, 0ms);
   will-change: opacity, transform;
 }
-[data-reveal][data-visible="true"] {
+:root.reveal-ready [data-reveal][data-visible="true"] {
   opacity: 1;
   transform: none;
+}
+
+/* Horizontal table scrollers: fade the right edge as a scroll affordance. */
+@utility table-scroller {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sticky table headers inside a scroll container. */
+@utility sticky-head {
+  & thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: color-mix(in oklab, var(--card) 94%, transparent);
+    backdrop-filter: blur(6px);
+  }
 }
 
 .tilt-scene {
