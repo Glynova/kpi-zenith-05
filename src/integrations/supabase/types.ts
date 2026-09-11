@@ -4559,6 +4559,203 @@ export type Database = {
           },
         ]
       }
+      stock_transfer_items: {
+        Row: {
+          batch_id: string | null
+          created_at: string
+          dest_product_id: string | null
+          discrepancy_reason: string | null
+          id: string
+          product_barcode: string | null
+          product_id: string
+          product_name: string | null
+          product_sku: string | null
+          quantity: number
+          received_quantity: number | null
+          transfer_id: string
+          unit: string | null
+          unit_cost: number
+          variant_id: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          created_at?: string
+          dest_product_id?: string | null
+          discrepancy_reason?: string | null
+          id?: string
+          product_barcode?: string | null
+          product_id: string
+          product_name?: string | null
+          product_sku?: string | null
+          quantity: number
+          received_quantity?: number | null
+          transfer_id: string
+          unit?: string | null
+          unit_cost?: number
+          variant_id?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          created_at?: string
+          dest_product_id?: string | null
+          discrepancy_reason?: string | null
+          id?: string
+          product_barcode?: string | null
+          product_id?: string
+          product_name?: string | null
+          product_sku?: string | null
+          quantity?: number
+          received_quantity?: number | null
+          transfer_id?: string
+          unit?: string | null
+          unit_cost?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfer_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_dest_product_id_fkey"
+            columns: ["dest_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "stock_transfers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfer_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_transfers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          dest_business_id: string
+          dest_business_name: string | null
+          dest_warehouse_id: string | null
+          dest_warehouse_name: string | null
+          id: string
+          is_cross_business: boolean
+          notes: string | null
+          receipt_reference: string | null
+          received_at: string | null
+          received_by: string | null
+          reference: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          source_business_id: string
+          source_business_name: string | null
+          source_warehouse_id: string | null
+          source_warehouse_name: string | null
+          status: string
+          total_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          dest_business_id: string
+          dest_business_name?: string | null
+          dest_warehouse_id?: string | null
+          dest_warehouse_name?: string | null
+          id?: string
+          is_cross_business?: boolean
+          notes?: string | null
+          receipt_reference?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          reference: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          source_business_id: string
+          source_business_name?: string | null
+          source_warehouse_id?: string | null
+          source_warehouse_name?: string | null
+          status?: string
+          total_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          dest_business_id?: string
+          dest_business_name?: string | null
+          dest_warehouse_id?: string | null
+          dest_warehouse_name?: string | null
+          id?: string
+          is_cross_business?: boolean
+          notes?: string | null
+          receipt_reference?: string | null
+          received_at?: string | null
+          received_by?: string | null
+          reference?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          source_business_id?: string
+          source_business_name?: string | null
+          source_warehouse_id?: string | null
+          source_warehouse_name?: string | null
+          status?: string
+          total_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transfers_dest_business_id_fkey"
+            columns: ["dest_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_dest_warehouse_id_fkey"
+            columns: ["dest_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_source_business_id_fkey"
+            columns: ["source_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_transfers_source_warehouse_id_fkey"
+            columns: ["source_warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_discounts: {
         Row: {
           active: boolean
@@ -5548,6 +5745,17 @@ export type Database = {
         Args: { _receipt_id: string }
         Returns: undefined
       }
+      create_stock_transfer: {
+        Args: {
+          _dest_business_id: string
+          _dest_warehouse_id: string
+          _items: Json
+          _notes?: string
+          _source_business_id: string
+          _source_warehouse_id: string
+        }
+        Returns: string
+      }
       current_partner_id: { Args: never; Returns: string }
       expire_subscriptions: {
         Args: never
@@ -5596,6 +5804,14 @@ export type Database = {
       }
       recalc_product_cost_from_bom: {
         Args: { _product_id: string }
+        Returns: undefined
+      }
+      receive_stock_transfer: {
+        Args: { _lines?: Json; _transfer_id: string }
+        Returns: string
+      }
+      reject_stock_transfer: {
+        Args: { _reason: string; _transfer_id: string }
         Returns: undefined
       }
       scan_business_alerts: { Args: { _business_id: string }; Returns: number }
