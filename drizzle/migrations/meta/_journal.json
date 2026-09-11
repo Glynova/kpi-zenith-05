@@ -8,6 +8,13 @@
       "when": 1789121013923,
       "tag": "0000_stock_transfer_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789121061846,
+      "tag": "0001_stock_transfer_denormalized_labels",
+      "breakpoints": true
     }
   ]
 }

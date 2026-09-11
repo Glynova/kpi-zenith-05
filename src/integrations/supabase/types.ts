@@ -4566,7 +4566,10 @@ export type Database = {
           dest_product_id: string | null
           discrepancy_reason: string | null
           id: string
+          product_barcode: string | null
           product_id: string
+          product_name: string | null
+          product_sku: string | null
           quantity: number
           received_quantity: number | null
           transfer_id: string
@@ -4580,7 +4583,10 @@ export type Database = {
           dest_product_id?: string | null
           discrepancy_reason?: string | null
           id?: string
+          product_barcode?: string | null
           product_id: string
+          product_name?: string | null
+          product_sku?: string | null
           quantity: number
           received_quantity?: number | null
           transfer_id: string
@@ -4594,7 +4600,10 @@ export type Database = {
           dest_product_id?: string | null
           discrepancy_reason?: string | null
           id?: string
+          product_barcode?: string | null
           product_id?: string
+          product_name?: string | null
+          product_sku?: string | null
           quantity?: number
           received_quantity?: number | null
           transfer_id?: string
@@ -4645,7 +4654,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           dest_business_id: string
+          dest_business_name: string | null
           dest_warehouse_id: string | null
+          dest_warehouse_name: string | null
           id: string
           is_cross_business: boolean
           notes: string | null
@@ -4657,7 +4668,9 @@ export type Database = {
           rejected_by: string | null
           rejection_reason: string | null
           source_business_id: string
+          source_business_name: string | null
           source_warehouse_id: string | null
+          source_warehouse_name: string | null
           status: string
           total_value: number
           updated_at: string
@@ -4666,7 +4679,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dest_business_id: string
+          dest_business_name?: string | null
           dest_warehouse_id?: string | null
+          dest_warehouse_name?: string | null
           id?: string
           is_cross_business?: boolean
           notes?: string | null
@@ -4678,7 +4693,9 @@ export type Database = {
           rejected_by?: string | null
           rejection_reason?: string | null
           source_business_id: string
+          source_business_name?: string | null
           source_warehouse_id?: string | null
+          source_warehouse_name?: string | null
           status?: string
           total_value?: number
           updated_at?: string
@@ -4687,7 +4704,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dest_business_id?: string
+          dest_business_name?: string | null
           dest_warehouse_id?: string | null
+          dest_warehouse_name?: string | null
           id?: string
           is_cross_business?: boolean
           notes?: string | null
@@ -4699,7 +4718,9 @@ export type Database = {
           rejected_by?: string | null
           rejection_reason?: string | null
           source_business_id?: string
+          source_business_name?: string | null
           source_warehouse_id?: string | null
+          source_warehouse_name?: string | null
           status?: string
           total_value?: number
           updated_at?: string
