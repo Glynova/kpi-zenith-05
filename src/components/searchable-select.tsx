@@ -72,10 +72,7 @@ export function SearchableSelect({
                   }}
                 >
                   <Check
-                    className={cn(
-                      "mr-2 size-4",
-                      value === o.value ? "opacity-100" : "opacity-0",
-                    )}
+                    className={cn("mr-2 size-4", value === o.value ? "opacity-100" : "opacity-0")}
                   />
                   <span className="min-w-0 flex-1 truncate">{o.label}</span>
                   {o.hint && (
