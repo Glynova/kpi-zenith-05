@@ -331,7 +331,11 @@ function TransfersPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {(
                   [
-                    ["internal", "Within my business", "Location to location — applied immediately."],
+                    [
+                      "internal",
+                      "Within my business",
+                      "Location to location — applied immediately.",
+                    ],
                     [
                       "external",
                       "To another business",
@@ -414,9 +418,7 @@ function TransfersPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() =>
-                  setLines((l) => [...l, { key: crypto.randomUUID(), quantity: "1" }])
-                }
+                onClick={() => setLines((l) => [...l, { key: crypto.randomUUID(), quantity: "1" }])}
               >
                 <Plus className="size-4" /> Add line
               </Button>
@@ -425,7 +427,10 @@ function TransfersPage() {
               {lines.map((line) => {
                 const avail = availableFor(line.product_id);
                 return (
-                  <div key={line.key} className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_140px_auto]">
+                  <div
+                    key={line.key}
+                    className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_140px_auto]"
+                  >
                     <div className="min-w-0">
                       <Label className="text-xs">Product</Label>
                       <div className="mt-1.5">
@@ -504,7 +509,8 @@ function TransfersPage() {
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <Badge variant="secondary" className="max-w-full truncate">
                   {business?.name} ·{" "}
-                  {(sourceLocations ?? []).find((l) => l.id === sourceWarehouse)?.name ?? "location"}
+                  {(sourceLocations ?? []).find((l) => l.id === sourceWarehouse)?.name ??
+                    "location"}
                 </Badge>
                 <ArrowLeftRight className="size-4 text-muted-foreground" />
                 <Badge variant="secondary" className="max-w-full truncate">
@@ -516,7 +522,8 @@ function TransfersPage() {
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {lines.filter((l) => l.product_id).length} product line(s) · estimated transfer value{" "}
+                {lines.filter((l) => l.product_id).length} product line(s) · estimated transfer
+                value{" "}
                 <span className="font-medium text-foreground">
                   {formatCurrency(estimatedValue, currency)}
                 </span>
@@ -696,9 +703,9 @@ function ReviewDialog({
   onClose: () => void;
   onDone: () => void;
 }) {
-  const [state, setState] = useState<Record<string, { qty: string; dest?: string; reason: string }>>(
-    {},
-  );
+  const [state, setState] = useState<
+    Record<string, { qty: string; dest?: string; reason: string }>
+  >({});
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
 
