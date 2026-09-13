@@ -12,6 +12,7 @@ import {
   type FeatureKey,
   type ProductCapability,
 } from "@/lib/business-config";
+import { isCapabilityEnabled } from "@/lib/capabilities";
 
 export type { AppRole } from "@/lib/permissions";
 import type { AppRole } from "@/lib/permissions";
@@ -155,7 +156,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     currency: active?.businesses?.currency ?? "USD",
     userId,
     settings,
-    feature: (key: FeatureKey) => !!settings[key],
+    // Dependency-aware: a capability is usable only when its hard
+    // prerequisites are enabled too (see src/lib/capabilities.ts).
+    feature: (key: FeatureKey) => isCapabilityEnabled(settings, key),
     capability: (key: ProductCapability) => !!capabilities[key],
     onboarding: onboardingRow ?? null,
     onboardingLoaded: !!businessId && onboardingLoaded,
