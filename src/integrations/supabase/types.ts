@@ -3117,6 +3117,7 @@ export type Database = {
           track_warranty: boolean
           unit: string
           updated_at: string
+          variant_options: Json
           warranty_months: number | null
         }
         Insert: {
@@ -3159,6 +3160,7 @@ export type Database = {
           track_warranty?: boolean
           unit?: string
           updated_at?: string
+          variant_options?: Json
           warranty_months?: number | null
         }
         Update: {
@@ -3201,6 +3203,7 @@ export type Database = {
           track_warranty?: boolean
           unit?: string
           updated_at?: string
+          variant_options?: Json
           warranty_months?: number | null
         }
         Relationships: [
