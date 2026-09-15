@@ -15,6 +15,13 @@
       "when": 1789121061846,
       "tag": "0001_stock_transfer_denormalized_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789436456786,
+      "tag": "0002_product_variant_integrity",
+      "breakpoints": true
     }
   ]
 }
