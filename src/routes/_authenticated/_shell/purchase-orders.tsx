@@ -271,10 +271,8 @@ function PurchaseOrdersPage() {
 
   function pickVariant(key: string, variantId: string) {
     const v = productVariants.find((x) => x.id === variantId);
-    updateLine(key, {
-      variant_id: variantId,
-      unit_cost: Number(v?.cost_price ?? 0) || undefined as never,
-    });
+    const cost = Number(v?.cost_price ?? 0);
+    updateLine(key, cost > 0 ? { variant_id: variantId, unit_cost: cost } : { variant_id: variantId });
   }
 
   function pickProduct(key: string, productId: string) {
