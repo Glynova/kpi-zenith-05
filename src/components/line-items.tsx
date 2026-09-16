@@ -142,6 +142,27 @@ export function LineItemsEditor({
                   ))}
                 </SelectContent>
               </Select>
+              {variantsFor(item.product_id).length > 0 && (
+                <div className="mt-2">
+                  <Label className="mb-1 block text-[11px] text-muted-foreground">Variant</Label>
+                  <Select
+                    value={item.variant_id ?? undefined}
+                    onValueChange={(v) => pickVariant(item.key, v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select variant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {variantsFor(item.product_id).map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name}
+                          {v.sku ? ` · ${v.sku}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div>
               <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>
