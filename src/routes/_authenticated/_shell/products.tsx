@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
 import { useProductBom } from "@/components/product-bom-section";
+import { useProductVariants } from "@/components/product-variants-section";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useBusiness } from "@/lib/business-context";
-import type { Row } from "@/lib/db";
+import { db, type Row } from "@/lib/db";
 import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
 
