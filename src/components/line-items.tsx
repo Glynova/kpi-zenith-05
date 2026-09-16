@@ -17,6 +17,8 @@ import {
 export type LineItem = {
   key: string;
   product_id: string | null;
+  /** Exact sellable identity when the product has variants. */
+  variant_id: string | null;
   product_name: string;
   quantity: number;
   unit_price: number;
@@ -28,6 +30,7 @@ export function emptyLine(): LineItem {
   return {
     key: Math.random().toString(36).slice(2),
     product_id: null,
+    variant_id: null,
     product_name: "",
     quantity: 1,
     unit_price: 0,
