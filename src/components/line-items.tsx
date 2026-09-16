@@ -17,6 +17,8 @@ import {
 export type LineItem = {
   key: string;
   product_id: string | null;
+  /** Exact sellable identity when the product has variants. */
+  variant_id: string | null;
   product_name: string;
   quantity: number;
   unit_price: number;
@@ -28,6 +30,7 @@ export function emptyLine(): LineItem {
   return {
     key: Math.random().toString(36).slice(2),
     product_id: null,
+    variant_id: null,
     product_name: "",
     quantity: 1,
     unit_price: 0,
@@ -52,6 +55,7 @@ export function LineItemsEditor({
   items,
   setItems,
   products,
+  variants = [],
   currency,
   priceKey = "selling_price",
   priceLabel = "Unit price",
@@ -59,6 +63,8 @@ export function LineItemsEditor({
   items: LineItem[];
   setItems: (items: LineItem[]) => void;
   products: Row[];
+  /** Active variants for the current business, used to resolve exact SKUs. */
+  variants?: Row[];
   currency: string;
   priceKey?: "selling_price" | "cost_price";
   priceLabel?: string;
@@ -67,13 +73,29 @@ export function LineItemsEditor({
     setItems(items.map((i) => (i.key === key ? { ...i, ...patch } : i)));
   }
 
+  const variantsFor = (productId: string | null) =>
+    productId ? variants.filter((v) => v.product_id === productId && v.status !== "archived") : [];
+
   function pickProduct(key: string, productId: string) {
     const p = products.find((x) => x.id === productId);
     update(key, {
       product_id: productId,
+      variant_id: null,
       product_name: p?.name ?? "",
       unit_price: Number(p?.[priceKey] ?? 0),
       unit_cost: Number(p?.average_cost || p?.cost_price || 0),
+    });
+  }
+
+  function pickVariant(key: string, variantId: string) {
+    const item = items.find((i) => i.key === key);
+    const v = variants.find((x) => x.id === variantId);
+    const p = products.find((x) => x.id === item?.product_id);
+    update(key, {
+      variant_id: variantId,
+      product_name: `${p?.name ?? ""} — ${v?.name ?? ""}`,
+      unit_price: Number(v?.[priceKey] ?? p?.[priceKey] ?? 0),
+      unit_cost: Number(v?.cost_price || p?.average_cost || p?.cost_price || 0),
     });
   }
 
@@ -120,6 +142,27 @@ export function LineItemsEditor({
                   ))}
                 </SelectContent>
               </Select>
+              {variantsFor(item.product_id).length > 0 && (
+                <div className="mt-2">
+                  <Label className="mb-1 block text-[11px] text-muted-foreground">Variant</Label>
+                  <Select
+                    value={item.variant_id ?? undefined}
+                    onValueChange={(v) => pickVariant(item.key, v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select variant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {variantsFor(item.product_id).map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name}
+                          {v.sku ? ` · ${v.sku}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div>
               <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>

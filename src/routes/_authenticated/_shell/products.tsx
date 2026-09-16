@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
 import { useProductBom } from "@/components/product-bom-section";
+import { useProductVariants } from "@/components/product-variants-section";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useBusiness } from "@/lib/business-context";
-import type { Row } from "@/lib/db";
+import { db, type Row } from "@/lib/db";
 import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
 
@@ -201,7 +206,30 @@ const description = "Your catalog. The form shows only the fields your business 
 function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
   const bom = useProductBom(businessId, currency);
+  const variants = useProductVariants(businessId);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const variantsEnabled = feature("track_variants");
+
+  /** Variant count + aggregate stock per parent product for the listing. */
+  const { data: variantSummary = {} } = useQuery({
+    queryKey: ["product-variant-summary", businessId],
+    enabled: !!businessId && variantsEnabled,
+    queryFn: async () => {
+      const { data } = await db
+        .from("product_variants")
+        .select("product_id,stock,status")
+        .eq("business_id", businessId);
+      const map: Record<string, { count: number; stock: number }> = {};
+      for (const v of (data ?? []) as Row[]) {
+        if (String(v.status) === "archived") continue;
+        const pid = String(v.product_id);
+        map[pid] ??= { count: 0, stock: 0 };
+        map[pid].count += 1;
+        map[pid].stock += Number(v.stock ?? 0);
+      }
+      return map;
+    },
+  });
 
   const keep = (key: string) => {
     switch (key) {
@@ -290,7 +318,43 @@ function ProductsPage() {
       table="products"
       title="Products"
       description={description}
-      columns={columns.filter((c) => keep(c.key))}
+      columns={[
+        ...columns.filter((c) => keep(c.key)).map((c): Column =>
+          c.key === "stock" && variantsEnabled
+            ? {
+                ...c,
+                render: (row) => {
+                  const summary = variantSummary[row.id];
+                  const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
+                  return (
+                    <span className="tabular-nums">
+                      {qty}
+                      {summary?.count ? (
+                        <span className="ml-1 text-[11px] text-muted-foreground">(derived)</span>
+                      ) : null}
+                    </span>
+                  );
+                },
+              }
+            : c,
+        ),
+        ...(variantsEnabled
+          ? [
+              {
+                key: "variant_count",
+                label: "Variants",
+                render: (row: Row) => {
+                  const count = variantSummary[row.id]?.count ?? 0;
+                  return count ? (
+                    <Badge variant="secondary">{count}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  );
+                },
+              } as Column,
+            ]
+          : []),
+      ]}
       fields={formFields}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
@@ -328,22 +392,52 @@ function ProductsPage() {
       onOpenForm={(row) => {
         setEditingId(row?.id ?? null);
         void bom.load(row);
+        void variants.load(row);
       }}
       formExtrasAfter="cost_price"
-      formExtras={({ form, setForm }) =>
-        isFinished(form) ? (
-          <bom.Section
-            productName={String(form.name ?? "")}
-
-            excludeProductId={editingId}
-            onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
-          />
-        ) : null
+      formExtras={({ form, setForm }) => (
+        <>
+          {isFinished(form) ? (
+            <bom.Section
+              productName={String(form.name ?? "")}
+              excludeProductId={editingId}
+              onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
+            />
+          ) : null}
+          {variantsEnabled ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                <div>
+                  <Label className="text-xs font-semibold">This product has variants</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Stock, SKU and price are tracked per variant.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!form.has_variants}
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, has_variants: v, product_type: v ? "variant" : "standard" })
+                  }
+                />
+              </div>
+              {form.has_variants ? (
+                <variants.Section
+                  parentCost={Number(form.cost_price ?? 0)}
+                  parentPrice={Number(form.selling_price ?? 0)}
+                  parentSku={String(form.sku ?? "")}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </>
+      )}
+      validate={({ form }) =>
+        (isFinished(form) ? bom.validate() : null) ??
+        (variantsEnabled && form.has_variants ? variants.validate() : null)
       }
-      validate={({ form }) => (isFinished(form) ? bom.validate() : null)}
       afterSave={async ({ form, id }) => {
-        if (!isFinished(form)) return;
-        await bom.persist(id, String(form.name ?? ""));
+        if (isFinished(form)) await bom.persist(id, String(form.name ?? ""));
+        if (variantsEnabled && form.has_variants) await variants.persist(id);
       }}
       rowActions={(row) => (
         <Button asChild variant="ghost" size="icon" title="View details">

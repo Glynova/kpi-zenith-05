@@ -93,7 +93,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "Suppliers", url: "/suppliers", icon: Truck, keywords: "vendors" },
       { title: "Locations", url: "/locations", icon: Warehouse, keywords: "warehouse branch" },
       { title: "Units", url: "/units", icon: Ruler, keywords: "uom measure" },
-      { title: "Variants", url: "/variants", icon: Palette, feature: "track_variants" },
       { title: "Batches", url: "/batches", icon: Factory, feature: "track_batch", keywords: "lot expiry" },
       { title: "Serial Numbers", url: "/serials", icon: Barcode, feature: "track_serial" },
     ],

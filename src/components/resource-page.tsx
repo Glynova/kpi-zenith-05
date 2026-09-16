@@ -57,6 +57,8 @@ export type Column = {
   key: string;
   label: string;
   format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
+  /** Custom cell renderer; takes precedence over `format`. */
+  render?: (row: Row) => ReactNode;
 };
 
 export type FormCtx = {
@@ -384,6 +386,7 @@ export function ResourcePage({
   }
 
   function renderCell(row: Row, col: Column) {
+    if (col.render) return col.render(row);
     const value = row[col.key];
     if (col.format === "boolean")
       return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
