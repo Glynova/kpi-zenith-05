@@ -57,6 +57,8 @@ export type Column = {
   key: string;
   label: string;
   format?: "currency" | "number" | "date" | "badge" | "text" | "boolean" | "image";
+  /** Custom cell renderer; takes precedence over `format`. */
+  render?: (row: Row) => ReactNode;
 };
 
 export type FormCtx = {
