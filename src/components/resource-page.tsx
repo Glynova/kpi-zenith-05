@@ -386,6 +386,7 @@ export function ResourcePage({
   }
 
   function renderCell(row: Row, col: Column) {
+    if (col.render) return col.render(row);
     const value = row[col.key];
     if (col.format === "boolean")
       return <Badge variant={value ? "default" : "secondary"}>{value ? "Yes" : "No"}</Badge>;
