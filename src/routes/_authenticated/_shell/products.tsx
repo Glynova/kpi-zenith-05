@@ -206,7 +206,30 @@ const description = "Your catalog. The form shows only the fields your business 
 function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
   const bom = useProductBom(businessId, currency);
+  const variants = useProductVariants(businessId);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const variantsEnabled = feature("track_variants");
+
+  /** Variant count + aggregate stock per parent product for the listing. */
+  const { data: variantSummary = {} } = useQuery({
+    queryKey: ["product-variant-summary", businessId],
+    enabled: !!businessId && variantsEnabled,
+    queryFn: async () => {
+      const { data } = await db
+        .from("product_variants")
+        .select("product_id,stock,status")
+        .eq("business_id", businessId);
+      const map: Record<string, { count: number; stock: number }> = {};
+      for (const v of (data ?? []) as Row[]) {
+        if (String(v.status) === "archived") continue;
+        const pid = String(v.product_id);
+        map[pid] ??= { count: 0, stock: 0 };
+        map[pid].count += 1;
+        map[pid].stock += Number(v.stock ?? 0);
+      }
+      return map;
+    },
+  });
 
   const keep = (key: string) => {
     switch (key) {
