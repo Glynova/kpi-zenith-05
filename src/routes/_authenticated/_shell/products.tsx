@@ -318,7 +318,43 @@ function ProductsPage() {
       table="products"
       title="Products"
       description={description}
-      columns={columns.filter((c) => keep(c.key))}
+      columns={[
+        ...columns.filter((c) => keep(c.key)).map((c): Column =>
+          c.key === "stock" && variantsEnabled
+            ? {
+                ...c,
+                render: (row) => {
+                  const summary = variantSummary[row.id];
+                  const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
+                  return (
+                    <span className="tabular-nums">
+                      {qty}
+                      {summary?.count ? (
+                        <span className="ml-1 text-[11px] text-muted-foreground">(derived)</span>
+                      ) : null}
+                    </span>
+                  );
+                },
+              }
+            : c,
+        ),
+        ...(variantsEnabled
+          ? [
+              {
+                key: "variant_count",
+                label: "Variants",
+                render: (row: Row) => {
+                  const count = variantSummary[row.id]?.count ?? 0;
+                  return count ? (
+                    <Badge variant="secondary">{count}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  );
+                },
+              } as Column,
+            ]
+          : []),
+      ]}
       fields={formFields}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
