@@ -99,6 +99,19 @@ function SalesPage() {
     },
   });
 
+  const { data: productVariants = [] } = useQuery({
+    queryKey: ["variants-lite", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data } = await db
+        .from("product_variants")
+        .select("id,product_id,name,sku,barcode,selling_price,cost_price,stock,status")
+        .eq("business_id", businessId)
+        .order("name");
+      return (data ?? []) as Row[];
+    },
+  });
+
   const { data: customers = [] } = useQuery({
     queryKey: ["customers-lite", businessId],
     enabled: !!businessId,
@@ -132,6 +145,13 @@ function SalesPage() {
     mutationFn: async () => {
       const valid = items.filter((i) => i.product_id && i.quantity > 0);
       if (!valid.length) throw new Error("Add at least one line item");
+      for (const i of valid) {
+        const needsVariant = productVariants.some(
+          (v) => v.product_id === i.product_id && v.status !== "archived",
+        );
+        if (needsVariant && !i.variant_id)
+          throw new Error(`Choose a variant for ${i.product_name || "the selected product"}`);
+      }
       if (!form.sale_number) throw new Error("Sale number is required");
 
       const { data: sale, error } = await db
@@ -163,6 +183,7 @@ function SalesPage() {
           business_id: businessId,
           sale_id: sale.id,
           product_id: i.product_id,
+          variant_id: i.variant_id,
           product_name: i.product_name,
           quantity: i.quantity,
           unit_price: i.unit_price,
@@ -179,6 +200,7 @@ function SalesPage() {
         valid.map((i) => ({
           business_id: businessId,
           product_id: i.product_id,
+          variant_id: i.variant_id,
           type: "sale_out",
           quantity: i.quantity,
           unit_cost: i.unit_cost,
@@ -519,6 +541,7 @@ function SalesPage() {
             items={items}
             setItems={setItems}
             products={products}
+            variants={productVariants}
             currency={currency}
           />
 
