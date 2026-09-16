@@ -392,22 +392,52 @@ function ProductsPage() {
       onOpenForm={(row) => {
         setEditingId(row?.id ?? null);
         void bom.load(row);
+        void variants.load(row);
       }}
       formExtrasAfter="cost_price"
-      formExtras={({ form, setForm }) =>
-        isFinished(form) ? (
-          <bom.Section
-            productName={String(form.name ?? "")}
-
-            excludeProductId={editingId}
-            onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
-          />
-        ) : null
+      formExtras={({ form, setForm }) => (
+        <>
+          {isFinished(form) ? (
+            <bom.Section
+              productName={String(form.name ?? "")}
+              excludeProductId={editingId}
+              onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
+            />
+          ) : null}
+          {variantsEnabled ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                <div>
+                  <Label className="text-xs font-semibold">This product has variants</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Stock, SKU and price are tracked per variant.
+                  </p>
+                </div>
+                <Switch
+                  checked={!!form.has_variants}
+                  onCheckedChange={(v) =>
+                    setForm({ ...form, has_variants: v, product_type: v ? "variant" : "standard" })
+                  }
+                />
+              </div>
+              {form.has_variants ? (
+                <variants.Section
+                  parentCost={Number(form.cost_price ?? 0)}
+                  parentPrice={Number(form.selling_price ?? 0)}
+                  parentSku={String(form.sku ?? "")}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </>
+      )}
+      validate={({ form }) =>
+        (isFinished(form) ? bom.validate() : null) ??
+        (variantsEnabled && form.has_variants ? variants.validate() : null)
       }
-      validate={({ form }) => (isFinished(form) ? bom.validate() : null)}
       afterSave={async ({ form, id }) => {
-        if (!isFinished(form)) return;
-        await bom.persist(id, String(form.name ?? ""));
+        if (isFinished(form)) await bom.persist(id, String(form.name ?? ""));
+        if (variantsEnabled && form.has_variants) await variants.persist(id);
       }}
       rowActions={(row) => (
         <Button asChild variant="ghost" size="icon" title="View details">
