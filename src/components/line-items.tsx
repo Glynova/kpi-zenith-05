@@ -55,6 +55,7 @@ export function LineItemsEditor({
   items,
   setItems,
   products,
+  variants = [],
   currency,
   priceKey = "selling_price",
   priceLabel = "Unit price",
@@ -62,6 +63,8 @@ export function LineItemsEditor({
   items: LineItem[];
   setItems: (items: LineItem[]) => void;
   products: Row[];
+  /** Active variants for the current business, used to resolve exact SKUs. */
+  variants?: Row[];
   currency: string;
   priceKey?: "selling_price" | "cost_price";
   priceLabel?: string;
@@ -70,13 +73,29 @@ export function LineItemsEditor({
     setItems(items.map((i) => (i.key === key ? { ...i, ...patch } : i)));
   }
 
+  const variantsFor = (productId: string | null) =>
+    productId ? variants.filter((v) => v.product_id === productId && v.status !== "archived") : [];
+
   function pickProduct(key: string, productId: string) {
     const p = products.find((x) => x.id === productId);
     update(key, {
       product_id: productId,
+      variant_id: null,
       product_name: p?.name ?? "",
       unit_price: Number(p?.[priceKey] ?? 0),
       unit_cost: Number(p?.average_cost || p?.cost_price || 0),
+    });
+  }
+
+  function pickVariant(key: string, variantId: string) {
+    const item = items.find((i) => i.key === key);
+    const v = variants.find((x) => x.id === variantId);
+    const p = products.find((x) => x.id === item?.product_id);
+    update(key, {
+      variant_id: variantId,
+      product_name: `${p?.name ?? ""} — ${v?.name ?? ""}`,
+      unit_price: Number(v?.[priceKey] ?? p?.[priceKey] ?? 0),
+      unit_cost: Number(v?.cost_price || p?.average_cost || p?.cost_price || 0),
     });
   }
 
