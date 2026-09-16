@@ -81,6 +81,7 @@ const PAGE_SIZE = 25;
 type PoLine = {
   key: string;
   product_id: string | null;
+  variant_id: string | null;
   supplier_sku: string;
   unit: string;
   quantity: number;
@@ -96,6 +97,7 @@ function emptyLine(): PoLine {
   return {
     key: Math.random().toString(36).slice(2),
     product_id: null,
+    variant_id: null,
     supplier_sku: "",
     unit: "",
     quantity: 1,
@@ -180,6 +182,19 @@ function PurchaseOrdersPage() {
     },
   });
 
+  const { data: productVariants = [] } = useQuery({
+    queryKey: ["variants-lite", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data } = await db
+        .from("product_variants")
+        .select("id,product_id,name,sku,cost_price,stock,status")
+        .eq("business_id", businessId)
+        .order("name");
+      return (data ?? []) as Row[];
+    },
+  });
+
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers-lite", businessId],
     enabled: !!businessId,
@@ -249,6 +264,19 @@ function PurchaseOrdersPage() {
     return { inCatalog, rest };
   }, [products, catalog]);
 
+  const variantsFor = (productId: string | null) =>
+    productId
+      ? productVariants.filter((v) => v.product_id === productId && v.status !== "archived")
+      : [];
+
+  function pickVariant(key: string, variantId: string) {
+    const v = productVariants.find((x) => x.id === variantId);
+    updateLine(key, {
+      variant_id: variantId,
+      unit_cost: Number(v?.cost_price ?? 0) || undefined as never,
+    });
+  }
+
   function pickProduct(key: string, productId: string) {
     const product = products.find((p) => p.id === productId);
     const sp = catalog.find((c) => c.product_id === productId);
@@ -258,6 +286,7 @@ function PurchaseOrdersPage() {
           ? {
               ...i,
               product_id: productId,
+              variant_id: null,
               supplier_sku: sp?.supplier_sku ?? "",
               unit: sp?.purchase_unit ?? product?.purchase_unit ?? product?.unit ?? "",
               unit_cost: Number(sp?.unit_cost ?? product?.cost_price ?? 0),
@@ -278,6 +307,10 @@ function PurchaseOrdersPage() {
     mutationFn: async () => {
       const valid = items.filter((i) => i.product_id && i.quantity > 0);
       if (!valid.length) throw new Error("Add at least one line item");
+      for (const i of valid) {
+        if (variantsFor(i.product_id).length && !i.variant_id)
+          throw new Error("Choose the exact variant for every line with variants");
+      }
       if (!form.supplier_id) throw new Error("Choose a supplier");
 
       const poNumber = form.po_number || (await nextDocNumber(businessId!, "PO"));
@@ -315,6 +348,7 @@ function PurchaseOrdersPage() {
           business_id: businessId,
           purchase_order_id: po.id,
           product_id: i.product_id,
+          variant_id: i.variant_id,
           supplier_sku: i.supplier_sku || null,
           unit: i.unit || null,
           quantity: i.quantity,
@@ -880,6 +914,29 @@ function PurchaseOrdersPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {variantsFor(item.product_id).length > 0 && (
+                        <div className="mt-2">
+                          <Label className="mb-1 block text-[11px] text-muted-foreground">
+                            Variant
+                          </Label>
+                          <Select
+                            value={item.variant_id ?? undefined}
+                            onValueChange={(v) => pickVariant(item.key, v)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select variant" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {variantsFor(item.product_id).map((v) => (
+                                <SelectItem key={v.id} value={v.id}>
+                                  {v.name}
+                                  {v.sku ? ` · ${v.sku}` : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>
