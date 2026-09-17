@@ -13,6 +13,15 @@ import {
   defaultsForType,
   type FeatureKey,
 } from "@/lib/business-config";
+import {
+  CAPABILITY_USED_BY,
+  capabilityLabel,
+  capabilityStatus,
+  configurationHealth,
+  dependentsOf,
+  withPrerequisites,
+} from "@/lib/capabilities";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,10 +57,25 @@ export function InventorySettings() {
 
   const flag = (key: FeatureKey) => config[key] ?? settings[key] ?? false;
 
+  const health = configurationHealth(config as any);
+
+  /** Turning a capability on pulls in its prerequisites; turning it off turns
+   *  off whatever depends on it, so a broken combination cannot be saved. */
+  function toggle(key: FeatureKey, value: boolean) {
+    if (value) {
+      setConfig({ ...config, ...withPrerequisites(config as any, key) });
+      return;
+    }
+    const next: Record<string, any> = { ...config, [key]: false };
+    for (const dep of dependentsOf(key)) next[dep] = false;
+    setConfig(next);
+  }
+
   function applyRecommended() {
     setConfig({ ...config, ...defaultsForType(type) });
     toast.info("Recommended settings loaded — review and save.");
   }
+
 
   async function save() {
     if (!isAdmin) return toast.error("Only owners and admins can change configuration");
