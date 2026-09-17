@@ -13,6 +13,15 @@ import {
   defaultsForType,
   type FeatureKey,
 } from "@/lib/business-config";
+import {
+  CAPABILITY_USED_BY,
+  capabilityLabel,
+  capabilityStatus,
+  configurationHealth,
+  dependentsOf,
+  withPrerequisites,
+} from "@/lib/capabilities";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,10 +57,25 @@ export function InventorySettings() {
 
   const flag = (key: FeatureKey) => config[key] ?? settings[key] ?? false;
 
+  const health = configurationHealth(config as any);
+
+  /** Turning a capability on pulls in its prerequisites; turning it off turns
+   *  off whatever depends on it, so a broken combination cannot be saved. */
+  function toggle(key: FeatureKey, value: boolean) {
+    if (value) {
+      setConfig({ ...config, ...withPrerequisites(config as any, key) });
+      return;
+    }
+    const next: Record<string, any> = { ...config, [key]: false };
+    for (const dep of dependentsOf(key)) next[dep] = false;
+    setConfig(next);
+  }
+
   function applyRecommended() {
     setConfig({ ...config, ...defaultsForType(type) });
     toast.info("Recommended settings loaded — review and save.");
   }
+
 
   async function save() {
     if (!isAdmin) return toast.error("Only owners and admins can change configuration");
@@ -153,25 +177,73 @@ export function InventorySettings() {
             <CardTitle className="text-base">{group.label}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            {group.items.map((item) => (
-              <div
-                key={item.key}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border p-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{item.label}</p>
-                  <p className="text-xs text-muted-foreground">{item.hint}</p>
+            {group.items.map((item) => {
+              const status = capabilityStatus(config as any, item.key);
+              const usedBy = CAPABILITY_USED_BY[item.key] ?? [];
+              return (
+                <div
+                  key={item.key}
+                  className="flex items-start justify-between gap-3 rounded-lg border border-border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.hint}</p>
+                    {usedBy.length > 0 && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Used by: {usedBy.join(", ")}
+                      </p>
+                    )}
+                    {status.enabled && status.missing.length > 0 && (
+                      <p className="mt-1 text-[11px] font-medium text-destructive">
+                        Needs {status.missing.map(capabilityLabel).join(" and ")}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={!!flag(item.key)}
+                    disabled={!isAdmin}
+                    onCheckedChange={(v: boolean) => toggle(item.key, v)}
+                  />
                 </div>
-                <Switch
-                  checked={!!flag(item.key)}
+              );
+            })}
+          </CardContent>
+        </Card>
+      ))}
+
+      {health.length > 0 && (
+        <Card className="border-destructive/40">
+          <CardHeader>
+            <CardTitle className="text-base text-destructive">Configuration health</CardTitle>
+            <CardDescription>
+              These are switched on but cannot work until what they depend on is switched on too.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {health.map((h) => (
+              <div
+                key={h.key}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm"
+              >
+                <span>
+                  <span className="font-medium">{h.label}</span> needs{" "}
+                  {h.missing.map(capabilityLabel).join(" and ")}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
                   disabled={!isAdmin}
-                  onCheckedChange={(v: boolean) => setConfig({ ...config, [item.key]: v })}
-                />
+                  onClick={() => toggle(h.key, true)}
+                >
+                  Fix it
+                </Button>
               </div>
             ))}
           </CardContent>
         </Card>
-      ))}
+      )}
+
+
 
       <Card>
         <CardHeader>

@@ -42,6 +42,9 @@ import { ROUTE_FEATURE } from "@/lib/billing";
 import { useSubscription } from "@/lib/use-subscription";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { SubscriptionBanner } from "@/components/subscription-banner";
+import { CapabilityBlocked, useRouteCapability } from "@/components/capability-guard";
+import { capabilityLabel } from "@/lib/capabilities";
+
 
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,

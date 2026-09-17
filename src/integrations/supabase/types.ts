@@ -5737,6 +5737,7 @@ export type Database = {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      business_today: { Args: { _business_id: string }; Returns: string }
       can_manage_sensitive: { Args: { _business_id: string }; Returns: boolean }
       can_write_business: { Args: { _business_id: string }; Returns: boolean }
       close_register: {
@@ -5782,6 +5783,10 @@ export type Database = {
           _record_id?: string
         }
         Returns: string
+      }
+      low_stock_threshold: {
+        Args: { _min: number; _reorder: number; _rule: string }
+        Returns: number
       }
       movement_sign: { Args: { _type: string }; Returns: number }
       next_doc_number: {
