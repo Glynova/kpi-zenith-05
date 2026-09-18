@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * PayMongo delivers loosely-typed JSON and the admin client bypasses generated
+ * table types on purpose here; every value is narrowed before use. */
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
