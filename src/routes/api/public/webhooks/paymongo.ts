@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * PayMongo delivers loosely-typed JSON and the admin client bypasses generated
+ * table types on purpose here; every value is narrowed before use. */
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
@@ -120,8 +123,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
               .from("subscriptions")
               .update({
                 status: mapped,
-                current_period_start:
-                  toIso(attrs["current_period_start"]) ?? undefined,
+                current_period_start: toIso(attrs["current_period_start"]) ?? undefined,
                 current_period_end:
                   toIso(attrs["next_billing_schedule"]) ??
                   toIso(attrs["current_period_end"]) ??
@@ -183,12 +185,18 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           }
 
           // 4c. Refunds / reversals clawback the matching commission entry.
-          if (type.startsWith("payment.refunded") || type.startsWith("payment.reversed") || type.startsWith("refund.")) {
+          if (
+            type.startsWith("payment.refunded") ||
+            type.startsWith("payment.reversed") ||
+            type.startsWith("refund.")
+          ) {
             const { reverseCommissionFor } = await import("@/lib/affiliate.server");
             const paymentRef = (attrs["payment_id"] as string) ?? resource?.id;
             const invoiceRef = attrs["invoice_id"] as string | undefined;
-            if (paymentRef) await reverseCommissionFor(admin, `payment:${paymentRef}`, "Payment refunded");
-            if (invoiceRef) await reverseCommissionFor(admin, `invoice:${invoiceRef}`, "Payment refunded");
+            if (paymentRef)
+              await reverseCommissionFor(admin, `payment:${paymentRef}`, "Payment refunded");
+            if (invoiceRef)
+              await reverseCommissionFor(admin, `invoice:${invoiceRef}`, "Payment refunded");
             if (paymentRef) {
               await admin
                 .from("subscription_payments")
@@ -237,7 +245,6 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
                 sourceType: "payment",
               });
             } else {
-
               const next = nextStatusAfterFailure(sub.status);
               await admin.from("subscriptions").update({ status: next }).eq("id", sub.id);
             }
@@ -247,10 +254,11 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           {
             const { setReferralStatus } = await import("@/lib/affiliate.server");
             const mappedStatus = SUBSCRIPTION_STATUS_MAP[type];
-            if (mappedStatus === "cancelled") await setReferralStatus(admin, sub.business_id, "cancelled");
-            else if (mappedStatus === "past_due") await setReferralStatus(admin, sub.business_id, "past_due");
+            if (mappedStatus === "cancelled")
+              await setReferralStatus(admin, sub.business_id, "cancelled");
+            else if (mappedStatus === "past_due")
+              await setReferralStatus(admin, sub.business_id, "past_due");
           }
-
         }
 
         // 5. Unrecognised events are acknowledged so PayMongo stops retrying.

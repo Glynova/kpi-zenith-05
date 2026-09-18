@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function ProductDetail() {
   const { productId } = Route.useParams();
@@ -24,29 +30,39 @@ function ProductDetail() {
     queryKey: ["product-detail", productId, businessId],
     enabled: !!businessId && !!productId,
     queryFn: async () => {
-      const [product, balances, movements, variants, suppliers, costs, boms, bomItems, warehouses, batches] =
-        await Promise.all([
-          db.from("products").select("*").eq("id", productId).maybeSingle(),
-          db.from("inventory_balances").select("*").eq("product_id", productId),
-          db
-            .from("inventory_movements")
-            .select("*")
-            .eq("product_id", productId)
-            .order("created_at", { ascending: false })
-            .limit(100),
-          db.from("product_variants").select("*").eq("product_id", productId),
-          db.from("supplier_products").select("*").eq("product_id", productId),
-          db
-            .from("cost_history")
-            .select("*")
-            .eq("product_id", productId)
-            .order("created_at", { ascending: false })
-            .limit(50),
-          db.from("bill_of_materials").select("*").eq("product_id", productId),
-          db.from("bom_items").select("*").eq("business_id", businessId),
-          db.from("warehouses").select("id, name").eq("business_id", businessId),
-          db.from("batches").select("*").eq("product_id", productId),
-        ]);
+      const [
+        product,
+        balances,
+        movements,
+        variants,
+        suppliers,
+        costs,
+        boms,
+        bomItems,
+        warehouses,
+        batches,
+      ] = await Promise.all([
+        db.from("products").select("*").eq("id", productId).maybeSingle(),
+        db.from("inventory_balances").select("*").eq("product_id", productId),
+        db
+          .from("inventory_movements")
+          .select("*")
+          .eq("product_id", productId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        db.from("product_variants").select("*").eq("product_id", productId),
+        db.from("supplier_products").select("*").eq("product_id", productId),
+        db
+          .from("cost_history")
+          .select("*")
+          .eq("product_id", productId)
+          .order("created_at", { ascending: false })
+          .limit(50),
+        db.from("bill_of_materials").select("*").eq("product_id", productId),
+        db.from("bom_items").select("*").eq("business_id", businessId),
+        db.from("warehouses").select("id, name").eq("business_id", businessId),
+        db.from("batches").select("*").eq("product_id", productId),
+      ]);
       return {
         product: (product.data ?? null) as Row | null,
         balances: (balances.data ?? []) as Row[],
@@ -136,7 +152,10 @@ function ProductDetail() {
     <div className="space-y-6">
       <PageHeader
         title={product.name}
-        description={[product.sku, titleCase(String(product.inventory_model ?? product.product_type))]
+        description={[
+          product.sku,
+          titleCase(String(product.inventory_model ?? product.product_type)),
+        ]
           .filter(Boolean)
           .join(" · ")}
         actions={
@@ -155,7 +174,10 @@ function ProductDetail() {
           </CardHeader>
           <CardContent>
             <p className="font-display text-2xl font-semibold">{formatNumber(onHand, 2)}</p>
-            <Badge className="mt-2" variant={status === "out_of_stock" ? "destructive" : "secondary"}>
+            <Badge
+              className="mt-2"
+              variant={status === "out_of_stock" ? "destructive" : "secondary"}
+            >
               {STATUS_LABEL[status]}
             </Badge>
           </CardContent>
@@ -168,24 +190,34 @@ function ProductDetail() {
             <p className="font-display text-2xl font-semibold">
               {formatNumber(availableQuantity(onHand, reserved), 2)}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{formatNumber(reserved, 2)} reserved</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {formatNumber(reserved, 2)} reserved
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-normal text-muted-foreground">Average cost</CardTitle>
+            <CardTitle className="text-xs font-normal text-muted-foreground">
+              Average cost
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="font-display text-2xl font-semibold">{formatCurrency(cost, currency)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{titleCase(String(settings.costing_method))}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {titleCase(String(settings.costing_method))}
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-normal text-muted-foreground">Inventory value</CardTitle>
+            <CardTitle className="text-xs font-normal text-muted-foreground">
+              Inventory value
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-display text-2xl font-semibold">{formatCurrency(onHand * cost, currency)}</p>
+            <p className="font-display text-2xl font-semibold">
+              {formatCurrency(onHand * cost, currency)}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -209,7 +241,10 @@ function ProductDetail() {
               ["Product behaviour", titleCase(String(product.inventory_model ?? ""))],
               ["Reorder level", formatNumber(Number(product.reorder_level ?? 0), 2)],
               ["Minimum stock", formatNumber(Number(product.min_stock ?? 0), 2)],
-              ["Maximum stock", product.max_stock ? formatNumber(Number(product.max_stock), 2) : null],
+              [
+                "Maximum stock",
+                product.max_stock ? formatNumber(Number(product.max_stock), 2) : null,
+              ],
               ["Status", titleCase(String(product.status ?? ""))],
               ["Created", formatDate(product.created_at)],
             ].map(([label, value]) => (
@@ -240,7 +275,9 @@ function ProductDetail() {
               {(data?.balances ?? []).map((b) => (
                 <TableRow key={b.id}>
                   <TableCell>{warehouseMap[b.warehouse_id] ?? "Unassigned"}</TableCell>
-                  <TableCell className="text-right">{formatNumber(Number(b.quantity ?? 0), 2)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatNumber(Number(b.quantity ?? 0), 2)}
+                  </TableCell>
                   <TableCell className="text-right">
                     {formatNumber(Number(b.reserved_quantity ?? 0), 2)}
                   </TableCell>
@@ -251,7 +288,10 @@ function ProductDetail() {
                     {formatCurrency(Number(b.average_cost ?? 0), currency)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(Number(b.quantity ?? 0) * Number(b.average_cost ?? 0), currency)}
+                    {formatCurrency(
+                      Number(b.quantity ?? 0) * Number(b.average_cost ?? 0),
+                      currency,
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -306,11 +346,15 @@ function ProductDetail() {
                 <TableRow key={v.id}>
                   <TableCell>{v.name}</TableCell>
                   <TableCell className="text-muted-foreground">{v.sku ?? "—"}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(v.cost_price ?? 0), currency)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(Number(v.cost_price ?? 0), currency)}
+                  </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(Number(v.selling_price ?? 0), currency)}
                   </TableCell>
-                  <TableCell className="text-right">{formatNumber(Number(v.stock ?? 0), 2)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatNumber(Number(v.stock ?? 0), 2)}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{titleCase(String(v.status ?? ""))}</Badge>
                   </TableCell>
@@ -343,7 +387,9 @@ function ProductDetail() {
                 <TableRow key={s.id}>
                   <TableCell>{names?.suppliers?.[s.supplier_id] ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{s.supplier_sku ?? "—"}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(s.unit_cost ?? 0), currency)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(Number(s.unit_cost ?? 0), currency)}
+                  </TableCell>
                   <TableCell className="text-right">{s.lead_time_days ?? 0} days</TableCell>
                   <TableCell>
                     <Badge variant={s.is_preferred ? "default" : "secondary"}>
@@ -380,10 +426,16 @@ function ProductDetail() {
               {(data?.costs ?? []).map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="whitespace-nowrap">{formatDate(c.created_at)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(c.old_cost ?? 0), currency)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(c.new_cost ?? 0), currency)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(Number(c.old_cost ?? 0), currency)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(Number(c.new_cost ?? 0), currency)}
+                  </TableCell>
                   <TableCell>{titleCase(String(c.method ?? ""))}</TableCell>
-                  <TableCell className="text-muted-foreground">{titleCase(String(c.reason ?? ""))}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {titleCase(String(c.reason ?? ""))}
+                  </TableCell>
                 </TableRow>
               ))}
               {!data?.costs.length && (
@@ -416,7 +468,9 @@ function ProductDetail() {
                   <TableRow key={m.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(m.created_at)}</TableCell>
                     <TableCell>
-                      <Badge variant={sign < 0 ? "destructive" : "secondary"}>{titleCase(m.type)}</Badge>
+                      <Badge variant={sign < 0 ? "destructive" : "secondary"}>
+                        {titleCase(m.type)}
+                      </Badge>
                     </TableCell>
                     <TableCell>{warehouseMap[m.warehouse_id] ?? "—"}</TableCell>
                     <TableCell className="text-right font-medium">
@@ -426,7 +480,9 @@ function ProductDetail() {
                     <TableCell className="text-right">
                       {formatCurrency(Number(m.unit_cost ?? 0), currency)}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{m.reference ?? m.reason ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {m.reference ?? m.reason ?? "—"}
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -456,9 +512,13 @@ function ProductDetail() {
                 {components.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>{names?.products?.[c.component_product_id] ?? "—"}</TableCell>
-                    <TableCell className="text-right">{formatNumber(Number(c.quantity ?? 0), 3)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatNumber(Number(c.quantity ?? 0), 3)}
+                    </TableCell>
                     <TableCell>{c.unit ?? "—"}</TableCell>
-                    <TableCell className="text-right">{formatNumber(Number(c.waste_percent ?? 0), 2)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatNumber(Number(c.waste_percent ?? 0), 2)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -486,7 +546,13 @@ function ProductDetail() {
                   : null;
                 const alert = Number(settings.expiry_alert_days ?? 30);
                 const label =
-                  days === null ? "Valid" : days < 0 ? "Expired" : days <= alert ? "Expiring soon" : "Valid";
+                  days === null
+                    ? "Valid"
+                    : days < 0
+                      ? "Expired"
+                      : days <= alert
+                        ? "Expiring soon"
+                        : "Valid";
                 return (
                   <TableRow key={b.id}>
                     <TableCell>{b.batch_number}</TableCell>
@@ -494,9 +560,13 @@ function ProductDetail() {
                     <TableCell className="text-right">
                       {formatNumber(Number(b.remaining_quantity ?? 0), 2)}
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(Number(b.unit_cost ?? 0), currency)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(Number(b.unit_cost ?? 0), currency)}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={label === "Expired" ? "destructive" : "secondary"}>{label}</Badge>
+                      <Badge variant={label === "Expired" ? "destructive" : "secondary"}>
+                        {label}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 );
@@ -522,12 +592,14 @@ export const Route = createFileRoute("/_authenticated/_shell/products_/$productI
       { title: "Product Details — Daraven ERP" },
       {
         name: "description",
-        content: "Product overview, inventory by location, pricing, variants, suppliers, cost history and stock movements.",
+        content:
+          "Product overview, inventory by location, pricing, variants, suppliers, cost history and stock movements.",
       },
       { property: "og:title", content: "Product Details — Daraven ERP" },
       {
         property: "og:description",
-        content: "Product overview, inventory by location, pricing, variants, suppliers, cost history and stock movements.",
+        content:
+          "Product overview, inventory by location, pricing, variants, suppliers, cost history and stock movements.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

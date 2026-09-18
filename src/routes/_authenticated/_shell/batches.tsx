@@ -14,7 +14,13 @@ const columns: Column[] = [
 ];
 
 const fields: Field[] = [
-  { key: "product_id", label: "Product", type: "relation", relation: { table: "products" }, required: true },
+  {
+    key: "product_id",
+    label: "Product",
+    type: "relation",
+    relation: { table: "products" },
+    required: true,
+  },
   { key: "batch_number", label: "Batch number", type: "text", required: true },
   { key: "lot_number", label: "Lot number", type: "text" },
   { key: "warehouse_id", label: "Location", type: "relation", relation: { table: "warehouses" } },

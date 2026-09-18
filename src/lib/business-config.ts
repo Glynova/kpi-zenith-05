@@ -42,13 +42,7 @@ export type FeatureKey =
 
 /** Optional product fields the owner can switch on or off. */
 export type ProductCapability =
-  | "sku"
-  | "barcode"
-  | "selling_price"
-  | "cost_price"
-  | "reorder_level"
-  | "brand"
-  | "warranty";
+  "sku" | "barcode" | "selling_price" | "cost_price" | "reorder_level" | "brand" | "warranty";
 
 export const PRODUCT_CAPABILITIES: {
   key: ProductCapability;
@@ -90,7 +84,6 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   extra?: Record<string, unknown>;
 };
 
-
 export type CostingMethod = "weighted_average" | "fifo" | "standard";
 
 export const COSTING_METHODS: { value: CostingMethod; label: string; description: string }[] = [
@@ -121,9 +114,21 @@ export const FEATURE_GROUPS: {
       { key: "track_quantity", label: "Quantity", hint: "Track stock levels per product." },
       { key: "track_cost", label: "Cost", hint: "Track purchase cost and inventory value." },
       { key: "track_locations", label: "Locations", hint: "Branches, warehouses, kitchens." },
-      { key: "enable_stock_transfers", label: "Stock transfers", hint: "Move stock between locations." },
-      { key: "enable_stock_counts", label: "Stock counts", hint: "Physical counts that set actual stock." },
-      { key: "enable_low_stock_alerts", label: "Low stock alerts", hint: "Warn when stock runs low." },
+      {
+        key: "enable_stock_transfers",
+        label: "Stock transfers",
+        hint: "Move stock between locations.",
+      },
+      {
+        key: "enable_stock_counts",
+        label: "Stock counts",
+        hint: "Physical counts that set actual stock.",
+      },
+      {
+        key: "enable_low_stock_alerts",
+        label: "Low stock alerts",
+        hint: "Warn when stock runs low.",
+      },
       { key: "track_batch", label: "Batch", hint: "Batch numbers on receipts and issues." },
       { key: "track_lot", label: "Lot number", hint: "Lot references alongside batches." },
       { key: "track_expiry", label: "Expiry", hint: "Expiry dates and expiring-soon alerts." },
@@ -136,26 +141,62 @@ export const FEATURE_GROUPS: {
     items: [
       { key: "enable_bom", label: "Recipes / BOM", hint: "Build products from components." },
       { key: "enable_production", label: "Production", hint: "Production orders and WIP." },
-      { key: "enable_food_costing", label: "Food costing", hint: "Cost per recipe and per serving." },
+      {
+        key: "enable_food_costing",
+        label: "Food costing",
+        hint: "Cost per recipe and per serving.",
+      },
       { key: "enable_waste", label: "Waste", hint: "Record waste and spoilage separately." },
-      { key: "enable_unit_conversion", label: "Unit conversion", hint: "1 case = 24 pcs, 1 kg = 1000 g." },
+      {
+        key: "enable_unit_conversion",
+        label: "Unit conversion",
+        hint: "1 case = 24 pcs, 1 kg = 1000 g.",
+      },
       { key: "enable_purchasing", label: "Purchasing", hint: "Suppliers and purchase orders." },
       { key: "enable_sales", label: "Sales", hint: "Sales, invoices and receivables." },
       { key: "enable_services", label: "Services", hint: "Sell services that hold no stock." },
       { key: "enable_returns", label: "Returns", hint: "Customer and supplier returns." },
       { key: "enable_barcode", label: "Barcode", hint: "Barcodes on products and variants." },
-      { key: "enable_projects", label: "Projects / jobs", hint: "Allocate stock to jobs or sites." },
+      {
+        key: "enable_projects",
+        label: "Projects / jobs",
+        hint: "Allocate stock to jobs or sites.",
+      },
     ],
   },
   {
     label: "Selling",
     items: [
-      { key: "enable_pos", label: "Point of sale", hint: "Fast counter selling with a cart and receipts." },
-      { key: "enable_quotes", label: "Quotations", hint: "Send quotes and convert them to orders." },
-      { key: "enable_sales_orders", label: "Sales orders", hint: "Confirm orders before fulfilling them." },
-      { key: "enable_shipping", label: "Shipping & delivery", hint: "Delivery addresses, methods and tracking." },
-      { key: "enable_customer_credit", label: "Customer credit", hint: "Credit limits and outstanding balances." },
-      { key: "enable_cash_register", label: "Cash registers", hint: "Open and close tills with cash variance." },
+      {
+        key: "enable_pos",
+        label: "Point of sale",
+        hint: "Fast counter selling with a cart and receipts.",
+      },
+      {
+        key: "enable_quotes",
+        label: "Quotations",
+        hint: "Send quotes and convert them to orders.",
+      },
+      {
+        key: "enable_sales_orders",
+        label: "Sales orders",
+        hint: "Confirm orders before fulfilling them.",
+      },
+      {
+        key: "enable_shipping",
+        label: "Shipping & delivery",
+        hint: "Delivery addresses, methods and tracking.",
+      },
+      {
+        key: "enable_customer_credit",
+        label: "Customer credit",
+        hint: "Credit limits and outstanding balances.",
+      },
+      {
+        key: "enable_cash_register",
+        label: "Cash registers",
+        hint: "Open and close tills with cash variance.",
+      },
     ],
   },
 ];
@@ -179,7 +220,6 @@ const BASE: FeatureKey[] = [
   "enable_stock_counts",
   "enable_pos",
 ];
-
 
 export type BusinessType = {
   value: string;
@@ -216,13 +256,24 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "grocery",
     label: "Grocery / Supermarket",
     summary: "Batches, expiry, barcodes, high SKU count.",
-    defaults: preset([...BASE, "track_batch", "track_expiry", "enable_unit_conversion", "enable_waste"]),
+    defaults: preset([
+      ...BASE,
+      "track_batch",
+      "track_expiry",
+      "enable_unit_conversion",
+      "enable_waste",
+    ]),
   },
   {
     value: "wholesale",
     label: "Wholesale / Distribution",
     summary: "Cases, boxes, pieces, conversions, multiple warehouses.",
-    defaults: preset([...BASE, "enable_unit_conversion", "track_locations", "enable_stock_transfers"]),
+    defaults: preset([
+      ...BASE,
+      "enable_unit_conversion",
+      "track_locations",
+      "enable_stock_transfers",
+    ]),
   },
   {
     value: "manufacturing",
@@ -280,7 +331,13 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "pharmacy",
     label: "Pharmacy / Healthcare",
     summary: "Batch, lot, expiry and recall control.",
-    defaults: preset([...BASE, "track_batch", "track_lot", "track_expiry", "enable_unit_conversion"]),
+    defaults: preset([
+      ...BASE,
+      "track_batch",
+      "track_lot",
+      "track_expiry",
+      "enable_unit_conversion",
+    ]),
   },
   {
     value: "agriculture",
@@ -305,7 +362,12 @@ export const BUSINESS_TYPES: BusinessType[] = [
     value: "distribution",
     label: "Distribution",
     summary: "Multi-warehouse distribution with conversions.",
-    defaults: preset([...BASE, "track_locations", "enable_stock_transfers", "enable_unit_conversion"]),
+    defaults: preset([
+      ...BASE,
+      "track_locations",
+      "enable_stock_transfers",
+      "enable_unit_conversion",
+    ]),
   },
   {
     value: "other",
@@ -448,21 +510,96 @@ export const TRACK_ITEMS: {
   hint: string;
   features: FeatureKey[];
 }[] = [
-  { key: "products", label: "Products", hint: "Physical items you buy, hold and sell.", features: ["track_quantity", "track_cost"] },
-  { key: "services", label: "Services", hint: "Work you sell that holds no stock.", features: ["enable_services", "enable_sales"] },
-  { key: "raw_materials", label: "Raw materials", hint: "Inputs consumed to make other items.", features: ["track_quantity", "enable_purchasing"] },
-  { key: "finished_products", label: "Finished products", hint: "Items produced in-house and ready to sell.", features: ["enable_production"] },
-  { key: "consumables", label: "Consumables", hint: "Supplies used up in daily operations.", features: ["track_quantity"] },
-  { key: "equipment", label: "Equipment / assets", hint: "Tools and machines you keep track of.", features: ["enable_assets"] },
-  { key: "packaging", label: "Packaging", hint: "Boxes, bags and containers you stock.", features: ["track_quantity"] },
-  { key: "ingredients", label: "Ingredients", hint: "Food or chemical inputs measured by weight or volume.", features: ["enable_unit_conversion", "enable_food_costing"] },
-  { key: "variants", label: "Product variants", hint: "Sizes, colours, models or specs under one product.", features: ["track_variants"] },
-  { key: "batches", label: "Batches / lots", hint: "Group stock by production or delivery batch.", features: ["track_batch", "track_lot"] },
-  { key: "expiry", label: "Expiration dates", hint: "Know what expires and when.", features: ["track_expiry"] },
-  { key: "serials", label: "Serial numbers", hint: "One record per physical unit.", features: ["track_serial"] },
-  { key: "bom", label: "Recipes & components", hint: "Build items from other items and cost them automatically.", features: ["enable_bom"] },
-  { key: "production", label: "Production", hint: "Production runs that consume inputs and create output.", features: ["enable_production", "enable_bom"] },
-  { key: "locations", label: "Multiple locations", hint: "Stores, warehouses, kitchens or sites.", features: ["track_locations", "enable_stock_transfers"] },
+  {
+    key: "products",
+    label: "Products",
+    hint: "Physical items you buy, hold and sell.",
+    features: ["track_quantity", "track_cost"],
+  },
+  {
+    key: "services",
+    label: "Services",
+    hint: "Work you sell that holds no stock.",
+    features: ["enable_services", "enable_sales"],
+  },
+  {
+    key: "raw_materials",
+    label: "Raw materials",
+    hint: "Inputs consumed to make other items.",
+    features: ["track_quantity", "enable_purchasing"],
+  },
+  {
+    key: "finished_products",
+    label: "Finished products",
+    hint: "Items produced in-house and ready to sell.",
+    features: ["enable_production"],
+  },
+  {
+    key: "consumables",
+    label: "Consumables",
+    hint: "Supplies used up in daily operations.",
+    features: ["track_quantity"],
+  },
+  {
+    key: "equipment",
+    label: "Equipment / assets",
+    hint: "Tools and machines you keep track of.",
+    features: ["enable_assets"],
+  },
+  {
+    key: "packaging",
+    label: "Packaging",
+    hint: "Boxes, bags and containers you stock.",
+    features: ["track_quantity"],
+  },
+  {
+    key: "ingredients",
+    label: "Ingredients",
+    hint: "Food or chemical inputs measured by weight or volume.",
+    features: ["enable_unit_conversion", "enable_food_costing"],
+  },
+  {
+    key: "variants",
+    label: "Product variants",
+    hint: "Sizes, colours, models or specs under one product.",
+    features: ["track_variants"],
+  },
+  {
+    key: "batches",
+    label: "Batches / lots",
+    hint: "Group stock by production or delivery batch.",
+    features: ["track_batch", "track_lot"],
+  },
+  {
+    key: "expiry",
+    label: "Expiration dates",
+    hint: "Know what expires and when.",
+    features: ["track_expiry"],
+  },
+  {
+    key: "serials",
+    label: "Serial numbers",
+    hint: "One record per physical unit.",
+    features: ["track_serial"],
+  },
+  {
+    key: "bom",
+    label: "Recipes & components",
+    hint: "Build items from other items and cost them automatically.",
+    features: ["enable_bom"],
+  },
+  {
+    key: "production",
+    label: "Production",
+    hint: "Production runs that consume inputs and create output.",
+    features: ["enable_production", "enable_bom"],
+  },
+  {
+    key: "locations",
+    label: "Multiple locations",
+    hint: "Stores, warehouses, kitchens or sites.",
+    features: ["track_locations", "enable_stock_transfers"],
+  },
 ];
 
 /** Location types offered in the wizard. */
@@ -482,7 +619,10 @@ export const COSTING_PLAIN: Record<CostingMethod, { label: string; hint: string 
     label: "Automatic average cost",
     hint: "Automatically calculates average inventory cost as purchases arrive.",
   },
-  fifo: { label: "Oldest stock first (FIFO)", hint: "Uses the cost of the oldest inventory first." },
+  fifo: {
+    label: "Oldest stock first (FIFO)",
+    hint: "Uses the cost of the oldest inventory first.",
+  },
   standard: { label: "Fixed standard cost", hint: "Uses a predefined standard cost for products." },
 };
 
@@ -509,82 +649,83 @@ export const STARTER_CONVERSIONS: { from_unit: string; to_unit: string; factor: 
 ];
 
 /** Grouped catalog of standard units of measure used across the app. */
-export const UNIT_OPTION_GROUPS: { label: string; options: { value: string; label: string }[] }[] = [
-  {
-    label: "Count",
-    options: [
-      { value: "pcs", label: "pcs — Piece" },
-      { value: "unit", label: "unit — Unit" },
-      { value: "box", label: "box — Box" },
-      { value: "pack", label: "pack — Pack" },
-      { value: "case", label: "case — Case" },
-      { value: "set", label: "set — Set" },
-      { value: "pair", label: "pair — Pair" },
-      { value: "dozen", label: "dozen — Dozen" },
-      { value: "carton", label: "carton — Carton" },
-      { value: "bottle", label: "bottle — Bottle" },
-      { value: "can", label: "can — Can" },
-      { value: "jar", label: "jar — Jar" },
-      { value: "bag", label: "bag — Bag" },
-      { value: "sack", label: "sack — Sack" },
-      { value: "tube", label: "tube — Tube" },
-      { value: "roll", label: "roll — Roll" },
-      { value: "sheet", label: "sheet — Sheet" },
-      { value: "ream", label: "ream — Ream" },
-      { value: "bundle", label: "bundle — Bundle" },
-      { value: "pallet", label: "pallet — Pallet" },
-    ],
-  },
-  {
-    label: "Weight",
-    options: [
-      { value: "kg", label: "kg — Kilogram" },
-      { value: "g", label: "g — Gram" },
-      { value: "mg", label: "mg — Milligram" },
-      { value: "lb", label: "lb — Pound" },
-      { value: "oz", label: "oz — Ounce" },
-      { value: "tonne", label: "tonne — Tonne" },
-    ],
-  },
-  {
-    label: "Volume",
-    options: [
-      { value: "l", label: "L — Liter" },
-      { value: "ml", label: "ml — Milliliter" },
-      { value: "gal", label: "gal — Gallon" },
-    ],
-  },
-  {
-    label: "Length",
-    options: [
-      { value: "m", label: "m — Meter" },
-      { value: "cm", label: "cm — Centimeter" },
-      { value: "mm", label: "mm — Millimeter" },
-      { value: "in", label: "in — Inch" },
-      { value: "ft", label: "ft — Foot" },
-      { value: "yd", label: "yd — Yard" },
-    ],
-  },
-  {
-    label: "Area & Volume (space)",
-    options: [
-      { value: "sqm", label: "sqm — Square meter" },
-      { value: "cbm", label: "cbm — Cubic meter" },
-    ],
-  },
-  {
-    label: "Time",
-    options: [
-      { value: "hour", label: "hour — Hour" },
-      { value: "day", label: "day — Day" },
-    ],
-  },
-  {
-    label: "Service",
-    options: [
-      { value: "service", label: "service — Service" },
-      { value: "session", label: "session — Session" },
-      { value: "license", label: "license — License" },
-    ],
-  },
-];
+export const UNIT_OPTION_GROUPS: { label: string; options: { value: string; label: string }[] }[] =
+  [
+    {
+      label: "Count",
+      options: [
+        { value: "pcs", label: "pcs — Piece" },
+        { value: "unit", label: "unit — Unit" },
+        { value: "box", label: "box — Box" },
+        { value: "pack", label: "pack — Pack" },
+        { value: "case", label: "case — Case" },
+        { value: "set", label: "set — Set" },
+        { value: "pair", label: "pair — Pair" },
+        { value: "dozen", label: "dozen — Dozen" },
+        { value: "carton", label: "carton — Carton" },
+        { value: "bottle", label: "bottle — Bottle" },
+        { value: "can", label: "can — Can" },
+        { value: "jar", label: "jar — Jar" },
+        { value: "bag", label: "bag — Bag" },
+        { value: "sack", label: "sack — Sack" },
+        { value: "tube", label: "tube — Tube" },
+        { value: "roll", label: "roll — Roll" },
+        { value: "sheet", label: "sheet — Sheet" },
+        { value: "ream", label: "ream — Ream" },
+        { value: "bundle", label: "bundle — Bundle" },
+        { value: "pallet", label: "pallet — Pallet" },
+      ],
+    },
+    {
+      label: "Weight",
+      options: [
+        { value: "kg", label: "kg — Kilogram" },
+        { value: "g", label: "g — Gram" },
+        { value: "mg", label: "mg — Milligram" },
+        { value: "lb", label: "lb — Pound" },
+        { value: "oz", label: "oz — Ounce" },
+        { value: "tonne", label: "tonne — Tonne" },
+      ],
+    },
+    {
+      label: "Volume",
+      options: [
+        { value: "l", label: "L — Liter" },
+        { value: "ml", label: "ml — Milliliter" },
+        { value: "gal", label: "gal — Gallon" },
+      ],
+    },
+    {
+      label: "Length",
+      options: [
+        { value: "m", label: "m — Meter" },
+        { value: "cm", label: "cm — Centimeter" },
+        { value: "mm", label: "mm — Millimeter" },
+        { value: "in", label: "in — Inch" },
+        { value: "ft", label: "ft — Foot" },
+        { value: "yd", label: "yd — Yard" },
+      ],
+    },
+    {
+      label: "Area & Volume (space)",
+      options: [
+        { value: "sqm", label: "sqm — Square meter" },
+        { value: "cbm", label: "cbm — Cubic meter" },
+      ],
+    },
+    {
+      label: "Time",
+      options: [
+        { value: "hour", label: "hour — Hour" },
+        { value: "day", label: "day — Day" },
+      ],
+    },
+    {
+      label: "Service",
+      options: [
+        { value: "service", label: "service — Service" },
+        { value: "session", label: "session — Session" },
+        { value: "license", label: "license — License" },
+      ],
+    },
+  ];

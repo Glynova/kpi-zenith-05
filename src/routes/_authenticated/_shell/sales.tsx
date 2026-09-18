@@ -325,8 +325,11 @@ function SalesPage() {
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter((r) =>
-      [r.sale_number, r.sale_type, r.payment_method, r.customers?.name]
-        .some((v) => String(v ?? "").toLowerCase().includes(q)),
+      [r.sale_number, r.sale_type, r.payment_method, r.customers?.name].some((v) =>
+        String(v ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
     );
   }, [salesQuery.data, search]);
 
@@ -404,10 +407,20 @@ function SalesPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-right">
-                    <Button variant="ghost" size="icon" onClick={() => setViewing(row)} aria-label="View">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setViewing(row)}
+                      aria-label="View"
+                    >
                       <Eye className="size-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => printSale(row)} aria-label="Print receipt">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => printSale(row)}
+                      aria-label="Print receipt"
+                    >
                       <Printer className="size-4" />
                     </Button>
                     {canWrite && (

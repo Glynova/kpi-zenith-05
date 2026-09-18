@@ -4,68 +4,65 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "transaction_date",
-    "label": "Date",
-    "format": "date"
+    key: "transaction_date",
+    label: "Date",
+    format: "date",
   },
   {
-    "key": "type",
-    "label": "Direction",
-    "format": "badge"
+    key: "type",
+    label: "Direction",
+    format: "badge",
   },
   {
-    "key": "category",
-    "label": "Category"
+    key: "category",
+    label: "Category",
   },
   {
-    "key": "description",
-    "label": "Description"
+    key: "description",
+    label: "Description",
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "format": "currency"
-  }
+    key: "amount",
+    label: "Amount",
+    format: "currency",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "type",
-    "label": "Direction",
-    "type": "select",
-    "options": [
-      "in",
-      "out"
-    ],
-    "default": "in"
+    key: "type",
+    label: "Direction",
+    type: "select",
+    options: ["in", "out"],
+    default: "in",
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "type": "number",
-    "default": 0,
-    "required": true
+    key: "amount",
+    label: "Amount",
+    type: "number",
+    default: 0,
+    required: true,
   },
   {
-    "key": "category",
-    "label": "Category",
-    "type": "text"
+    key: "category",
+    label: "Category",
+    type: "text",
   },
   {
-    "key": "description",
-    "label": "Description",
-    "type": "text"
+    key: "description",
+    label: "Description",
+    type: "text",
   },
   {
-    "key": "reference",
-    "label": "Reference",
-    "type": "text"
+    key: "reference",
+    label: "Reference",
+    type: "text",
   },
   {
-    "key": "transaction_date",
-    "label": "Date",
-    "type": "date"
-  }
+    key: "transaction_date",
+    label: "Date",
+    type: "date",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/cash-flow")({
@@ -85,9 +82,8 @@ export const Route = createFileRoute("/_authenticated/_shell/cash-flow")({
       description={"Every cash movement in and out of the business."}
       columns={columns}
       fields={fields}
-      searchKeys={["description","category","reference"]}
+      searchKeys={["description", "category", "reference"]}
       orderBy="transaction_date"
-      
     />
   ),
 });

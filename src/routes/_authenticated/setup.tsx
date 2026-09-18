@@ -57,12 +57,14 @@ export const Route = createFileRoute("/_authenticated/setup")({
       { title: "Business Setup — Daraven ERP" },
       {
         name: "description",
-        content: "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
+        content:
+          "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
       },
       { property: "og:title", content: "Business Setup — Daraven ERP" },
       {
         property: "og:description",
-        content: "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
+        content:
+          "Set up Daraven ERP around how your business actually tracks stock, costs and sales.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -110,9 +112,9 @@ const BASIC_INVENTORY: FeatureKey[] = [
   "enable_sales",
 ];
 
-const ADVANCED_INVENTORY: FeatureKey[] = FEATURE_GROUPS.flatMap((g) => g.items.map((i) => i.key)).filter(
-  (k) => !BASIC_INVENTORY.includes(k),
-);
+const ADVANCED_INVENTORY: FeatureKey[] = FEATURE_GROUPS.flatMap((g) =>
+  g.items.map((i) => i.key),
+).filter((k) => !BASIC_INVENTORY.includes(k));
 
 const FEATURE_META = Object.fromEntries(
   FEATURE_GROUPS.flatMap((g) => g.items).map((i) => [i.key, i]),
@@ -200,8 +202,16 @@ function SwitchRow({
 function SetupWizard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { business, businessId, loading, onboarding, onboardingLoaded, isAdmin, refresh, refreshSettings } =
-    useBusiness();
+  const {
+    business,
+    businessId,
+    loading,
+    onboarding,
+    onboardingLoaded,
+    isAdmin,
+    refresh,
+    refreshSettings,
+  } = useBusiness();
 
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
@@ -226,7 +236,8 @@ function SetupWizard() {
       features: { ...defaultsForType(business.type ?? "retail") },
       ...saved,
     } as Draft);
-    if (onboarding?.current_step) setStep(Math.min(Number(onboarding.current_step) || 1, STEPS.length));
+    if (onboarding?.current_step)
+      setStep(Math.min(Number(onboarding.current_step) || 1, STEPS.length));
     setHydrated(true);
   }, [business, onboarding, onboardingLoaded, hydrated]);
 
@@ -259,7 +270,10 @@ function SetupWizard() {
     if (!businessId) return;
     const { error } = await db
       .from("business_onboarding")
-      .upsert({ business_id: businessId, draft, current_step: nextStep }, { onConflict: "business_id" });
+      .upsert(
+        { business_id: businessId, draft, current_step: nextStep },
+        { onConflict: "business_id" },
+      );
     if (error && !silent) toast.error(error.message);
     else if (!silent) toast.success("Progress saved — you can finish this later.");
   }
@@ -314,7 +328,9 @@ function SetupWizard() {
         .select("id, name, is_default")
         .eq("business_id", businessId);
       const rows = (existing ?? []) as any[];
-      const wanted = (multi ? draft.locations : draft.locations.slice(0, 1)).filter((l) => l.name.trim());
+      const wanted = (multi ? draft.locations : draft.locations.slice(0, 1)).filter((l) =>
+        l.name.trim(),
+      );
       for (const [i, loc] of wanted.entries()) {
         const match = rows.find((r) => r.name?.toLowerCase() === loc.name.trim().toLowerCase());
         if (match) continue;
@@ -351,9 +367,7 @@ function SetupWizard() {
         .select("from_unit, to_unit")
         .eq("business_id", businessId)
         .is("product_id", null);
-      const haveConv = new Set(
-        (existingConv ?? []).map((c: any) => `${c.from_unit}>${c.to_unit}`),
-      );
+      const haveConv = new Set((existingConv ?? []).map((c: any) => `${c.from_unit}>${c.to_unit}`));
       const newConv = draft.conversions
         .filter((c) => c.from_unit && c.to_unit && Number(c.factor) > 0)
         .filter((c) => !haveConv.has(`${c.from_unit}>${c.to_unit}`))
@@ -410,7 +424,9 @@ function SetupWizard() {
     return (
       <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
         <CheckCircle2 className="size-14 text-success" />
-        <h1 className="font-display text-2xl font-semibold">Your Daraven ERP workspace is ready.</h1>
+        <h1 className="font-display text-2xl font-semibold">
+          Your Daraven ERP workspace is ready.
+        </h1>
         <p className="text-sm text-muted-foreground">Let&apos;s add your first product.</p>
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={() => navigate({ to: "/products" })}>Add First Product</Button>
@@ -440,10 +456,7 @@ function SetupWizard() {
           {STEPS.map((s, i) => (
             <div
               key={s}
-              className={cn(
-                "h-1.5 flex-1 rounded-full",
-                i < step ? "bg-primary" : "bg-muted",
-              )}
+              className={cn("h-1.5 flex-1 rounded-full", i < step ? "bg-primary" : "bg-muted")}
               title={s}
             />
           ))}
@@ -568,8 +581,8 @@ function SetupWizard() {
           <CardHeader>
             <CardTitle className="text-base">How would you like to track inventory?</CardTitle>
             <CardDescription>
-              These are recommendations for a {BUSINESS_TYPES.find((t) => t.value === draft.type)?.label}.
-              Change anything you need.
+              These are recommendations for a{" "}
+              {BUSINESS_TYPES.find((t) => t.value === draft.type)?.label}. Change anything you need.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -621,8 +634,12 @@ function SetupWizard() {
       {step === 4 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Where do you store or manage your inventory?</CardTitle>
-            <CardDescription>One place is perfectly fine — add more only if you need them.</CardDescription>
+            <CardTitle className="text-base">
+              Where do you store or manage your inventory?
+            </CardTitle>
+            <CardDescription>
+              One place is perfectly fine — add more only if you need them.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -642,7 +659,10 @@ function SetupWizard() {
 
             {(draft.locationMode === "many" ? draft.locations : draft.locations.slice(0, 1)).map(
               (loc, i) => (
-                <div key={i} className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-3">
+                <div
+                  key={i}
+                  className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-3"
+                >
                   <div className="min-w-0">
                     <Label className="text-xs">Location name</Label>
                     <Input
@@ -735,7 +755,8 @@ function SetupWizard() {
           <CardHeader>
             <CardTitle className="text-base">Units you buy, stock and sell in</CardTitle>
             <CardDescription>
-              Conversions are reused across products, purchasing, inventory, recipes, sales and production.
+              Conversions are reused across products, purchasing, inventory, recipes, sales and
+              production.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -748,9 +769,7 @@ function SetupWizard() {
                   checked={draft.units.includes(u.code)}
                   onChange={(v) =>
                     set({
-                      units: v
-                        ? [...draft.units, u.code]
-                        : draft.units.filter((c) => c !== u.code),
+                      units: v ? [...draft.units, u.code] : draft.units.filter((c) => c !== u.code),
                     })
                   }
                 />
@@ -803,7 +822,9 @@ function SetupWizard() {
                     variant="ghost"
                     size="icon"
                     aria-label="Remove conversion"
-                    onClick={() => set({ conversions: draft.conversions.filter((_, x) => x !== i) })}
+                    onClick={() =>
+                      set({ conversions: draft.conversions.filter((_, x) => x !== i) })
+                    }
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -815,7 +836,10 @@ function SetupWizard() {
                 className="gap-2"
                 onClick={() =>
                   set({
-                    conversions: [...draft.conversions, { from_unit: "", to_unit: "pcs", factor: 1 }],
+                    conversions: [
+                      ...draft.conversions,
+                      { from_unit: "", to_unit: "pcs", factor: 1 },
+                    ],
                   })
                 }
               >
@@ -829,7 +853,9 @@ function SetupWizard() {
       {step === 6 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">How should Daraven ERP calculate inventory cost?</CardTitle>
+            <CardTitle className="text-base">
+              How should Daraven ERP calculate inventory cost?
+            </CardTitle>
             <CardDescription>Authorized users can change this later in Settings.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -854,8 +880,8 @@ function SetupWizard() {
           <CardHeader>
             <CardTitle className="text-base">Product fields</CardTitle>
             <CardDescription>
-              Daraven ERP configures your product form from your inventory needs. Turn off anything you
-              don&apos;t use.
+              Daraven ERP configures your product form from your inventory needs. Turn off anything
+              you don&apos;t use.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -871,8 +897,8 @@ function SetupWizard() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Variants, batches, expiry, serial numbers and recipes follow the tracking choices you made
-              earlier.
+              Variants, batches, expiry, serial numbers and recipes follow the tracking choices you
+              made earlier.
             </p>
           </CardContent>
         </Card>
@@ -971,7 +997,9 @@ function ReviewSection({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {title}
+        </p>
         <Button variant="ghost" size="sm" onClick={onEdit}>
           Edit
         </Button>

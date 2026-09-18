@@ -31,9 +31,7 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
 
   const groups = NAV_GROUPS.map((g) => ({
     ...g,
-    items: g.items.filter(
-      (i) => canAccessRoute(role, i.url) && (!i.feature || feature(i.feature)),
-    ),
+    items: g.items.filter((i) => canAccessRoute(role, i.url) && (!i.feature || feature(i.feature))),
   })).filter((g) => (g.url ? canAccessRoute(role, g.url) : g.items.length > 0));
 
   const activeGroup = groups.find((g) =>

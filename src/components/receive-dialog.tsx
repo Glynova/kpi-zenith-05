@@ -121,7 +121,13 @@ export function ReceiveDialog({
 
   const accepted = (l: Line) => Math.max(0, l.receive - l.damaged - l.rejected);
   const totalValue = useMemo(
-    () => round2(lines.reduce((s, l) => s + Math.max(0, l.receive - l.damaged - l.rejected) * l.unit_cost, 0)),
+    () =>
+      round2(
+        lines.reduce(
+          (s, l) => s + Math.max(0, l.receive - l.damaged - l.rejected) * l.unit_cost,
+          0,
+        ),
+      ),
     [lines],
   );
 
@@ -141,7 +147,10 @@ export function ReceiveDialog({
           throw new Error(`${l.name}: expiry date cannot be before the receiving date`);
         }
         if (l.track_serial) {
-          const serials = l.serials.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+          const serials = l.serials
+            .split(/[\n,]/)
+            .map((s) => s.trim())
+            .filter(Boolean);
           if (serials.length !== accepted(l)) {
             throw new Error(
               `${l.name}: enter ${accepted(l)} serial numbers (currently ${serials.length})`,
@@ -192,7 +201,10 @@ export function ReceiveDialog({
           manufactured_date: l.manufactured_date || null,
           expiry_date: trackExpiry && l.expiry_date ? l.expiry_date : null,
           serial_numbers: l.track_serial
-            ? l.serials.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
+            ? l.serials
+                .split(/[\n,]/)
+                .map((s) => s.trim())
+                .filter(Boolean)
             : null,
         })),
       );
@@ -245,15 +257,19 @@ export function ReceiveDialog({
         <DialogHeader>
           <DialogTitle>Receive goods · {order.po_number}</DialogTitle>
           <DialogDescription>
-            Enter what actually arrived. Only the accepted quantity is added to stock, and the
-            order stays partially received until everything is resolved.
+            Enter what actually arrived. Only the accepted quantity is added to stock, and the order
+            stays partially received until everything is resolved.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <Label className="mb-1.5 block text-xs">Receiving date</Label>
-            <Input type="date" value={receiptDate} onChange={(e) => setReceiptDate(e.target.value)} />
+            <Input
+              type="date"
+              value={receiptDate}
+              onChange={(e) => setReceiptDate(e.target.value)}
+            />
           </div>
           <div className="sm:col-span-2">
             <Label className="mb-1.5 block text-xs">Attachment link (invoice, DR, photo)</Label>
@@ -276,13 +292,15 @@ export function ReceiveDialog({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-medium">{l.name}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      Ordered {formatNumber(l.ordered, 0)} · Received {formatNumber(l.previously, 0)} ·
-                      Remaining {formatNumber(l.remaining, 0)}
+                      Ordered {formatNumber(l.ordered, 0)} · Received{" "}
+                      {formatNumber(l.previously, 0)} · Remaining {formatNumber(l.remaining, 0)}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Receive now</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Receive now
+                      </Label>
                       <Input
                         type="number"
                         step="any"
@@ -291,7 +309,9 @@ export function ReceiveDialog({
                       />
                     </div>
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Damaged</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Damaged
+                      </Label>
                       <Input
                         type="number"
                         step="any"
@@ -300,7 +320,9 @@ export function ReceiveDialog({
                       />
                     </div>
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Rejected</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Rejected
+                      </Label>
                       <Input
                         type="number"
                         step="any"
@@ -309,7 +331,9 @@ export function ReceiveDialog({
                       />
                     </div>
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Unit cost</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Unit cost
+                      </Label>
                       <Input
                         type="number"
                         step="any"
@@ -328,7 +352,9 @@ export function ReceiveDialog({
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {trackBatch && (
                         <div>
-                          <Label className="mb-1 block text-[11px] text-muted-foreground">Batch number</Label>
+                          <Label className="mb-1 block text-[11px] text-muted-foreground">
+                            Batch number
+                          </Label>
                           <Input
                             value={l.batch_number}
                             onChange={(e) => update(l.id, { batch_number: e.target.value })}
@@ -337,7 +363,9 @@ export function ReceiveDialog({
                       )}
                       {trackBatch && (
                         <div>
-                          <Label className="mb-1 block text-[11px] text-muted-foreground">Manufactured</Label>
+                          <Label className="mb-1 block text-[11px] text-muted-foreground">
+                            Manufactured
+                          </Label>
                           <Input
                             type="date"
                             value={l.manufactured_date}
@@ -347,7 +375,9 @@ export function ReceiveDialog({
                       )}
                       {trackExpiry && (
                         <div>
-                          <Label className="mb-1 block text-[11px] text-muted-foreground">Expiry</Label>
+                          <Label className="mb-1 block text-[11px] text-muted-foreground">
+                            Expiry
+                          </Label>
                           <Input
                             type="date"
                             value={l.expiry_date}

@@ -72,8 +72,8 @@ function AssetsPage() {
             <BrandMark className="h-12 w-auto" />
           </div>
           <p className="max-w-xs text-sm text-muted-foreground">
-            Use the mark on light or dark backgrounds with clear space equal to its height. Don&apos;t
-            recolour, stretch, or add effects.
+            Use the mark on light or dark backgrounds with clear space equal to its height.
+            Don&apos;t recolour, stretch, or add effects.
           </p>
         </CardContent>
       </Card>

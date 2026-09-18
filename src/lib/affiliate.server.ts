@@ -111,7 +111,10 @@ export async function validatePromoCode(
   if (promo.min_amount != null && Number(opts.amount) < Number(promo.min_amount))
     return { ok: false, error: "below_minimum" };
 
-  if (promo.max_redemptions != null && Number(promo.redemption_count) >= Number(promo.max_redemptions))
+  if (
+    promo.max_redemptions != null &&
+    Number(promo.redemption_count) >= Number(promo.max_redemptions)
+  )
     return { ok: false, error: "limit_reached" };
 
   if (promo.max_per_business != null) {
@@ -196,8 +199,7 @@ export async function redeemPromoCode(
     final_amount: finalAmount,
     duration: promo.duration,
     provider_applied: args.providerApplied === true,
-    fulfilment_status:
-      args.providerApplied === true ? "provider_applied" : "manual_credit_pending",
+    fulfilment_status: args.providerApplied === true ? "provider_applied" : "manual_credit_pending",
   });
 
   // A promo code owned by a partner also attributes the business to them when
@@ -294,7 +296,6 @@ export async function recordCommissionForPayment(
      * partial unique index makes the second insert a no-op. No time heuristics.
      */
     cycleKey?: string | null;
-
   },
 ) {
   const collected = round2(Number(args.collectedAmount) || 0);
@@ -374,7 +375,6 @@ export async function recordCommissionForPayment(
   // 23505 = replayed webhook delivery or same cycle from a second event source.
   if (error && (error as any).code === "23505") return null;
   if (error) throw new Error(error.message);
-
 
   await admin
     .from("affiliate_referrals")

@@ -13,7 +13,13 @@ const unitColumns: Column[] = [
 const unitFields: Field[] = [
   { key: "code", label: "Code", type: "text", required: true, placeholder: "kg" },
   { key: "name", label: "Name", type: "text", required: true, placeholder: "Kilogram" },
-  { key: "category", label: "Category", type: "select", options: UNIT_CATEGORIES, default: "count" },
+  {
+    key: "category",
+    label: "Category",
+    type: "select",
+    options: UNIT_CATEGORIES,
+    default: "count",
+  },
   { key: "is_base", label: "Base unit for its category", type: "boolean", default: false },
 ];
 
@@ -55,7 +61,7 @@ function UnitsPage() {
   return (
     <div className="space-y-10">
       <ResourcePage
-      illustration="inventory"
+        illustration="inventory"
         table="units_of_measure"
         title="Units of Measure"
         description={description}

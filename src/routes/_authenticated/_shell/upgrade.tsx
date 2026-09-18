@@ -235,8 +235,7 @@ function UpgradePage() {
               {plan?.name} — {formatPHP(Number(plan?.price ?? 0))} / month
             </p>
             <p className="text-xs text-muted-foreground">
-              Amount charged by the payment provider today:{" "}
-              {formatPHP(Number(plan?.price ?? 0))}
+              Amount charged by the payment provider today: {formatPHP(Number(plan?.price ?? 0))}
               {promo?.ok && !promo.providerApplied ? " (promo settled as a credit)" : ""}
             </p>
           </div>

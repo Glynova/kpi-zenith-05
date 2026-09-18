@@ -45,7 +45,6 @@ import { SubscriptionBanner } from "@/components/subscription-banner";
 import { CapabilityBlocked, useRouteCapability } from "@/components/capability-guard";
 import { capabilityLabel } from "@/lib/capabilities";
 
-
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
 });
@@ -66,6 +65,7 @@ function Shell() {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const allowed = canAccessRoute(role, pathname);
+  const capability = useRouteCapability(pathname);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   useEffect(() => {
@@ -226,10 +226,15 @@ function Shell() {
             <Breadcrumbs />
           </div>
           <main className="flex-1 p-4 pb-24 sm:p-6 lg:p-8 md:pb-8">
-            {allowed && entitled ? (
+            {allowed && entitled && capability.allowed ? (
               <div className="page-enter">
                 <Outlet />
               </div>
+            ) : allowed && entitled && !capability.allowed ? (
+              <CapabilityBlocked
+                capability={capability.key ? capabilityLabel(capability.key) : "This module"}
+                missing={capability.missing}
+              />
             ) : allowed && requiredFeature ? (
               <div className="py-10">
                 <UpgradePrompt

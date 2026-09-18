@@ -4,31 +4,31 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "created_at",
-    "label": "When",
-    "format": "date"
+    key: "created_at",
+    label: "When",
+    format: "date",
   },
   {
-    "key": "user_email",
-    "label": "User"
+    key: "user_email",
+    label: "User",
   },
   {
-    "key": "action",
-    "label": "Action"
+    key: "action",
+    label: "Action",
   },
   {
-    "key": "module",
-    "label": "Module",
-    "format": "badge"
+    key: "module",
+    label: "Module",
+    format: "badge",
   },
   {
-    "key": "record_id",
-    "label": "Record"
+    key: "record_id",
+    label: "Record",
   },
   {
-    "key": "ip_address",
-    "label": "IP"
-  }
+    key: "ip_address",
+    label: "IP",
+  },
 ];
 
 const fields: Field[] = [];
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/_authenticated/_shell/audit-logs")({
       description={"Immutable record of who changed what, and when."}
       columns={columns}
       fields={fields}
-      searchKeys={["action","module","user_email"]}
+      searchKeys={["action", "module", "user_email"]}
       orderBy="created_at"
       readOnly
     />

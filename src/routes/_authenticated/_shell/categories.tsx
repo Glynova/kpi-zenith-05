@@ -4,32 +4,32 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "name",
-    "label": "Category"
+    key: "name",
+    label: "Category",
   },
   {
-    "key": "description",
-    "label": "Description"
+    key: "description",
+    label: "Description",
   },
   {
-    "key": "created_at",
-    "label": "Created",
-    "format": "date"
-  }
+    key: "created_at",
+    label: "Created",
+    format: "date",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "name",
-    "label": "Name",
-    "type": "text",
-    "required": true
+    key: "name",
+    label: "Name",
+    type: "text",
+    required: true,
   },
   {
-    "key": "description",
-    "label": "Description",
-    "type": "textarea"
-  }
+    key: "description",
+    label: "Description",
+    type: "textarea",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/categories")({
@@ -51,7 +51,6 @@ export const Route = createFileRoute("/_authenticated/_shell/categories")({
       fields={fields}
       searchKeys={["name"]}
       orderBy="created_at"
-      
     />
   ),
 });

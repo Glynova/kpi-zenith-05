@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Shared contract for the purchasing engine.
  *
@@ -152,19 +151,26 @@ export function threeWayMatch(input: {
 }): MatchResult {
   const notes: string[] = [];
   if (round2(input.invoicedQty) !== round2(input.receivedQty)) {
-    notes.push(
-      `Quantity variance — received ${input.receivedQty}, invoiced ${input.invoicedQty}.`,
-    );
+    notes.push(`Quantity variance — received ${input.receivedQty}, invoiced ${input.invoicedQty}.`);
   }
   const expected = round2(
     input.orderedQty > 0 ? (input.orderedTotal / input.orderedQty) * input.invoicedQty : 0,
   );
   if (Math.abs(round2(input.invoicedTotal) - expected) > 0.01) {
-    notes.push(`Price variance — expected ${expected.toFixed(2)}, invoiced ${round2(input.invoicedTotal).toFixed(2)}.`);
+    notes.push(
+      `Price variance — expected ${expected.toFixed(2)}, invoiced ${round2(input.invoicedTotal).toFixed(2)}.`,
+    );
   }
   const qtyOff = notes.some((n) => n.startsWith("Quantity"));
   const priceOff = notes.some((n) => n.startsWith("Price"));
-  const status = qtyOff && priceOff ? "variance" : qtyOff ? "quantity_variance" : priceOff ? "price_variance" : "matched";
+  const status =
+    qtyOff && priceOff
+      ? "variance"
+      : qtyOff
+        ? "quantity_variance"
+        : priceOff
+          ? "price_variance"
+          : "matched";
   return { status, notes };
 }
 
@@ -195,7 +201,8 @@ export function supplierPerformance(orders: Row[], receipts: Row[], receiptItems
     const po = orders.find((o) => o.id === r.purchase_order_id);
     if (po?.expected_date && new Date(r.receipt_date) <= new Date(po.expected_date)) onTime++;
     if (po?.order_date) {
-      const days = (new Date(r.receipt_date).getTime() - new Date(po.order_date).getTime()) / 86_400_000;
+      const days =
+        (new Date(r.receipt_date).getTime() - new Date(po.order_date).getTime()) / 86_400_000;
       if (days >= 0) {
         leadSum += days;
         leadCount++;

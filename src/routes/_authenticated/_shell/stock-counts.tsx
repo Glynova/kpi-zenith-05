@@ -14,7 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -23,12 +30,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const description =
   "Physical counts per location. Enter what you counted, review the variance, then confirm — adjustments post to the ledger.";
 
-type CountLine = { product_id: string; name: string; sku: string | null; expected: number; counted: string };
+type CountLine = {
+  product_id: string;
+  name: string;
+  sku: string | null;
+  expected: number;
+  counted: string;
+};
 
 function StockCounts() {
   const { businessId, canWrite, feature } = useBusiness();
@@ -43,7 +62,12 @@ function StockCounts() {
     enabled: !!businessId,
     queryFn: async () => {
       const [counts, items, products, warehouses, balances] = await Promise.all([
-        db.from("stock_counts").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(100),
+        db
+          .from("stock_counts")
+          .select("*")
+          .eq("business_id", businessId)
+          .order("created_at", { ascending: false })
+          .limit(100),
         db.from("stock_count_items").select("*").eq("business_id", businessId),
         db.from("products").select("id, name, sku, stock, status").eq("business_id", businessId),
         db.from("warehouses").select("id, name").eq("business_id", businessId),
@@ -219,7 +243,8 @@ function StockCounts() {
               {(data?.counts ?? []).map((c) => {
                 const items = (data?.items ?? []).filter((i) => i.stock_count_id === c.id);
                 const variance = items.reduce(
-                  (a, i) => a + (Number(i.counted_quantity ?? 0) - Number(i.expected_quantity ?? 0)),
+                  (a, i) =>
+                    a + (Number(i.counted_quantity ?? 0) - Number(i.expected_quantity ?? 0)),
                   0,
                 );
                 return (
@@ -274,7 +299,9 @@ function StockCounts() {
                     return (
                       <TableRow key={l.product_id}>
                         <TableCell className="whitespace-nowrap">{l.name}</TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">{l.sku ?? "—"}</TableCell>
+                        <TableCell className="whitespace-nowrap text-muted-foreground">
+                          {l.sku ?? "—"}
+                        </TableCell>
                         <TableCell className="text-right">{formatNumber(l.expected, 2)}</TableCell>
                         <TableCell>
                           <Input
@@ -291,7 +318,9 @@ function StockCounts() {
                         <TableCell
                           className={`text-right font-medium ${variance && variance < 0 ? "text-destructive" : ""}`}
                         >
-                          {variance === null ? "—" : `${variance > 0 ? "+" : ""}${formatNumber(variance, 2)}`}
+                          {variance === null
+                            ? "—"
+                            : `${variance > 0 ? "+" : ""}${formatNumber(variance, 2)}`}
                         </TableCell>
                       </TableRow>
                     );
@@ -303,7 +332,11 @@ function StockCounts() {
 
           <div>
             <Label className="mb-1.5 block text-xs">Notes</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" />
+            <Input
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Optional"
+            />
           </div>
 
           <DialogFooter className="items-center gap-3 sm:justify-between">

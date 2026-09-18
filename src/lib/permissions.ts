@@ -21,7 +21,7 @@ export const ROUTE_SECTION: Record<string, Section> = {
   "/categories": "catalog",
   "/suppliers": "catalog",
   "/customers": "catalog",
-  
+
   "/variants": "catalog",
   "/batches": "catalog",
   "/serials": "catalog",
@@ -50,7 +50,6 @@ export const ROUTE_SECTION: Record<string, Section> = {
   "/platform-billing": "system",
 };
 
-
 /** Sections each role may open. "system" (notifications/settings) is open to everyone. */
 const ROLE_SECTIONS: Record<AppRole, Section[]> = {
   owner: ["overview", "catalog", "operations", "finance", "people", "system"],
@@ -78,7 +77,6 @@ const ROUTE_ROLE_LOCK: Record<string, AppRole[]> = {
   "/billing": ["owner", "admin"],
   "/platform-billing": ["owner", "admin"],
 };
-
 
 export function canAccessRoute(role: AppRole | null, url: string): boolean {
   if (!role) return false;

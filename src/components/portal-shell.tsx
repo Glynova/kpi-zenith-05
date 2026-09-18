@@ -42,7 +42,10 @@ export function PortalShell({
       >
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
           <BrandLogo />
-          <Badge variant={tone === "admin" ? "destructive" : "default"} className="uppercase tracking-wide">
+          <Badge
+            variant={tone === "admin" ? "destructive" : "default"}
+            className="uppercase tracking-wide"
+          >
             {label}
           </Badge>
           <div className="ml-auto flex items-center gap-1">

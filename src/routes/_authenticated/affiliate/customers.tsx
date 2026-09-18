@@ -30,7 +30,10 @@ function CustomersPage() {
   const earnedByBiz = new Map<string, number>();
   for (const c of data.commissions as any[]) {
     if (!c.business_id) continue;
-    earnedByBiz.set(c.business_id, (earnedByBiz.get(c.business_id) ?? 0) + Number(c.commission_amount ?? 0));
+    earnedByBiz.set(
+      c.business_id,
+      (earnedByBiz.get(c.business_id) ?? 0) + Number(c.commission_amount ?? 0),
+    );
   }
 
   const rows = (data.referrals as any[]).filter((r) => r.business_id);

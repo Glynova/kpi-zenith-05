@@ -5740,6 +5740,10 @@ export type Database = {
       business_today: { Args: { _business_id: string }; Returns: string }
       can_manage_sensitive: { Args: { _business_id: string }; Returns: boolean }
       can_write_business: { Args: { _business_id: string }; Returns: boolean }
+      capability_enabled: {
+        Args: { _business_id: string; _key: string }
+        Returns: boolean
+      }
       close_register: {
         Args: { _actual: number; _reason: string; _register_id: string }
         Returns: number
@@ -5820,6 +5824,10 @@ export type Database = {
       }
       reject_stock_transfer: {
         Args: { _reason: string; _transfer_id: string }
+        Returns: undefined
+      }
+      require_capability: {
+        Args: { _business_id: string; _key: string; _label: string }
         Returns: undefined
       }
       scan_business_alerts: { Args: { _business_id: string }; Returns: number }

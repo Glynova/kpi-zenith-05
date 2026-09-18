@@ -15,189 +15,182 @@ import { useBusiness } from "@/lib/business-context";
 import { db, type Row } from "@/lib/db";
 import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
-
-
-
 const columns: Column[] = [
   {
-    "key": "image_url",
-    "label": "Photo",
-    "format": "image"
+    key: "image_url",
+    label: "Photo",
+    format: "image",
   },
   {
-    "key": "name",
-    "label": "Product"
+    key: "name",
+    label: "Product",
   },
   {
-    "key": "sku",
-    "label": "SKU"
+    key: "sku",
+    label: "SKU",
   },
   {
-    "key": "brand",
-    "label": "Brand"
+    key: "brand",
+    label: "Brand",
   },
   {
-    "key": "cost_price",
-    "label": "Cost",
-    "format": "currency"
+    key: "cost_price",
+    label: "Cost",
+    format: "currency",
   },
   {
-    "key": "selling_price",
-    "label": "Price",
-    "format": "currency"
+    key: "selling_price",
+    label: "Price",
+    format: "currency",
   },
   {
-    "key": "stock",
-    "label": "Stock",
-    "format": "number"
+    key: "stock",
+    label: "Stock",
+    format: "number",
   },
   {
-    "key": "reorder_level",
-    "label": "Reorder",
-    "format": "number"
+    key: "reorder_level",
+    label: "Reorder",
+    format: "number",
   },
   {
-    "key": "expiration_date",
-    "label": "Expires",
-    "format": "date"
+    key: "expiration_date",
+    label: "Expires",
+    format: "date",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "format": "badge"
-  }
+    key: "status",
+    label: "Status",
+    format: "badge",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "name",
-    "label": "Product name",
-    "type": "text",
-    "required": true
+    key: "name",
+    label: "Product name",
+    type: "text",
+    required: true,
   },
   {
-    "key": "inventory_model",
-    "label": "Product behaviour",
-    "type": "select",
-    "options": INVENTORY_MODELS,
-    "default": "stocked_item"
+    key: "inventory_model",
+    label: "Product behaviour",
+    type: "select",
+    options: INVENTORY_MODELS,
+    default: "stocked_item",
   },
   {
-    "key": "sku",
-    "label": "SKU",
-    "type": "text"
+    key: "sku",
+    label: "SKU",
+    type: "text",
   },
   {
-    "key": "barcode",
-    "label": "Barcode",
-    "type": "text"
+    key: "barcode",
+    label: "Barcode",
+    type: "text",
   },
   {
-    "key": "category_id",
-    "label": "Category",
-    "type": "relation",
-    "relation": {
-      "table": "categories"
-    }
+    key: "category_id",
+    label: "Category",
+    type: "relation",
+    relation: {
+      table: "categories",
+    },
   },
   {
-    "key": "supplier_id",
-    "label": "Supplier",
-    "type": "relation",
-    "relation": {
-      "table": "suppliers"
-    }
+    key: "supplier_id",
+    label: "Supplier",
+    type: "relation",
+    relation: {
+      table: "suppliers",
+    },
   },
   {
-    "key": "brand",
-    "label": "Brand",
-    "type": "text"
+    key: "brand",
+    label: "Brand",
+    type: "text",
   },
   {
-    "key": "unit",
-    "label": "Unit",
-    "type": "select",
-    "optionGroups": UNIT_OPTION_GROUPS,
-    "searchable": true,
-    "default": "pcs"
+    key: "unit",
+    label: "Unit",
+    type: "select",
+    optionGroups: UNIT_OPTION_GROUPS,
+    searchable: true,
+    default: "pcs",
   },
   {
-    "key": "cost_price",
-    "label": "Cost price",
-    "type": "number",
-    "default": 0
+    key: "cost_price",
+    label: "Cost price",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "selling_price",
-    "label": "Selling price",
-    "type": "number",
-    "default": 0
+    key: "selling_price",
+    label: "Selling price",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "tax_rate",
-    "label": "Tax rate (%)",
-    "type": "number",
-    "default": 0
+    key: "tax_rate",
+    label: "Tax rate (%)",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "standard_cost",
-    "label": "Standard cost",
-    "type": "number",
-    "default": 0
+    key: "standard_cost",
+    label: "Standard cost",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "reorder_level",
-    "label": "Reorder level",
-    "type": "number",
-    "default": 0
+    key: "reorder_level",
+    label: "Reorder level",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "min_stock",
-    "label": "Minimum stock",
-    "type": "number",
-    "default": 0
+    key: "min_stock",
+    label: "Minimum stock",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "max_stock",
-    "label": "Maximum stock",
-    "type": "number"
+    key: "max_stock",
+    label: "Maximum stock",
+    type: "number",
   },
   {
-    "key": "batch_number",
-    "label": "Batch number",
-    "type": "text"
+    key: "batch_number",
+    label: "Batch number",
+    type: "text",
   },
   {
-    "key": "serial_number",
-    "label": "Serial number",
-    "type": "text"
+    key: "serial_number",
+    label: "Serial number",
+    type: "text",
   },
   {
-    "key": "expiration_date",
-    "label": "Expiration date",
-    "type": "date"
+    key: "expiration_date",
+    label: "Expiration date",
+    type: "date",
   },
   {
-    "key": "image_url",
-    "label": "Product image",
-    "type": "image"
+    key: "image_url",
+    label: "Product image",
+    type: "image",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "type": "select",
-    "options": [
-      "active",
-      "inactive",
-      "discontinued"
-    ],
-    "default": "active"
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["active", "inactive", "discontinued"],
+    default: "active",
   },
   {
-    "key": "description",
-    "label": "Description",
-    "type": "textarea"
-  }
+    key: "description",
+    label: "Description",
+    type: "textarea",
+  },
 ];
 
 const description = "Your catalog. The form shows only the fields your business actually uses.";
@@ -266,52 +259,56 @@ function ProductsPage() {
 
   const isFinished = (form: Row) => form.inventory_model === "finished_product";
 
-  const formFields = fields.filter((f) => keep(f.key)).map((field): Field => {
-    if (field.key === "cost_price") {
-      return {
-        ...field,
-        label: "Cost price",
-        render: ({ form, setForm }) =>
-          isFinished(form) ? (
-            <div>
-              <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
-              <p className="mt-1 text-[11px] text-muted-foreground">Auto-calculated from components</p>
-            </div>
-          ) : (
-            <Input
-              type="number"
-              step="any"
-              value={form.cost_price ?? ""}
-              onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
-            />
-          ),
-      };
-    }
-    if (field.key === "selling_price") {
-      return {
-        ...field,
-        render: ({ form, setForm }) => {
-          const price = Number(form.selling_price ?? 0);
-          const cost = Number(form.cost_price ?? 0);
-          const margin = price > 0 ? ((price - cost) / price) * 100 : null;
-          return (
-            <div>
+  const formFields = fields
+    .filter((f) => keep(f.key))
+    .map((field): Field => {
+      if (field.key === "cost_price") {
+        return {
+          ...field,
+          label: "Cost price",
+          render: ({ form, setForm }) =>
+            isFinished(form) ? (
+              <div>
+                <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Auto-calculated from components
+                </p>
+              </div>
+            ) : (
               <Input
                 type="number"
                 step="any"
-                value={form.selling_price ?? ""}
-                onChange={(e) => setForm({ ...form, selling_price: e.target.value })}
+                value={form.cost_price ?? ""}
+                onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
               />
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {margin === null ? "Margin: —" : `Margin: ${margin.toFixed(0)}%`}
-              </p>
-            </div>
-          );
-        },
-      };
-    }
-    return field;
-  });
+            ),
+        };
+      }
+      if (field.key === "selling_price") {
+        return {
+          ...field,
+          render: ({ form, setForm }) => {
+            const price = Number(form.selling_price ?? 0);
+            const cost = Number(form.cost_price ?? 0);
+            const margin = price > 0 ? ((price - cost) / price) * 100 : null;
+            return (
+              <div>
+                <Input
+                  type="number"
+                  step="any"
+                  value={form.selling_price ?? ""}
+                  onChange={(e) => setForm({ ...form, selling_price: e.target.value })}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {margin === null ? "Margin: —" : `Margin: ${margin.toFixed(0)}%`}
+                </p>
+              </div>
+            );
+          },
+        };
+      }
+      return field;
+    });
 
   return (
     <ResourcePage
@@ -319,25 +316,27 @@ function ProductsPage() {
       title="Products"
       description={description}
       columns={[
-        ...columns.filter((c) => keep(c.key)).map((c): Column =>
-          c.key === "stock" && variantsEnabled
-            ? {
-                ...c,
-                render: (row) => {
-                  const summary = variantSummary[row.id];
-                  const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
-                  return (
-                    <span className="tabular-nums">
-                      {qty}
-                      {summary?.count ? (
-                        <span className="ml-1 text-[11px] text-muted-foreground">(derived)</span>
-                      ) : null}
-                    </span>
-                  );
-                },
-              }
-            : c,
-        ),
+        ...columns
+          .filter((c) => keep(c.key))
+          .map((c): Column =>
+            c.key === "stock" && variantsEnabled
+              ? {
+                  ...c,
+                  render: (row) => {
+                    const summary = variantSummary[row.id];
+                    const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
+                    return (
+                      <span className="tabular-nums">
+                        {qty}
+                        {summary?.count ? (
+                          <span className="ml-1 text-[11px] text-muted-foreground">(derived)</span>
+                        ) : null}
+                      </span>
+                    );
+                  },
+                }
+              : c,
+          ),
         ...(variantsEnabled
           ? [
               {
@@ -363,7 +362,16 @@ function ProductsPage() {
         {
           title: "Basics",
           description: "What is this product and how should it behave?",
-          fields: ["name", "inventory_model", "sku", "barcode", "category_id", "brand", "unit", "status"],
+          fields: [
+            "name",
+            "inventory_model",
+            "sku",
+            "barcode",
+            "category_id",
+            "brand",
+            "unit",
+            "status",
+          ],
         },
         {
           title: "Pricing",
@@ -450,7 +458,6 @@ function ProductsPage() {
   );
 }
 
-
 export const Route = createFileRoute("/_authenticated/_shell/products")({
   head: () => ({
     meta: [
@@ -464,4 +471,3 @@ export const Route = createFileRoute("/_authenticated/_shell/products")({
   }),
   component: ProductsPage,
 });
-

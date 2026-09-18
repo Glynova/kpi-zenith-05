@@ -132,7 +132,11 @@ function POSPage() {
     queryKey: ["pos-categories", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data } = await db.from("categories").select("id,name").eq("business_id", businessId).order("name");
+      const { data } = await db
+        .from("categories")
+        .select("id,name")
+        .eq("business_id", businessId)
+        .order("name");
       return (data ?? []) as Row[];
     },
   });
@@ -207,7 +211,13 @@ function POSPage() {
   });
 
   useEffect(() => {
-    if (businessId && customers.length >= 0 && !walkIn && !ensureWalkIn.isPending && customers.length > 0) {
+    if (
+      businessId &&
+      customers.length >= 0 &&
+      !walkIn &&
+      !ensureWalkIn.isPending &&
+      customers.length > 0
+    ) {
       ensureWalkIn.mutate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,13 +234,23 @@ function POSPage() {
       const variants = (p.product_variants ?? []) as Row[];
       return (
         String(p.name).toLowerCase().includes(q) ||
-        String(p.sku ?? "").toLowerCase().includes(q) ||
-        String(p.barcode ?? "").toLowerCase().includes(q) ||
+        String(p.sku ?? "")
+          .toLowerCase()
+          .includes(q) ||
+        String(p.barcode ?? "")
+          .toLowerCase()
+          .includes(q) ||
         variants.some(
           (v) =>
-            String(v.name ?? "").toLowerCase().includes(q) ||
-            String(v.sku ?? "").toLowerCase().includes(q) ||
-            String(v.barcode ?? "").toLowerCase().includes(q),
+            String(v.name ?? "")
+              .toLowerCase()
+              .includes(q) ||
+            String(v.sku ?? "")
+              .toLowerCase()
+              .includes(q) ||
+            String(v.barcode ?? "")
+              .toLowerCase()
+              .includes(q),
         )
       );
     });
@@ -253,7 +273,9 @@ function POSPage() {
     const existing = cart.find((c) => c.key === key);
     const nextQty = (existing?.quantity ?? 0) + 1;
     if (stocked && settings.track_quantity && !allowNegative && nextQty > stock) {
-      toast.error("Insufficient stock", { description: `${product.name}: ${stock} available at this location.` });
+      toast.error("Insufficient stock", {
+        description: `${product.name}: ${stock} available at this location.`,
+      });
       return;
     }
     if (existing) {
@@ -305,7 +327,8 @@ function POSPage() {
     for (const p of products) {
       const variants = (p.product_variants ?? []) as Row[];
       const v = variants.find(
-        (x) => String(x.barcode ?? "").toLowerCase() === q || String(x.sku ?? "").toLowerCase() === q,
+        (x) =>
+          String(x.barcode ?? "").toLowerCase() === q || String(x.sku ?? "").toLowerCase() === q,
       );
       if (v) {
         addToCart(p, v);
@@ -396,7 +419,8 @@ function POSPage() {
       if (!cart.length) throw new Error("Cart is empty");
       const valid = payments.filter((p) => Number(p.amount) > 0);
       if (paidTotal > totals.total + 0.009) throw new Error("Payments exceed the sale total");
-      if (balance > 0.009 && !customerId && !walkIn?.id) throw new Error("Select a customer for the unpaid balance");
+      if (balance > 0.009 && !customerId && !walkIn?.id)
+        throw new Error("Select a customer for the unpaid balance");
 
       const sale = await createSale({
         businessId: businessId!,
@@ -541,13 +565,17 @@ function POSPage() {
             {isLoading ? (
               <p className="p-6 text-center text-sm text-muted-foreground">Loading products…</p>
             ) : filtered.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">No products match your search.</p>
+              <p className="p-6 text-center text-sm text-muted-foreground">
+                No products match your search.
+              </p>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                 {filtered.map((p) => {
                   const stock = avail(p.id);
                   const tone = stockLabel(stock, Number(p.reorder_level ?? 0));
-                  const stocked = !["service", "non_stock", "digital"].includes(p.inventory_model ?? "");
+                  const stocked = !["service", "non_stock", "digital"].includes(
+                    p.inventory_model ?? "",
+                  );
                   return (
                     <button
                       key={p.id}
@@ -621,7 +649,11 @@ function POSPage() {
                       </Button>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      <Button size="icon" variant="outline" onClick={() => setQty(l.key, l.quantity - 1)}>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setQty(l.key, l.quantity - 1)}
+                      >
                         <Minus className="size-3" />
                       </Button>
                       <Input
@@ -630,11 +662,18 @@ function POSPage() {
                         value={l.quantity}
                         onChange={(e) => setQty(l.key, Number(e.target.value))}
                       />
-                      <Button size="icon" variant="outline" onClick={() => setQty(l.key, l.quantity + 1)}>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setQty(l.key, l.quantity + 1)}
+                      >
                         <Plus className="size-3" />
                       </Button>
                       <span className="flex-1 text-right text-sm font-semibold">
-                        {formatCurrency(l.quantity * l.unit_price - Number(l.discount || 0), currency)}
+                        {formatCurrency(
+                          l.quantity * l.unit_price - Number(l.discount || 0),
+                          currency,
+                        )}
                       </span>
                     </div>
                   </li>
@@ -665,7 +704,14 @@ function POSPage() {
             <Button variant="outline" onClick={() => setDiscountOpen(true)} disabled={!cart.length}>
               <Percent className="size-4" /> Discount
             </Button>
-            <Button variant="outline" onClick={() => { setCart([]); setOrderDiscount(0); }} disabled={!cart.length}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCart([]);
+                setOrderDiscount(0);
+              }}
+              disabled={!cart.length}
+            >
               <X className="size-4" /> Clear
             </Button>
           </div>
@@ -673,7 +719,9 @@ function POSPage() {
             size="lg"
             disabled={!cart.length}
             onClick={() => {
-              setPayments([{ method: methods[0] ?? "cash", amount: totals.total, tendered: totals.total }]);
+              setPayments([
+                { method: methods[0] ?? "cash", amount: totals.total, tendered: totals.total },
+              ]);
               setPayOpen(true);
             }}
           >
@@ -701,13 +749,19 @@ function POSPage() {
                 >
                   <span className="font-medium">{v.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {formatCurrency(Number(v.selling_price ?? variantFor?.selling_price ?? 0), currency)} · {stock} available
+                    {formatCurrency(
+                      Number(v.selling_price ?? variantFor?.selling_price ?? 0),
+                      currency,
+                    )}{" "}
+                    · {stock} available
                   </span>
                 </Button>
               );
             })}
             {!((variantFor?.product_variants ?? []) as Row[]).length && (
-              <p className="text-sm text-muted-foreground">No variants defined for this product yet.</p>
+              <p className="text-sm text-muted-foreground">
+                No variants defined for this product yet.
+              </p>
             )}
           </div>
         </DialogContent>
@@ -725,7 +779,10 @@ function POSPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Type</Label>
-              <Select value={orderDiscountType} onValueChange={(v) => setOrderDiscountType(v as any)}>
+              <Select
+                value={orderDiscountType}
+                onValueChange={(v) => setOrderDiscountType(v as any)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -772,7 +829,8 @@ function POSPage() {
           <DialogHeader>
             <DialogTitle>Take payment</DialogTitle>
             <DialogDescription>
-              Total {formatCurrency(totals.total, currency)}. Split across as many methods as you need.
+              Total {formatCurrency(totals.total, currency)}. Split across as many methods as you
+              need.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -783,7 +841,9 @@ function POSPage() {
                   <Select
                     value={p.method}
                     onValueChange={(v) =>
-                      setPayments((list) => list.map((x, i) => (i === idx ? { ...x, method: v } : x)))
+                      setPayments((list) =>
+                        list.map((x, i) => (i === idx ? { ...x, method: v } : x)),
+                      )
                     }
                   >
                     <SelectTrigger>
@@ -805,7 +865,9 @@ function POSPage() {
                     value={p.amount}
                     onChange={(e) =>
                       setPayments((list) =>
-                        list.map((x, i) => (i === idx ? { ...x, amount: Number(e.target.value) } : x)),
+                        list.map((x, i) =>
+                          i === idx ? { ...x, amount: Number(e.target.value) } : x,
+                        ),
                       )
                     }
                   />
@@ -817,7 +879,9 @@ function POSPage() {
                     value={p.tendered ?? ""}
                     onChange={(e) =>
                       setPayments((list) =>
-                        list.map((x, i) => (i === idx ? { ...x, tendered: Number(e.target.value) } : x)),
+                        list.map((x, i) =>
+                          i === idx ? { ...x, tendered: Number(e.target.value) } : x,
+                        ),
                       )
                     }
                   />
@@ -834,7 +898,9 @@ function POSPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPayments((list) => [...list, { method: methods[0] ?? "cash", amount: balance }])}
+              onClick={() =>
+                setPayments((list) => [...list, { method: methods[0] ?? "cash", amount: balance }])
+              }
             >
               <Plus className="size-4" /> Add payment
             </Button>
@@ -866,7 +932,9 @@ function POSPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Held orders</DialogTitle>
-            <DialogDescription>Resume a suspended cart. Only the cashier who held it can resume it.</DialogDescription>
+            <DialogDescription>
+              Resume a suspended cart. Only the cashier who held it can resume it.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {held.length === 0 && <p className="text-sm text-muted-foreground">Nothing on hold.</p>}
@@ -909,7 +977,11 @@ function POSPage() {
           </DialogHeader>
           <div className="space-y-1">
             <Label>Opening cash</Label>
-            <Input type="number" value={openingCash} onChange={(e) => setOpeningCash(Number(e.target.value))} />
+            <Input
+              type="number"
+              value={openingCash}
+              onChange={(e) => setOpeningCash(Number(e.target.value))}
+            />
           </div>
           <DialogFooter>
             <Button onClick={() => openRegister.mutate()} disabled={openRegister.isPending}>
@@ -935,9 +1007,15 @@ export const Route = createFileRoute("/_authenticated/_shell/pos")({
   head: () => ({
     meta: [
       { title: "Point of Sale — Daraven ERP" },
-      { name: "description", content: "Fast counter selling with barcode search, split payments and receipts." },
+      {
+        name: "description",
+        content: "Fast counter selling with barcode search, split payments and receipts.",
+      },
       { property: "og:title", content: "Point of Sale — Daraven ERP" },
-      { property: "og:description", content: "Fast counter selling with barcode search, split payments and receipts." },
+      {
+        property: "og:description",
+        content: "Fast counter selling with barcode search, split payments and receipts.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

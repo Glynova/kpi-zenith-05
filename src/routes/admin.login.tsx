@@ -136,7 +136,9 @@ function AdminLoginPage() {
         setLoading(false);
         return;
       }
-      void logEvent({ data: { action: "admin_login_success", success: true, email, path: target } });
+      void logEvent({
+        data: { action: "admin_login_success", success: true, email, path: target },
+      });
       toast.success("Welcome back, admin.");
       navigate({ to: target, replace: true });
     } catch {
@@ -175,7 +177,6 @@ function AdminLoginPage() {
     }
     toast.success("If that address is registered, a password reset link is on its way.");
   }
-
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-16">

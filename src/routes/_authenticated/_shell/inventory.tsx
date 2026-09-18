@@ -16,7 +16,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +32,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const description =
   "The stock movement ledger — every receipt, issue, transfer, adjustment and count, with cost and reference.";
@@ -50,7 +63,10 @@ function StockMovements() {
           .eq("business_id", businessId)
           .order("created_at", { ascending: false })
           .limit(400),
-        db.from("products").select("id, name, sku, unit, average_cost, cost_price").eq("business_id", businessId),
+        db
+          .from("products")
+          .select("id, name, sku, unit, average_cost, cost_price")
+          .eq("business_id", businessId),
         db.from("warehouses").select("id, name").eq("business_id", businessId),
         db.from("inventory_balances").select("*").eq("business_id", businessId),
       ]);
@@ -80,8 +96,12 @@ function StockMovements() {
       if (locationFilter !== "all" && (m.warehouse_id ?? "none") !== locationFilter) return false;
       if (!q) return true;
       const product = productMap[m.product_id];
-      return [product?.name, product?.sku, m.reference, m.notes, m.batch_number, m.reason]
-        .some((v) => String(v ?? "").toLowerCase().includes(q));
+      return [product?.name, product?.sku, m.reference, m.notes, m.batch_number, m.reason].some(
+        (v) =>
+          String(v ?? "")
+            .toLowerCase()
+            .includes(q),
+      );
     });
   }, [data, search, typeFilter, locationFilter, productMap]);
 
@@ -136,7 +156,8 @@ function StockMovements() {
   }
 
   function exportCsv() {
-    const header = "Date,Product,SKU,Location,Movement,Quantity,Unit cost,Total value,Reason,Reference";
+    const header =
+      "Date,Product,SKU,Location,Movement,Quantity,Unit cost,Total value,Reason,Reference";
     const body = rows
       .map((m) => {
         const p = productMap[m.product_id];
@@ -199,11 +220,15 @@ function StockMovements() {
         </div>
         <div className="surface-panel p-4">
           <p className="text-xs text-muted-foreground">Inventory value</p>
-          <p className="font-display text-2xl font-semibold">{formatCurrency(totals.value, currency)}</p>
+          <p className="font-display text-2xl font-semibold">
+            {formatCurrency(totals.value, currency)}
+          </p>
         </div>
         <div className="surface-panel p-4">
           <p className="text-xs text-muted-foreground">Costing method</p>
-          <p className="font-display text-2xl font-semibold">{titleCase(String(settings.costing_method))}</p>
+          <p className="font-display text-2xl font-semibold">
+            {titleCase(String(settings.costing_method))}
+          </p>
         </div>
       </div>
 
@@ -304,7 +329,9 @@ function StockMovements() {
                       {warehouseMap[m.warehouse_id]?.name ?? "—"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      <Badge variant={sign < 0 ? "destructive" : "secondary"}>{titleCase(m.type)}</Badge>
+                      <Badge variant={sign < 0 ? "destructive" : "secondary"}>
+                        {titleCase(m.type)}
+                      </Badge>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right font-medium">
                       {sign < 0 ? "−" : sign > 0 ? "+" : ""}
@@ -314,7 +341,10 @@ function StockMovements() {
                       {formatCurrency(Number(m.unit_cost ?? 0), currency)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right">
-                      {formatCurrency(Number(m.total_cost ?? qty * Number(m.unit_cost ?? 0)), currency)}
+                      {formatCurrency(
+                        Number(m.total_cost ?? qty * Number(m.unit_cost ?? 0)),
+                        currency,
+                      )}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {m.reason ?? "—"}
@@ -346,7 +376,13 @@ function StockMovements() {
               <Select
                 value={form.product_id ?? undefined}
                 onValueChange={(v) =>
-                  setForm({ ...form, product_id: v, unit_cost: Number(productMap[v]?.average_cost || productMap[v]?.cost_price || 0) })
+                  setForm({
+                    ...form,
+                    product_id: v,
+                    unit_cost: Number(
+                      productMap[v]?.average_cost || productMap[v]?.cost_price || 0,
+                    ),
+                  })
                 }
               >
                 <SelectTrigger>
@@ -364,7 +400,9 @@ function StockMovements() {
             </div>
 
             <div className="min-w-0">
-              <Label className="mb-1.5 block text-xs">{isAdjustment ? "Direction" : "Movement type"}</Label>
+              <Label className="mb-1.5 block text-xs">
+                {isAdjustment ? "Direction" : "Movement type"}
+              </Label>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -437,7 +475,10 @@ function StockMovements() {
 
             <div className="min-w-0">
               <Label className="mb-1.5 block text-xs">Reason</Label>
-              <Select value={form.reason ?? undefined} onValueChange={(v) => setForm({ ...form, reason: v })}>
+              <Select
+                value={form.reason ?? undefined}
+                onValueChange={(v) => setForm({ ...form, reason: v })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Optional" />
                 </SelectTrigger>
@@ -473,7 +514,11 @@ function StockMovements() {
               Cancel
             </Button>
             <Button onClick={() => record.mutate(form)} disabled={record.isPending}>
-              {record.isPending ? "Saving..." : isAdjustment ? "Post adjustment" : "Record movement"}
+              {record.isPending
+                ? "Saving..."
+                : isAdjustment
+                  ? "Post adjustment"
+                  : "Record movement"}
             </Button>
           </DialogFooter>
         </DialogContent>

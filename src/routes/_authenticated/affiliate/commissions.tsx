@@ -22,7 +22,10 @@ export const Route = createFileRoute("/_authenticated/affiliate/commissions")({
       { title: "Commission Ledger — Daraven ERP" },
       { name: "description", content: "Every commission earning, reversal and payout linkage." },
       { property: "og:title", content: "Commission Ledger — Daraven ERP" },
-      { property: "og:description", content: "Every commission earning, reversal and payout linkage." },
+      {
+        property: "og:description",
+        content: "Every commission earning, reversal and payout linkage.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -76,7 +79,10 @@ function CommissionsPage() {
         }
         columns={["Date", "Type", "Reference", "Net revenue", "Rate", "Commission", "Status"]}
         rows={rows}
-        empty={{ title: "Nothing here yet", description: "No commission entries match this filter." }}
+        empty={{
+          title: "Nothing here yet",
+          description: "No commission entries match this filter.",
+        }}
         renderRow={(row: any) => (
           <TableRow key={row.id}>
             <TableCell>{shortDate(row.created_at)}</TableCell>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Universal sales engine.
  *
@@ -57,18 +56,69 @@ export const PAYMENT_STATUSES = [
   "voided",
 ];
 
-export const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "digital_wallet", "credit", "other"];
-export const SALES_CHANNELS = ["pos", "online", "website", "marketplace", "phone", "manual", "wholesale", "other"];
+export const PAYMENT_METHODS = [
+  "cash",
+  "card",
+  "bank_transfer",
+  "digital_wallet",
+  "credit",
+  "other",
+];
+export const SALES_CHANNELS = [
+  "pos",
+  "online",
+  "website",
+  "marketplace",
+  "phone",
+  "manual",
+  "wholesale",
+  "other",
+];
 export const SALES_SOURCES = ["pos", "website", "mobile_app", "marketplace", "api", "manual"];
-export const CUSTOMER_TYPES = ["walk_in", "individual", "business", "wholesale", "corporate", "online", "other"];
+export const CUSTOMER_TYPES = [
+  "walk_in",
+  "individual",
+  "business",
+  "wholesale",
+  "corporate",
+  "online",
+  "other",
+];
 export const PRICE_TIERS = ["default", "wholesale", "vip", "corporate"];
 export const RETURN_CONDITIONS = ["resellable", "damaged", "defective", "expired", "other"];
-export const DELIVERY_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled", "returned"];
-export const CUSTOMER_STATUSES = ["order_received", "processing", "ready", "shipped", "delivered", "cancelled", "returned"];
+export const DELIVERY_STATUSES = [
+  "pending",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
+];
+export const CUSTOMER_STATUSES = [
+  "order_received",
+  "processing",
+  "ready",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "returned",
+];
 export const INVENTORY_TIMINGS = [
-  { value: "sale_completed", label: "When the sale is completed", hint: "Best for POS and counter sales." },
-  { value: "payment_completed", label: "When payment is completed", hint: "Stock leaves once the money is in." },
-  { value: "fulfillment", label: "When the order is fulfilled", hint: "Best for e-commerce and wholesale." },
+  {
+    value: "sale_completed",
+    label: "When the sale is completed",
+    hint: "Best for POS and counter sales.",
+  },
+  {
+    value: "payment_completed",
+    label: "When payment is completed",
+    hint: "Stock leaves once the money is in.",
+  },
+  {
+    value: "fulfillment",
+    label: "When the order is fulfilled",
+    hint: "Best for e-commerce and wholesale.",
+  },
 ];
 
 /** Which order statuses may follow the current one. */
@@ -121,14 +171,22 @@ export type CartLine = {
   available?: number;
 };
 
-export type LineTotals = { gross: number; discount: number; net: number; tax: number; total: number };
+export type LineTotals = {
+  gross: number;
+  discount: number;
+  net: number;
+  tax: number;
+  total: number;
+};
 
 /** Line maths. Handles percentage/fixed discounts and inclusive/exclusive tax. */
 export function lineTotals(line: CartLine, taxInclusive: boolean): LineTotals {
   const gross = round2(Number(line.quantity || 0) * Number(line.unit_price || 0));
   const raw = Number(line.discount || 0);
   const discount = round2(
-    line.discount_type === "percent" ? (gross * Math.min(Math.max(raw, 0), 100)) / 100 : Math.min(Math.max(raw, 0), gross),
+    line.discount_type === "percent"
+      ? (gross * Math.min(Math.max(raw, 0), 100)) / 100
+      : Math.min(Math.max(raw, 0), gross),
   );
   const after = round2(gross - discount);
   const rate = Number(line.tax_rate || 0) / 100;
@@ -240,7 +298,8 @@ export function resolvePrice(
     .filter((p) => customer?.id && p.customer_id === customer.id)
     .sort((a, b) => Number(b.min_quantity ?? 0) - Number(a.min_quantity ?? 0))[0];
   if (specific) return Number(specific.price);
-  const tier = customer?.price_tier && customer.price_tier !== "default" ? customer.price_tier : null;
+  const tier =
+    customer?.price_tier && customer.price_tier !== "default" ? customer.price_tier : null;
   if (tier) {
     const tiered = matches
       .filter((p) => !p.customer_id && p.tier === tier)
@@ -252,7 +311,8 @@ export function resolvePrice(
 
 export function stockLabel(available: number, reorder = 0) {
   if (available <= 0) return { label: "Out of stock", tone: "destructive" as const };
-  if (reorder > 0 && available <= reorder) return { label: "Low stock", tone: "secondary" as const };
+  if (reorder > 0 && available <= reorder)
+    return { label: "Low stock", tone: "secondary" as const };
   return { label: "Available", tone: "outline" as const };
 }
 
@@ -316,7 +376,8 @@ export async function createSale(draft: SaleDraft) {
     otherCharges: draft.otherCharges,
   });
 
-  const number = draft.number ?? (await nextDocNumber(draft.businessId, DOC_PREFIX[draft.documentType]));
+  const number =
+    draft.number ?? (await nextDocNumber(draft.businessId, DOC_PREFIX[draft.documentType]));
 
   const { data: sale, error } = await db
     .from("sales")

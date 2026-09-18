@@ -15,13 +15,7 @@ export type CommissionStatus = "pending" | "approved" | "reversed" | "paid" | "c
 export type CommissionEntryType = "earning" | "reversal" | "adjustment";
 export type PayoutStatus = "pending" | "processing" | "paid" | "failed" | "cancelled";
 export type ReferralStatus =
-  | "clicked"
-  | "signed_up"
-  | "trialing"
-  | "paid"
-  | "active"
-  | "past_due"
-  | "cancelled";
+  "clicked" | "signed_up" | "trialing" | "paid" | "active" | "past_due" | "cancelled";
 export type DiscountType = "percentage" | "fixed";
 export type PromoDuration = "first_payment" | "forever" | "12_months" | "6_months" | "3_months";
 
@@ -58,10 +52,7 @@ export const COMMISSION_STATUS_LABEL: Record<CommissionStatus, string> = {
   cancelled: "Cancelled",
 };
 
-export const STATUS_TONE: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+export const STATUS_TONE: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",
   paid: "default",
   approved: "default",

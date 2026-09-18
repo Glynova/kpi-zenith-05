@@ -565,10 +565,7 @@ export function ResourcePage({
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   {columns.map((c) => (
-                    <TableCell
-                      key={c.key}
-                      className={`whitespace-nowrap ${cellAlign(c) ?? ""}`}
-                    >
+                    <TableCell key={c.key} className={`whitespace-nowrap ${cellAlign(c) ?? ""}`}>
                       {renderCell(row, c)}
                     </TableCell>
                   ))}
@@ -611,9 +608,7 @@ export function ResourcePage({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}
-            </DialogTitle>
+            <DialogTitle>{editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}</DialogTitle>
             <DialogDescription>
               {activeStep?.description ?? "Fill in the details below and save."}
             </DialogDescription>
@@ -671,7 +666,6 @@ export function ResourcePage({
                       value={form[field.key] ?? null}
                       onChange={(v) => setForm({ ...form, [field.key]: v })}
                     />
-
                   ) : field.type === "boolean" ? (
                     <div className="flex h-9 items-center">
                       <Switch

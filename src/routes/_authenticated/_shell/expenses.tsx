@@ -4,41 +4,41 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "expense_date",
-    "label": "Date",
-    "format": "date"
+    key: "expense_date",
+    label: "Date",
+    format: "date",
   },
   {
-    "key": "category",
-    "label": "Category",
-    "format": "badge"
+    key: "category",
+    label: "Category",
+    format: "badge",
   },
   {
-    "key": "description",
-    "label": "Description"
+    key: "description",
+    label: "Description",
   },
   {
-    "key": "vendor",
-    "label": "Vendor"
+    key: "vendor",
+    label: "Vendor",
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "format": "currency"
+    key: "amount",
+    label: "Amount",
+    format: "currency",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "format": "badge"
-  }
+    key: "status",
+    label: "Status",
+    format: "badge",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "category",
-    "label": "Category",
-    "type": "select",
-    "options": [
+    key: "category",
+    label: "Category",
+    type: "select",
+    options: [
       "utilities",
       "rent",
       "payroll",
@@ -46,79 +46,62 @@ const fields: Field[] = [
       "fuel",
       "repairs",
       "supplies",
-      "miscellaneous"
+      "miscellaneous",
     ],
-    "default": "miscellaneous"
+    default: "miscellaneous",
   },
   {
-    "key": "description",
-    "label": "Description",
-    "type": "text",
-    "required": true
+    key: "description",
+    label: "Description",
+    type: "text",
+    required: true,
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "type": "number",
-    "default": 0,
-    "required": true
+    key: "amount",
+    label: "Amount",
+    type: "number",
+    default: 0,
+    required: true,
   },
   {
-    "key": "expense_date",
-    "label": "Date",
-    "type": "date"
+    key: "expense_date",
+    label: "Date",
+    type: "date",
   },
   {
-    "key": "vendor",
-    "label": "Vendor",
-    "type": "text"
+    key: "vendor",
+    label: "Vendor",
+    type: "text",
   },
   {
-    "key": "payment_method",
-    "label": "Payment method",
-    "type": "select",
-    "options": [
-      "cash",
-      "card",
-      "bank_transfer",
-      "mobile_money",
-      "cheque"
-    ],
-    "default": "cash"
+    key: "payment_method",
+    label: "Payment method",
+    type: "select",
+    options: ["cash", "card", "bank_transfer", "mobile_money", "cheque"],
+    default: "cash",
   },
   {
-    "key": "recurrence",
-    "label": "Recurrence",
-    "type": "select",
-    "options": [
-      "none",
-      "weekly",
-      "monthly",
-      "quarterly",
-      "yearly"
-    ],
-    "default": "none"
+    key: "recurrence",
+    label: "Recurrence",
+    type: "select",
+    options: ["none", "weekly", "monthly", "quarterly", "yearly"],
+    default: "none",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "type": "select",
-    "options": [
-      "pending",
-      "approved",
-      "rejected"
-    ],
-    "default": "approved"
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["pending", "approved", "rejected"],
+    default: "approved",
   },
   {
-    "key": "attachment_url",
-    "label": "Receipt / Attachment",
-    "type": "image",
-    "maxSizeMB": 5,
-    "uploadVariant": "dropzone",
-    "uploadHint": "Upload receipt or image"
-  }
-
+    key: "attachment_url",
+    label: "Receipt / Attachment",
+    type: "image",
+    maxSizeMB: 5,
+    uploadVariant: "dropzone",
+    uploadHint: "Upload receipt or image",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/expenses")({
@@ -138,9 +121,8 @@ export const Route = createFileRoute("/_authenticated/_shell/expenses")({
       description={"Recurring and one-off spend across every category."}
       columns={columns}
       fields={fields}
-      searchKeys={["description","category","vendor"]}
+      searchKeys={["description", "category", "vendor"]}
       orderBy="expense_date"
-      
     />
   ),
 });

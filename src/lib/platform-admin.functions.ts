@@ -76,7 +76,9 @@ export const adminBusinesses = createServerFn({ method: "GET" })
     const [{ data: businesses }, { data: subs }, { data: plans }, { data: members }] =
       await Promise.all([
         admin.from("businesses").select("*").order("created_at", { ascending: false }).limit(500),
-        admin.from("subscriptions").select("business_id, status, plan_id, trial_ends_at, current_period_end"),
+        admin
+          .from("subscriptions")
+          .select("business_id, status, plan_id, trial_ends_at, current_period_end"),
         admin.from("subscription_plans").select("id, name, slug, price"),
         admin.from("user_businesses").select("business_id, user_id, role, status"),
       ]);
@@ -122,18 +124,27 @@ export const adminSubscriptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const admin = await requirePlatformAdmin(context);
-    const [{ data: subs }, { data: plans }, { data: businesses }, { data: payments }, { data: invoices }] =
-      await Promise.all([
-        admin.from("subscriptions").select("*").order("created_at", { ascending: false }),
-        admin.from("subscription_plans").select("*").order("sort_order"),
-        admin.from("businesses").select("id, name"),
-        admin
-          .from("subscription_payments")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(200),
-        admin.from("billing_invoices").select("*").order("created_at", { ascending: false }).limit(200),
-      ]);
+    const [
+      { data: subs },
+      { data: plans },
+      { data: businesses },
+      { data: payments },
+      { data: invoices },
+    ] = await Promise.all([
+      admin.from("subscriptions").select("*").order("created_at", { ascending: false }),
+      admin.from("subscription_plans").select("*").order("sort_order"),
+      admin.from("businesses").select("id, name"),
+      admin
+        .from("subscription_payments")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200),
+      admin
+        .from("billing_invoices")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200),
+    ]);
     const bizMap = new Map<string, string>((businesses ?? []).map((b: any) => [b.id, b.name]));
     const planMap = new Map<string, any>((plans ?? []).map((p: any) => [p.id, p]));
     return {
@@ -144,8 +155,14 @@ export const adminSubscriptions = createServerFn({ method: "GET" })
         plan_price: Number(planMap.get(s.plan_id)?.price ?? 0),
       })),
       plans: plans ?? [],
-      payments: (payments ?? []).map((p: any) => ({ ...p, business_name: bizMap.get(p.business_id) ?? "—" })),
-      invoices: (invoices ?? []).map((i: any) => ({ ...i, business_name: bizMap.get(i.business_id) ?? "—" })),
+      payments: (payments ?? []).map((p: any) => ({
+        ...p,
+        business_name: bizMap.get(p.business_id) ?? "—",
+      })),
+      invoices: (invoices ?? []).map((i: any) => ({
+        ...i,
+        business_name: bizMap.get(i.business_id) ?? "—",
+      })),
     };
   });
 
@@ -164,8 +181,14 @@ export const adminEvents = createServerFn({ method: "GET" })
     ]);
     const bizMap = new Map<string, string>((businesses ?? []).map((b: any) => [b.id, b.name]));
     return {
-      events: (events ?? []).map((e: any) => ({ ...e, business_name: bizMap.get(e.business_id) ?? "—" })),
-      auditLogs: (logs ?? []).map((l: any) => ({ ...l, business_name: bizMap.get(l.business_id) ?? "—" })),
+      events: (events ?? []).map((e: any) => ({
+        ...e,
+        business_name: bizMap.get(e.business_id) ?? "—",
+      })),
+      auditLogs: (logs ?? []).map((l: any) => ({
+        ...l,
+        business_name: bizMap.get(l.business_id) ?? "—",
+      })),
     };
   });
 
@@ -175,15 +198,25 @@ export const adminAffiliates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const admin = await requirePlatformAdmin(context);
-    const [{ data: applications }, { data: partners }, { data: referrals }, { data: commissions }, { data: payouts }, { data: settings }] =
-      await Promise.all([
-        admin.from("affiliate_applications").select("*").order("created_at", { ascending: false }),
-        admin.from("affiliate_partners").select("*").order("created_at", { ascending: false }),
-        admin.from("affiliate_referrals").select("*"),
-        admin.from("affiliate_commissions").select("*").order("created_at", { ascending: false }).limit(500),
-        admin.from("affiliate_payouts").select("*").order("created_at", { ascending: false }),
-        admin.from("platform_settings").select("value").eq("key", "affiliate").maybeSingle(),
-      ]);
+    const [
+      { data: applications },
+      { data: partners },
+      { data: referrals },
+      { data: commissions },
+      { data: payouts },
+      { data: settings },
+    ] = await Promise.all([
+      admin.from("affiliate_applications").select("*").order("created_at", { ascending: false }),
+      admin.from("affiliate_partners").select("*").order("created_at", { ascending: false }),
+      admin.from("affiliate_referrals").select("*"),
+      admin
+        .from("affiliate_commissions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500),
+      admin.from("affiliate_payouts").select("*").order("created_at", { ascending: false }),
+      admin.from("platform_settings").select("value").eq("key", "affiliate").maybeSingle(),
+    ]);
 
     const byPartner = (id: string) => (commissions ?? []).filter((c: any) => c.partner_id === id);
     return {
@@ -200,7 +233,8 @@ export const adminAffiliates = createServerFn({ method: "GET" })
           referral_count: refs.length,
           active_count: refs.filter((r: any) => r.status === "active").length,
           attributed_revenue:
-            Math.round(rows.reduce((s: number, c: any) => s + Number(c.net_amount ?? 0), 0) * 100) / 100,
+            Math.round(rows.reduce((s: number, c: any) => s + Number(c.net_amount ?? 0), 0) * 100) /
+            100,
           lifetime_commission: Math.round(earned * 100) / 100,
           payout_balance: Math.round(unpaid * 100) / 100,
         };
@@ -463,9 +497,7 @@ export const adminPromoCodes = createServerFn({ method: "GET" })
 
 export const upsertPromoCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    promoInput.extend({ id: z.string().uuid().optional() }).parse(d),
-  )
+  .inputValidator((d: unknown) => promoInput.extend({ id: z.string().uuid().optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const admin = await requirePlatformAdmin(context);
     const row = {
@@ -500,12 +532,13 @@ export const upsertPromoCode = createServerFn({ method: "POST" })
 
 export const setPromoCodeActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     const admin = await requirePlatformAdmin(context);
-    const { error } = await admin.from("promo_codes").update({ active: data.active }).eq("id", data.id);
+    const { error } = await admin
+      .from("promo_codes")
+      .update({ active: data.active })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

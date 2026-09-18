@@ -143,7 +143,8 @@ export function useProductVariants(businessId: string | null) {
 
   function validate(): string | null {
     const active = variants.filter((v) => v.status !== "archived");
-    if (!active.length) return "Add at least one variant, or switch this product back to a simple product";
+    if (!active.length)
+      return "Add at least one variant, or switch this product back to a simple product";
     const names = new Set<string>();
     const skus = new Set<string>();
     const barcodes = new Set<string>();
@@ -294,7 +295,10 @@ export function useProductVariants(businessId: string | null) {
 
         <div className="space-y-2">
           {options.map((o) => (
-            <div key={o.key} className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
+            <div
+              key={o.key}
+              className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
+            >
               <div>
                 <Label className="mb-1 block text-[11px] text-muted-foreground">Attribute</Label>
                 <Input
@@ -368,7 +372,10 @@ export function useProductVariants(businessId: string | null) {
               </div>
               <div className="min-w-0">
                 <Label className="mb-1 block text-[11px] text-muted-foreground">Barcode</Label>
-                <Input value={v.barcode} onChange={(e) => update(v.key, { barcode: e.target.value })} />
+                <Input
+                  value={v.barcode}
+                  onChange={(e) => update(v.key, { barcode: e.target.value })}
+                />
               </div>
               <div>
                 <Label className="mb-1 block text-[11px] text-muted-foreground">Cost</Label>

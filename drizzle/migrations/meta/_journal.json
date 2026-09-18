@@ -29,6 +29,20 @@
       "when": 1789604188962,
       "tag": "0003_settings_driven_alerts_and_po_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789692944378,
+      "tag": "0004_capability_enforcement_and_totals_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789692988830,
+      "tag": "0005_relax_capability_guards_for_receipts_and_updates",
+      "breakpoints": true
     }
   ]
 }

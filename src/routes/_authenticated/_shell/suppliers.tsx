@@ -4,86 +4,83 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "name",
-    "label": "Supplier"
+    key: "name",
+    label: "Supplier",
   },
   {
-    "key": "contact_person",
-    "label": "Contact"
+    key: "contact_person",
+    label: "Contact",
   },
   {
-    "key": "email",
-    "label": "Email"
+    key: "email",
+    label: "Email",
   },
   {
-    "key": "phone",
-    "label": "Phone"
+    key: "phone",
+    label: "Phone",
   },
   {
-    "key": "balance",
-    "label": "Balance",
-    "format": "currency"
+    key: "balance",
+    label: "Balance",
+    format: "currency",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "format": "badge"
-  }
+    key: "status",
+    label: "Status",
+    format: "badge",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "name",
-    "label": "Supplier name",
-    "type": "text",
-    "required": true
+    key: "name",
+    label: "Supplier name",
+    type: "text",
+    required: true,
   },
   {
-    "key": "contact_person",
-    "label": "Contact person",
-    "type": "text"
+    key: "contact_person",
+    label: "Contact person",
+    type: "text",
   },
   {
-    "key": "email",
-    "label": "Email",
-    "type": "text"
+    key: "email",
+    label: "Email",
+    type: "text",
   },
   {
-    "key": "phone",
-    "label": "Phone",
-    "type": "text"
+    key: "phone",
+    label: "Phone",
+    type: "text",
   },
   {
-    "key": "tax_number",
-    "label": "Tax number",
-    "type": "text"
+    key: "tax_number",
+    label: "Tax number",
+    type: "text",
   },
   {
-    "key": "balance",
-    "label": "Opening balance",
-    "type": "number",
-    "default": 0
+    key: "balance",
+    label: "Opening balance",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "status",
-    "label": "Status",
-    "type": "select",
-    "options": [
-      "active",
-      "inactive"
-    ],
-    "default": "active"
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["active", "inactive"],
+    default: "active",
   },
   {
-    "key": "address",
-    "label": "Address",
-    "type": "textarea"
+    key: "address",
+    label: "Address",
+    type: "textarea",
   },
   {
-    "key": "notes",
-    "label": "Notes",
-    "type": "textarea"
-  }
+    key: "notes",
+    label: "Notes",
+    type: "textarea",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/suppliers")({
@@ -92,7 +89,10 @@ export const Route = createFileRoute("/_authenticated/_shell/suppliers")({
       { title: "Suppliers — Daraven ERP" },
       { name: "description", content: "Vendor directory with balances and contact details." },
       { property: "og:title", content: "Suppliers — Daraven ERP" },
-      { property: "og:description", content: "Vendor directory with balances and contact details." },
+      {
+        property: "og:description",
+        content: "Vendor directory with balances and contact details.",
+      },
     ],
   }),
   component: () => (
@@ -103,9 +103,8 @@ export const Route = createFileRoute("/_authenticated/_shell/suppliers")({
       description={"Vendor directory with balances and contact details."}
       columns={columns}
       fields={fields}
-      searchKeys={["name","email","phone"]}
+      searchKeys={["name", "email", "phone"]}
       orderBy="created_at"
-      
     />
   ),
 });

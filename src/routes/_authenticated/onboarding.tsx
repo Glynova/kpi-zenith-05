@@ -77,9 +77,7 @@ function Onboarding() {
     refresh();
     toast.success("Business created");
     navigate({ to: "/setup", replace: true });
-
   }
-
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">

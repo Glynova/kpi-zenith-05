@@ -36,9 +36,7 @@ function AdminUsers() {
     const all = (data?.users ?? []) as any[];
     const term = q.trim().toLowerCase();
     return term
-      ? all.filter((u) =>
-          `${u.full_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(term),
-        )
+      ? all.filter((u) => `${u.full_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(term))
       : all;
   }, [data, q]);
 

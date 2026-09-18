@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -22,9 +21,15 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Platform Overview — Daraven ERP" },
-      { name: "description", content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions." },
+      {
+        name: "description",
+        content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions.",
+      },
       { property: "og:title", content: "Platform Overview — Daraven ERP" },
-      { property: "og:description", content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions." },
+      {
+        property: "og:description",
+        content: "Platform-wide revenue, trials, past-due workspaces and affiliate commissions.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

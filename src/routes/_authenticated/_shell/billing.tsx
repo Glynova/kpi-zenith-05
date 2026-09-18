@@ -172,7 +172,10 @@ function BillingPage() {
       const res: any = await syncPlans({ data: { businessId } });
       if (!res.configured) toast.error("Add PAYMONGO_SECRET_KEY before syncing plans.");
       else if (res.error) toast.error(res.error);
-      else toast.success(res.synced.length ? `Synced: ${res.synced.join(", ")}` : "Plans already synced");
+      else
+        toast.success(
+          res.synced.length ? `Synced: ${res.synced.join(", ")}` : "Plans already synced",
+        );
       refreshAll();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sync failed");
@@ -198,7 +201,9 @@ function BillingPage() {
         <Card>
           <CardContent className="space-y-3 py-12 text-center">
             <AlertTriangle className="mx-auto size-8 text-destructive" />
-            <p className="text-sm text-muted-foreground">We couldn&apos;t load your subscription.</p>
+            <p className="text-sm text-muted-foreground">
+              We couldn&apos;t load your subscription.
+            </p>
             <Button variant="outline" onClick={refreshAll}>
               <RefreshCw className="size-4" /> Retry
             </Button>
@@ -274,9 +279,7 @@ function BillingPage() {
           />
           <Detail
             label={sub.isTrialing ? "Trial ends" : "Next billing date"}
-            value={formatDate(
-              sub.isTrialing ? record?.trial_ends_at : record?.current_period_end,
-            )}
+            value={formatDate(sub.isTrialing ? record?.trial_ends_at : record?.current_period_end)}
           />
           <Detail
             label="Payment method"
@@ -520,10 +523,7 @@ function Flag({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div className="flex items-center gap-2">
       <span
-        className={cn(
-          "size-2 rounded-full",
-          ok ? "bg-emerald-500" : "bg-muted-foreground/40",
-        )}
+        className={cn("size-2 rounded-full", ok ? "bg-emerald-500" : "bg-muted-foreground/40")}
       />
       <span className={cn("text-sm", !ok && "text-muted-foreground")}>{label}</span>
       <span className="ml-auto text-xs text-muted-foreground">
