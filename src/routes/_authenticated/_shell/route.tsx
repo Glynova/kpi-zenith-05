@@ -66,6 +66,7 @@ function Shell() {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const allowed = canAccessRoute(role, pathname);
+  const capability = useRouteCapability(pathname);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   useEffect(() => {
