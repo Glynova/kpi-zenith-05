@@ -227,10 +227,15 @@ function Shell() {
             <Breadcrumbs />
           </div>
           <main className="flex-1 p-4 pb-24 sm:p-6 lg:p-8 md:pb-8">
-            {allowed && entitled ? (
+            {allowed && entitled && capability.allowed ? (
               <div className="page-enter">
                 <Outlet />
               </div>
+            ) : allowed && entitled && !capability.allowed ? (
+              <CapabilityBlocked
+                capability={capability.key ? capabilityLabel(capability.key) : "This module"}
+                missing={capability.missing}
+              />
             ) : allowed && requiredFeature ? (
               <div className="py-10">
                 <UpgradePrompt
