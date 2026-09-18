@@ -42,9 +42,15 @@ export const Route = createFileRoute("/_authenticated/admin/affiliates")({
   head: () => ({
     meta: [
       { title: "Affiliate Programme — Daraven ERP" },
-      { name: "description", content: "Review partner applications and manage commission settings." },
+      {
+        name: "description",
+        content: "Review partner applications and manage commission settings.",
+      },
       { property: "og:title", content: "Affiliate Programme — Daraven ERP" },
-      { property: "og:description", content: "Review partner applications and manage commission settings." },
+      {
+        property: "og:description",
+        content: "Review partner applications and manage commission settings.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -113,7 +119,10 @@ function AdminAffiliates() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Pending applications" value={pending.length} />
-        <StatCard label="Active partners" value={partners.filter((p) => p.status === "active").length} />
+        <StatCard
+          label="Active partners"
+          value={partners.filter((p) => p.status === "active").length}
+        />
         <StatCard
           label="Attributed revenue"
           value={peso(partners.reduce((s, p) => s + Number(p.attributed_revenue ?? 0), 0))}

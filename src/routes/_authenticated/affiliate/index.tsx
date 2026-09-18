@@ -16,7 +16,10 @@ export const Route = createFileRoute("/_authenticated/affiliate/")({
       { title: "Partner Overview — Daraven ERP" },
       { name: "description", content: "Your referrals, conversions and commission balance." },
       { property: "og:title", content: "Partner Overview — Daraven ERP" },
-      { property: "og:description", content: "Your referrals, conversions and commission balance." },
+      {
+        property: "og:description",
+        content: "Your referrals, conversions and commission balance.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -87,7 +90,9 @@ function PartnerOverview() {
             <TableCell>{peso(row.net_amount)}</TableCell>
             <TableCell>{row.commission_rate}%</TableCell>
             <TableCell
-              className={row.commission_amount < 0 ? "text-destructive tabular-nums" : "tabular-nums"}
+              className={
+                row.commission_amount < 0 ? "text-destructive tabular-nums" : "tabular-nums"
+              }
             >
               {peso(row.commission_amount)}
             </TableCell>

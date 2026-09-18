@@ -10,9 +10,20 @@ const columns: Column[] = [
 ];
 
 const fields: Field[] = [
-  { key: "product_id", label: "Product", type: "relation", relation: { table: "products" }, required: true },
+  {
+    key: "product_id",
+    label: "Product",
+    type: "relation",
+    relation: { table: "products" },
+    required: true,
+  },
   { key: "serial_number", label: "Serial number", type: "text", required: true },
-  { key: "variant_id", label: "Variant", type: "relation", relation: { table: "product_variants" } },
+  {
+    key: "variant_id",
+    label: "Variant",
+    type: "relation",
+    relation: { table: "product_variants" },
+  },
   { key: "warehouse_id", label: "Location", type: "relation", relation: { table: "warehouses" } },
   { key: "supplier_id", label: "Supplier", type: "relation", relation: { table: "suppliers" } },
   { key: "purchase_date", label: "Purchase date", type: "date" },

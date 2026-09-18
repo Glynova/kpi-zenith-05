@@ -45,7 +45,6 @@ import { SubscriptionBanner } from "@/components/subscription-banner";
 import { CapabilityBlocked, useRouteCapability } from "@/components/capability-guard";
 import { capabilityLabel } from "@/lib/capabilities";
 
-
 export const Route = createFileRoute("/_authenticated/_shell")({
   component: Shell,
 });

@@ -98,7 +98,9 @@ function AdminActivity() {
                 <TableCell className="font-medium capitalize">
                   {String(l.action ?? "").replace(/_/g, " ")}
                 </TableCell>
-                <TableCell className="capitalize text-muted-foreground">{l.module ?? "—"}</TableCell>
+                <TableCell className="capitalize text-muted-foreground">
+                  {l.module ?? "—"}
+                </TableCell>
                 <TableCell>{l.business_name}</TableCell>
                 <TableCell className="text-muted-foreground">{l.user_email ?? "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{dateTime(l.created_at)}</TableCell>

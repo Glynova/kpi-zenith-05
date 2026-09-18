@@ -176,12 +176,14 @@ export type ResourceList<A = Record<string, unknown>> = {
 export type PayMongoSubscriptionAttrs = {
   status: string;
   livemode?: boolean;
-  plan?: { id: string; amount?: number; name?: string; interval?: string } | Record<string, unknown>;
+  plan?:
+    { id: string; amount?: number; name?: string; interval?: string } | Record<string, unknown>;
   plan_id?: string;
   customer?: { id: string } | Record<string, unknown>;
   customer_id?: string;
   payment_method_id?: string | null;
-  latest_invoice?: { id: string; status?: string; amount?: number } | Record<string, unknown> | null;
+  latest_invoice?:
+    { id: string; status?: string; amount?: number } | Record<string, unknown> | null;
   latest_invoice_id?: string | null;
   current_period_start?: number | string | null;
   current_period_end?: number | string | null;
@@ -222,7 +224,8 @@ export type PayMongoPaymentIntentAttrs = {
   currency: string;
   livemode?: boolean;
   client_key?: string;
-  last_payment_error?: { failed_code?: string; failed_message?: string } | Record<string, unknown> | null;
+  last_payment_error?:
+    { failed_code?: string; failed_message?: string } | Record<string, unknown> | null;
   next_action?: { type: string; redirect?: { url: string; return_url?: string } } | null;
   payment_method?: { id: string } | null;
   payments?: { id: string; attributes?: Record<string, unknown> }[];
@@ -398,10 +401,9 @@ export function paymongoClient(mode?: PayMongoMode) {
 
     // ---- Webhooks (diagnostics only) ----------------------------------------
     listWebhooks() {
-      return request<ResourceList<{ url: string; status: string; events: string[]; livemode?: boolean }>>(
-        m,
-        "/webhooks",
-      );
+      return request<
+        ResourceList<{ url: string; status: string; events: string[]; livemode?: boolean }>
+      >(m, "/webhooks");
     },
   };
 }

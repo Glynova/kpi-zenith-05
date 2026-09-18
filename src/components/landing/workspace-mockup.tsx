@@ -235,7 +235,9 @@ export function WorkspaceMockup() {
           className="absolute -right-3 top-16 hidden w-40 rounded-2xl border border-white/12 bg-[oklch(0.19_0.04_264)]/95 p-3 shadow-[0_30px_60px_-30px_oklch(0_0_0/0.9)] lg:block"
           style={{ transform: "translateZ(90px)" }}
         >
-          <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">Today&apos;s sales</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-white/45">
+            Today&apos;s sales
+          </p>
           <p className="mt-1 font-display text-2xl font-semibold text-white">₱48,210</p>
           <div className="mt-2 flex h-8 items-end gap-1">
             {[5, 9, 6, 12, 8, 14, 11].map((h, i) => (

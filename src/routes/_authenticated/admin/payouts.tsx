@@ -41,7 +41,10 @@ export const Route = createFileRoute("/_authenticated/admin/payouts")({
       { title: "Affiliate Payouts — Daraven ERP" },
       { name: "description", content: "Pending partner balances and payout batch processing." },
       { property: "og:title", content: "Affiliate Payouts — Daraven ERP" },
-      { property: "og:description", content: "Pending partner balances and payout batch processing." },
+      {
+        property: "og:description",
+        content: "Pending partner balances and payout batch processing.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -97,8 +100,7 @@ function AdminPayouts() {
   const partners = (data.partners ?? []) as any[];
   const payouts = (data.payouts ?? []) as any[];
   const commissions = (data.commissions ?? []) as any[];
-  const partnerName = (id: string) =>
-    partners.find((p) => p.id === id)?.display_name ?? "—";
+  const partnerName = (id: string) => partners.find((p) => p.id === id)?.display_name ?? "—";
   const pendingCommissions = commissions.filter((c) => c.status === "pending");
   const owed = partners.reduce((s, p) => s + Number(p.payout_balance ?? 0), 0);
 
@@ -123,7 +125,9 @@ function AdminPayouts() {
         <StatCard
           label="Paid out"
           value={peso(
-            payouts.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount ?? 0), 0),
+            payouts
+              .filter((p) => p.status === "paid")
+              .reduce((s, p) => s + Number(p.amount ?? 0), 0),
           )}
         />
       </div>

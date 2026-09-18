@@ -12,8 +12,7 @@ export function KpiOrb({
   caption?: string;
 }) {
   const rings = [0, 30, 60, 90, 120, 150];
-  const tone =
-    score >= 70 ? "var(--chart-2)" : score >= 45 ? "var(--chart-3)" : "var(--chart-5)";
+  const tone = score >= 70 ? "var(--chart-2)" : score >= 45 ? "var(--chart-3)" : "var(--chart-5)";
 
   return (
     <div className="scene-3d relative grid h-56 place-items-center select-none">

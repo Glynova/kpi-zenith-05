@@ -8,8 +8,30 @@
 
 /** Movement types supported by the engine, grouped for the UI. */
 export const MOVEMENT_GROUPS: { label: string; types: string[] }[] = [
-  { label: "Receipts", types: ["opening_balance", "purchase", "return_in", "production_in", "transfer_in", "adjustment_in"] },
-  { label: "Issues", types: ["sale", "return_out", "consumption", "production_out", "transfer_out", "adjustment_out", "waste", "damage"] },
+  {
+    label: "Receipts",
+    types: [
+      "opening_balance",
+      "purchase",
+      "return_in",
+      "production_in",
+      "transfer_in",
+      "adjustment_in",
+    ],
+  },
+  {
+    label: "Issues",
+    types: [
+      "sale",
+      "return_out",
+      "consumption",
+      "production_out",
+      "transfer_out",
+      "adjustment_out",
+      "waste",
+      "damage",
+    ],
+  },
   { label: "Counts", types: ["stock_count"] },
 ];
 
@@ -68,7 +90,13 @@ export const STATUS_LABEL: Record<StockStatus, string> = {
 /** Derived — never stored. */
 export function stockStatus(
   quantity: number,
-  opts: { reorderLevel?: number; minStock?: number; maxStock?: number | null; active?: boolean; rule?: string },
+  opts: {
+    reorderLevel?: number;
+    minStock?: number;
+    maxStock?: number | null;
+    active?: boolean;
+    rule?: string;
+  },
 ): StockStatus {
   if (opts.active === false) return "inactive";
   const qty = Number(quantity ?? 0);

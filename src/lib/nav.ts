@@ -32,7 +32,6 @@ import {
   Landmark,
   CreditCard,
   UsersRound,
-
   type LucideIcon,
 } from "lucide-react";
 
@@ -73,7 +72,13 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Sales",
     icon: ShoppingCart,
     items: [
-      { title: "Point of Sale", url: "/pos", icon: ScanLine, feature: "enable_pos", keywords: "till register checkout" },
+      {
+        title: "Point of Sale",
+        url: "/pos",
+        icon: ScanLine,
+        feature: "enable_pos",
+        keywords: "till register checkout",
+      },
       { title: "Sales", url: "/sales", icon: ShoppingCart, keywords: "orders quotes revenue" },
       { title: "Invoices", url: "/invoices", icon: FileText, keywords: "billing" },
       { title: "Customers", url: "/customers", icon: Users, keywords: "clients buyers" },
@@ -87,13 +92,29 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "Products", url: "/products", icon: Package, keywords: "items catalog sku" },
       { title: "Categories", url: "/categories", icon: Tags },
       { title: "Stock Movements", url: "/inventory", icon: Boxes, keywords: "ledger stock in out" },
-      { title: "Stock Counts", url: "/stock-counts", icon: ClipboardCheck, feature: "enable_stock_counts" },
+      {
+        title: "Stock Counts",
+        url: "/stock-counts",
+        icon: ClipboardCheck,
+        feature: "enable_stock_counts",
+      },
       { title: "Transfers", url: "/transfers", icon: ArrowLeftRight, feature: "track_locations" },
-      { title: "Purchase Orders", url: "/purchase-orders", icon: ClipboardList, keywords: "po purchasing receive" },
+      {
+        title: "Purchase Orders",
+        url: "/purchase-orders",
+        icon: ClipboardList,
+        keywords: "po purchasing receive",
+      },
       { title: "Suppliers", url: "/suppliers", icon: Truck, keywords: "vendors" },
       { title: "Locations", url: "/locations", icon: Warehouse, keywords: "warehouse branch" },
       { title: "Units", url: "/units", icon: Ruler, keywords: "uom measure" },
-      { title: "Batches", url: "/batches", icon: Factory, feature: "track_batch", keywords: "lot expiry" },
+      {
+        title: "Batches",
+        url: "/batches",
+        icon: Factory,
+        feature: "track_batch",
+        keywords: "lot expiry",
+      },
       { title: "Serial Numbers", url: "/serials", icon: Barcode, feature: "track_serial" },
     ],
   },
@@ -104,7 +125,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Expenses", url: "/expenses", icon: Receipt, keywords: "costs spend" },
       { title: "Cash Flow", url: "/cash-flow", icon: Wallet, keywords: "cash in out" },
-      { title: "Receivables", url: "/receivables", icon: ArrowDownLeft, keywords: "ar debtors owed" },
+      {
+        title: "Receivables",
+        url: "/receivables",
+        icon: ArrowDownLeft,
+        keywords: "ar debtors owed",
+      },
       { title: "Payables", url: "/payables", icon: ArrowUpRight, keywords: "ap creditors bills" },
     ],
   },
@@ -133,8 +159,18 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: Settings,
     items: [
       { title: "Settings", url: "/settings", icon: Settings, keywords: "preferences access team" },
-      { title: "Billing", url: "/billing", icon: CreditCard, keywords: "subscription plan invoice upgrade payment" },
-      { title: "Upgrade Plan", url: "/upgrade", icon: Sparkles, keywords: "plan pro business promo code checkout" },
+      {
+        title: "Billing",
+        url: "/billing",
+        icon: CreditCard,
+        keywords: "subscription plan invoice upgrade payment",
+      },
+      {
+        title: "Upgrade Plan",
+        url: "/upgrade",
+        icon: Sparkles,
+        keywords: "plan pro business promo code checkout",
+      },
       { title: "Notifications", url: "/notifications", icon: Bell, keywords: "alerts" },
 
       { title: "Audit Logs", url: "/audit-logs", icon: ScrollText, keywords: "history trail" },

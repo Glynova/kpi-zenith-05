@@ -25,7 +25,9 @@ export function UpgradePrompt({
           <Lock className="size-5" />
         </div>
         <div className="space-y-1.5">
-          <h2 className="font-display text-xl font-semibold">{label} is a {plan} feature</h2>
+          <h2 className="font-display text-xl font-semibold">
+            {label} is a {plan} feature
+          </h2>
           <p className="text-sm text-muted-foreground">
             {description ??
               `Upgrade your workspace to unlock ${label.toLowerCase()} and the rest of the ${plan} toolkit. Your existing data stays exactly as it is.`}

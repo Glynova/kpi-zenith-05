@@ -21,7 +21,9 @@ async function sign(timestamp: string, body: string, secret = SECRET) {
 }
 
 describe("PayMongo webhook signature", () => {
-  const body = JSON.stringify({ data: { id: "evt_1", attributes: { type: "subscription.activated" } } });
+  const body = JSON.stringify({
+    data: { id: "evt_1", attributes: { type: "subscription.activated" } },
+  });
 
   it("accepts a valid test-mode (te) signature", async () => {
     const t = "1717000000";
@@ -102,7 +104,9 @@ describe("cycleKeyFor", () => {
   });
 
   it("falls back to the invoice id when no period is known", () => {
-    expect(cycleKeyFor({ id: "s1", current_period_start: null }, {}, "inv_9")).toBe("invoice:inv_9");
+    expect(cycleKeyFor({ id: "s1", current_period_start: null }, {}, "inv_9")).toBe(
+      "invoice:inv_9",
+    );
   });
 
   it("returns null without a subscription", () => {

@@ -7,8 +7,6 @@ import { DISCOUNT_SETTLEMENT_NOTE, PROVIDER_APPLIES_DISCOUNTS } from "@/lib/bill
 
 const businessInput = z.object({ businessId: z.string().uuid() });
 
-
-
 async function assertAdmin(supabase: any, userId: string, businessId: string) {
   const { data, error } = await supabase
     .from("user_businesses")
@@ -89,8 +87,7 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
       publicKeyConfigured: !!cfg.publicKey,
       webhookSecretConfigured: !!readWebhookSecret(),
       mode: cfg.mode,
-      recurringBillingReady:
-        cfg.configured && !!(plans ?? []).some((p: any) => p.paymongo_plan_id),
+      recurringBillingReady: cfg.configured && !!(plans ?? []).some((p: any) => p.paymongo_plan_id),
       plansSynced: (plans ?? []).filter((p: any) => p.paymongo_plan_id).map((p: any) => p.slug),
       subscriptionLinked: !!(sub as any)?.paymongo_subscription_id,
       customerLinked: !!(sub as any)?.paymongo_customer_id,
@@ -188,7 +185,6 @@ export const startSubscription = createServerFn({ method: "POST" })
       }
     }
 
-
     const { data: sub } = await admin
       .from("subscriptions")
       .select("*")
@@ -216,7 +212,12 @@ export const startSubscription = createServerFn({ method: "POST" })
         event_type: "plan.changed.free",
         payload: { plan: plan.slug },
       });
-      return { ok: true, configured: true, checkoutUrl: null, effectiveAt: new Date().toISOString() };
+      return {
+        ok: true,
+        configured: true,
+        checkoutUrl: null,
+        effectiveAt: new Date().toISOString(),
+      };
     }
 
     const { paymongo, readConfig } = await import("@/lib/paymongo.server");
@@ -320,7 +321,6 @@ export const startSubscription = createServerFn({ method: "POST" })
     };
   });
 
-
 export const cancelSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => businessInput.parse(d))
@@ -388,7 +388,6 @@ export const resumeSubscription = createServerFn({ method: "POST" })
 
 /** Platform-wide billing overview for internal admins. */
 
-
 export const platformBillingOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -398,7 +397,9 @@ export const platformBillingOverview = createServerFn({ method: "GET" })
     const [{ data: subs }, { data: plans }, { data: payments }] = await Promise.all([
       admin
         .from("subscriptions")
-        .select("id, business_id, plan_id, status, trial_ends_at, current_period_end, businesses(name)")
+        .select(
+          "id, business_id, plan_id, status, trial_ends_at, current_period_end, businesses(name)",
+        )
         .order("created_at", { ascending: false }),
       admin.from("subscription_plans").select("*").order("sort_order"),
       admin

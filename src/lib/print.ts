@@ -20,7 +20,10 @@ export function printDocument({
   terms?: string | null;
 }) {
   const esc = (v: any) =>
-    String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string);
+    String(v ?? "").replace(
+      /[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string,
+    );
 
   const rows = items
     .map(

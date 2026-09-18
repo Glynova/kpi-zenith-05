@@ -76,7 +76,6 @@ export function InventorySettings() {
     toast.info("Recommended settings loaded — review and save.");
   }
 
-
   async function save() {
     if (!isAdmin) return toast.error("Only owners and admins can change configuration");
     setSaving(true);
@@ -242,8 +241,6 @@ export function InventorySettings() {
           </CardContent>
         </Card>
       )}
-
-
 
       <Card>
         <CardHeader>

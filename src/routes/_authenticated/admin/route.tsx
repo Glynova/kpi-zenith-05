@@ -70,7 +70,6 @@ function AdminLayout() {
     });
   }, [denied, logEvent, pathname]);
 
-
   async function signOutAdmin() {
     void logEvent({ data: { action: "admin_logout", success: true } });
     await queryClient.cancelQueries();

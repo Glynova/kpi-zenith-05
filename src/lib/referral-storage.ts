@@ -12,7 +12,10 @@ type StoredReferral = { code: string; at: number };
 export function storeReferralCode(code: string) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(KEY, JSON.stringify({ code, at: Date.now() } satisfies StoredReferral));
+    window.localStorage.setItem(
+      KEY,
+      JSON.stringify({ code, at: Date.now() } satisfies StoredReferral),
+    );
     // Mirrored as a cookie so a server-rendered signup can read it too.
     document.cookie = `${KEY}=${encodeURIComponent(code)}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
   } catch {

@@ -16,7 +16,12 @@ const fields: Field[] = [
   { key: "name", label: "Location name", type: "text", required: true },
   { key: "code", label: "Code", type: "text", placeholder: "MAIN" },
   { key: "type", label: "Type", type: "select", options: LOCATION_TYPES, default: "warehouse" },
-  { key: "parent_id", label: "Parent location", type: "relation", relation: { table: "warehouses" } },
+  {
+    key: "parent_id",
+    label: "Parent location",
+    type: "relation",
+    relation: { table: "warehouses" },
+  },
   { key: "location", label: "Address", type: "text" },
   { key: "is_default", label: "Default location", type: "boolean", default: false },
   { key: "is_active", label: "Active", type: "boolean", default: true },

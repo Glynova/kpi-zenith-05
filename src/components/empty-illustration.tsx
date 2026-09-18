@@ -30,11 +30,29 @@ function Iso({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Box({ x, y, w = 34, h = 18, d = 12 }: { x: number; y: number; w?: number; h?: number; d?: number }) {
+function Box({
+  x,
+  y,
+  w = 34,
+  h = 18,
+  d = 12,
+}: {
+  x: number;
+  y: number;
+  w?: number;
+  h?: number;
+  d?: number;
+}) {
   return (
     <g>
-      <polygon points={`${x},${y} ${x + w / 2},${y - d} ${x + w},${y} ${x + w / 2},${y + d}`} fill="url(#isoTop)" />
-      <polygon points={`${x},${y} ${x + w / 2},${y + d} ${x + w / 2},${y + d + h} ${x},${y + h}`} fill="url(#isoSide)" />
+      <polygon
+        points={`${x},${y} ${x + w / 2},${y - d} ${x + w},${y} ${x + w / 2},${y + d}`}
+        fill="url(#isoTop)"
+      />
+      <polygon
+        points={`${x},${y} ${x + w / 2},${y + d} ${x + w / 2},${y + d + h} ${x},${y + h}`}
+        fill="url(#isoSide)"
+      />
       <polygon
         points={`${x + w},${y} ${x + w / 2},${y + d} ${x + w / 2},${y + d + h} ${x + w},${y + h}`}
         fill="var(--primary)"

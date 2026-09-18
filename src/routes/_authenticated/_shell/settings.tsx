@@ -21,9 +21,15 @@ export const Route = createFileRoute("/_authenticated/_shell/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Daraven ERP" },
-      { name: "description", content: "Customize business branding, currency, tax and appearance." },
+      {
+        name: "description",
+        content: "Customize business branding, currency, tax and appearance.",
+      },
       { property: "og:title", content: "Settings — Daraven ERP" },
-      { property: "og:description", content: "Customize business branding, currency, tax and appearance." },
+      {
+        property: "og:description",
+        content: "Customize business branding, currency, tax and appearance.",
+      },
     ],
   }),
   component: SettingsPage,

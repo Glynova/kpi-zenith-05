@@ -59,7 +59,8 @@ function PayoutsPage() {
         rows={data.payouts as any[]}
         empty={{
           title: "No payouts yet",
-          description: "Approved commissions are batched into a payout once you pass the threshold.",
+          description:
+            "Approved commissions are batched into a payout once you pass the threshold.",
         }}
         renderRow={(row: any) => (
           <TableRow key={row.id}>

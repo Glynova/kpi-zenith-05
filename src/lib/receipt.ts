@@ -23,7 +23,10 @@ export function printReceipt({
   taxName?: string;
 }) {
   const esc = (v: any) =>
-    String(v ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string);
+    String(v ?? "").replace(
+      /[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string,
+    );
   const money = (n: number) => esc(formatCurrency(Number(n ?? 0), currency));
 
   const tendered = payments.reduce((s, p) => s + Number(p.tendered ?? p.amount ?? 0), 0);
@@ -32,16 +35,20 @@ export function printReceipt({
 
   const lines = items
     .map(
-      (i) => `<tr><td>${esc(i.product_name)}${
-        i.variant_name ? `<div class="muted">${esc(i.variant_name)}</div>` : ""
-      }<div class="muted">${esc(Number(i.quantity))} × ${money(i.unit_price)}${
-        Number(i.discount) > 0 ? ` − ${money(i.discount)}` : ""
-      }</div></td><td class="num">${money(i.total)}</td></tr>`,
+      (i) =>
+        `<tr><td>${esc(i.product_name)}${
+          i.variant_name ? `<div class="muted">${esc(i.variant_name)}</div>` : ""
+        }<div class="muted">${esc(Number(i.quantity))} × ${money(i.unit_price)}${
+          Number(i.discount) > 0 ? ` − ${money(i.discount)}` : ""
+        }</div></td><td class="num">${money(i.total)}</td></tr>`,
     )
     .join("");
 
   const payRows = payments
-    .map((p) => `<div><span>${esc(String(p.method).replace(/_/g, " "))}</span><span>${money(p.amount)}</span></div>`)
+    .map(
+      (p) =>
+        `<div><span>${esc(String(p.method).replace(/_/g, " "))}</span><span>${money(p.amount)}</span></div>`,
+    )
     .join("");
 
   const html = `<!doctype html><html><head><meta charset="utf-8" /><title>${esc(sale.sale_number)}</title>

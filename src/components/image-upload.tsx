@@ -36,16 +36,33 @@ export function useImageSrc(value?: string | null) {
 }
 
 /** Small square preview used in tables and detail pages. */
-export function ImageThumb({ value, alt = "", className = "size-10" }: { value?: string | null; alt?: string; className?: string }) {
+export function ImageThumb({
+  value,
+  alt = "",
+  className = "size-10",
+}: {
+  value?: string | null;
+  alt?: string;
+  className?: string;
+}) {
   const src = useImageSrc(value);
   if (!src) {
     return (
-      <div className={`${className} flex items-center justify-center rounded-md border bg-muted text-muted-foreground`}>
+      <div
+        className={`${className} flex items-center justify-center rounded-md border bg-muted text-muted-foreground`}
+      >
         <ImagePlus className="size-4" />
       </div>
     );
   }
-  return <img src={src} alt={alt} loading="lazy" className={`${className} rounded-md border object-cover`} />;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className={`${className} rounded-md border object-cover`}
+    />
+  );
 }
 
 type Props = {
@@ -149,7 +166,13 @@ export function ImageUpload({
               <p className="truncate text-sm font-medium">{displayName}</p>
               <p className="text-xs text-muted-foreground">Attached</p>
             </div>
-            <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploading}
+              onClick={() => inputRef.current?.click()}
+            >
               Replace
             </Button>
             <Button
@@ -212,8 +235,18 @@ export function ImageUpload({
       </div>
       <div className="flex flex-wrap gap-2">
         {input}
-        <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => inputRef.current?.click()}>
-          {uploading ? <Loader2 className="mr-1 size-4 animate-spin" /> : <ImagePlus className="mr-1 size-4" />}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
+          {uploading ? (
+            <Loader2 className="mr-1 size-4 animate-spin" />
+          ) : (
+            <ImagePlus className="mr-1 size-4" />
+          )}
           {value ? "Replace" : "Upload image"}
         </Button>
         {value && (
@@ -226,4 +259,3 @@ export function ImageUpload({
     </div>
   );
 }
-

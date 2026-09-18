@@ -4,77 +4,71 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 
 const columns: Column[] = [
   {
-    "key": "due_date",
-    "label": "Due",
-    "format": "date"
+    key: "due_date",
+    label: "Due",
+    format: "date",
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "format": "currency"
+    key: "amount",
+    label: "Amount",
+    format: "currency",
   },
   {
-    "key": "paid",
-    "label": "Paid",
-    "format": "currency"
+    key: "paid",
+    label: "Paid",
+    format: "currency",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "format": "badge"
+    key: "status",
+    label: "Status",
+    format: "badge",
   },
   {
-    "key": "notes",
-    "label": "Notes"
-  }
+    key: "notes",
+    label: "Notes",
+  },
 ];
 
 const fields: Field[] = [
   {
-    "key": "customer_id",
-    "label": "Customer",
-    "type": "relation",
-    "relation": {
-      "table": "customers"
+    key: "customer_id",
+    label: "Customer",
+    type: "relation",
+    relation: {
+      table: "customers",
     },
-    "required": true
+    required: true,
   },
   {
-    "key": "amount",
-    "label": "Amount",
-    "type": "number",
-    "default": 0,
-    "required": true
+    key: "amount",
+    label: "Amount",
+    type: "number",
+    default: 0,
+    required: true,
   },
   {
-    "key": "paid",
-    "label": "Paid",
-    "type": "number",
-    "default": 0
+    key: "paid",
+    label: "Paid",
+    type: "number",
+    default: 0,
   },
   {
-    "key": "due_date",
-    "label": "Due date",
-    "type": "date"
+    key: "due_date",
+    label: "Due date",
+    type: "date",
   },
   {
-    "key": "status",
-    "label": "Status",
-    "type": "select",
-    "options": [
-      "open",
-      "partial",
-      "settled",
-      "overdue",
-      "written_off"
-    ],
-    "default": "open"
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["open", "partial", "settled", "overdue", "written_off"],
+    default: "open",
   },
   {
-    "key": "notes",
-    "label": "Notes",
-    "type": "textarea"
-  }
+    key: "notes",
+    label: "Notes",
+    type: "textarea",
+  },
 ];
 
 export const Route = createFileRoute("/_authenticated/_shell/receivables")({
@@ -94,9 +88,8 @@ export const Route = createFileRoute("/_authenticated/_shell/receivables")({
       description={"Customer debts, partial payments and aging."}
       columns={columns}
       fields={fields}
-      searchKeys={["status","notes"]}
+      searchKeys={["status", "notes"]}
       orderBy="created_at"
-      
     />
   ),
 });

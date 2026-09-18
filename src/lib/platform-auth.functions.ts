@@ -136,10 +136,7 @@ export const bootstrapPlatformAdmin = createServerFn({ method: "POST" })
       .ilike("email", email!)
       .maybeSingle();
     if (!allowed) {
-      await deny(
-        "not_allowlisted",
-        "This account is not authorized for platform administration.",
-      );
+      await deny("not_allowlisted", "This account is not authorized for platform administration.");
     }
 
     const { count } = await admin
@@ -156,7 +153,6 @@ export const bootstrapPlatformAdmin = createServerFn({ method: "POST" })
         );
       }
     }
-
 
     const { error } = await admin
       .from("platform_admins")

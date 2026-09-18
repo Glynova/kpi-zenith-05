@@ -133,7 +133,9 @@ function PurchaseOrdersPage() {
     queryFn: async () => {
       let q = db
         .from("purchase_orders")
-        .select("*, suppliers(name,email,phone,payment_terms), warehouses(name)", { count: "exact" })
+        .select("*, suppliers(name,email,phone,payment_terms), warehouses(name)", {
+          count: "exact",
+        })
         .eq("business_id", businessId);
       if (statusFilter !== "all") q = q.eq("status", statusFilter);
       if (search.trim()) q = q.ilike("po_number", `%${search.trim()}%`);
@@ -272,7 +274,10 @@ function PurchaseOrdersPage() {
   function pickVariant(key: string, variantId: string) {
     const v = productVariants.find((x) => x.id === variantId);
     const cost = Number(v?.cost_price ?? 0);
-    updateLine(key, cost > 0 ? { variant_id: variantId, unit_cost: cost } : { variant_id: variantId });
+    updateLine(
+      key,
+      cost > 0 ? { variant_id: variantId, unit_cost: cost } : { variant_id: variantId },
+    );
   }
 
   function pickProduct(key: string, productId: string) {
@@ -592,18 +597,21 @@ function PurchaseOrdersPage() {
                 {rows.map((row) => {
                   const p = progress[row.id];
                   const next = PO_TRANSITIONS[String(row.status)] ?? [];
-                  const canReceive =
-                    canWrite && RECEIVABLE_STATUSES.includes(String(row.status));
+                  const canReceive = canWrite && RECEIVABLE_STATUSES.includes(String(row.status));
                   return (
                     <TableRow key={row.id}>
-                      <TableCell className="whitespace-nowrap font-medium">{row.po_number}</TableCell>
+                      <TableCell className="whitespace-nowrap font-medium">
+                        {row.po_number}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {row.suppliers?.name ?? <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {row.warehouses?.name ?? "—"}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{formatDate(row.order_date)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {formatDate(row.order_date)}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {formatDate(row.expected_date)}
                       </TableCell>
@@ -619,17 +627,29 @@ function PurchaseOrdersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right">
-                        <Button variant="ghost" size="icon" onClick={() => setViewing(row)} aria-label="View">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setViewing(row)}
+                          aria-label="View"
+                        >
                           <Eye className="size-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => printPo(row)} aria-label="Print">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => printPo(row)}
+                          aria-label="Print"
+                        >
                           <Printer className="size-4" />
                         </Button>
                         {canWrite && next.includes("pending_approval") && !canApprove && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setStatus.mutate({ po: row, status: "pending_approval" })}
+                            onClick={() =>
+                              setStatus.mutate({ po: row, status: "pending_approval" })
+                            }
                             title="Submit for owner approval"
                             aria-label="Submit for approval"
                           >
@@ -884,14 +904,15 @@ function PurchaseOrdersPage() {
             </div>
             {items.map((item) => {
               const variance = priceVariance(item.unit_cost, item.last_price);
-              const warn =
-                variance !== null && Math.abs(variance) >= DEFAULT_PRICE_ALERT_PERCENT;
+              const warn = variance !== null && Math.abs(variance) >= DEFAULT_PRICE_ALERT_PERCENT;
               const belowMoq = item.moq > 0 && item.quantity < item.moq;
               return (
                 <div key={item.key} className="space-y-2 rounded-lg border border-border p-3">
                   <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,2fr)_90px_110px_100px_100px_auto]">
                     <div className="col-span-2 min-w-0 sm:col-span-1">
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Product</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Product
+                      </Label>
                       <Select
                         value={item.product_id ?? undefined}
                         onValueChange={(v) => pickProduct(item.key, v)}
@@ -942,13 +963,13 @@ function PurchaseOrdersPage() {
                         type="number"
                         step="any"
                         value={item.quantity}
-                        onChange={(e) =>
-                          updateLine(item.key, { quantity: Number(e.target.value) })
-                        }
+                        onChange={(e) => updateLine(item.key, { quantity: Number(e.target.value) })}
                       />
                     </div>
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Unit cost</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Unit cost
+                      </Label>
                       <Input
                         type="number"
                         step="any"
@@ -959,14 +980,14 @@ function PurchaseOrdersPage() {
                       />
                     </div>
                     <div>
-                      <Label className="mb-1 block text-[11px] text-muted-foreground">Discount</Label>
+                      <Label className="mb-1 block text-[11px] text-muted-foreground">
+                        Discount
+                      </Label>
                       <Input
                         type="number"
                         step="any"
                         value={item.discount}
-                        onChange={(e) =>
-                          updateLine(item.key, { discount: Number(e.target.value) })
-                        }
+                        onChange={(e) => updateLine(item.key, { discount: Number(e.target.value) })}
                       />
                     </div>
                     <div>
@@ -996,7 +1017,9 @@ function PurchaseOrdersPage() {
                   <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
                     {item.supplier_sku && <span>SKU {item.supplier_sku}</span>}
                     {item.last_price != null && (
-                      <span>Last purchase {formatCurrency(item.last_price, form.currency ?? currency)}</span>
+                      <span>
+                        Last purchase {formatCurrency(item.last_price, form.currency ?? currency)}
+                      </span>
                     )}
                     {item.moq > 0 && <span>MOQ {item.moq}</span>}
                   </div>

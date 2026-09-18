@@ -165,6 +165,9 @@ export type RuleKey =
   | "costing_method"
   | "enable_alerts";
 
-export function getRule<K extends RuleKey>(settings: BusinessSettings, key: K): BusinessSettings[K] {
+export function getRule<K extends RuleKey>(
+  settings: BusinessSettings,
+  key: K,
+): BusinessSettings[K] {
   return settings[key];
 }

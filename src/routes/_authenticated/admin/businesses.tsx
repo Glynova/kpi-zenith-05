@@ -15,9 +15,15 @@ export const Route = createFileRoute("/_authenticated/admin/businesses")({
   head: () => ({
     meta: [
       { title: "Workspaces — Daraven ERP" },
-      { name: "description", content: "Every workspace on the platform with plan, status and owner." },
+      {
+        name: "description",
+        content: "Every workspace on the platform with plan, status and owner.",
+      },
       { property: "og:title", content: "Workspaces — Daraven ERP" },
-      { property: "og:description", content: "Every workspace on the platform with plan, status and owner." },
+      {
+        property: "og:description",
+        content: "Every workspace on the platform with plan, status and owner.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -36,7 +42,13 @@ function AdminBusinesses() {
   const rows = useMemo(() => {
     const all = (data?.businesses ?? []) as any[];
     const term = q.trim().toLowerCase();
-    return term ? all.filter((b) => String(b.name ?? "").toLowerCase().includes(term)) : all;
+    return term
+      ? all.filter((b) =>
+          String(b.name ?? "")
+            .toLowerCase()
+            .includes(term),
+        )
+      : all;
   }, [data, q]);
 
   if (isLoading || !data) return <Skeleton className="h-96 w-full" />;
@@ -61,7 +73,8 @@ function AdminBusinesses() {
           <TableRow key={b.id}>
             <TableCell className="font-medium">{b.name}</TableCell>
             <TableCell>
-              {b.plan} {b.price > 0 && <span className="text-muted-foreground">· {peso(b.price)}</span>}
+              {b.plan}{" "}
+              {b.price > 0 && <span className="text-muted-foreground">· {peso(b.price)}</span>}
             </TableCell>
             <TableCell>
               <StatusBadge status={b.status} />

@@ -40,7 +40,11 @@ import {
 
 type Admin = any;
 
-export const OPEN_CHECKOUT_STATUSES: CheckoutStatus[] = ["pending", "awaiting_action", "processing"];
+export const OPEN_CHECKOUT_STATUSES: CheckoutStatus[] = [
+  "pending",
+  "awaiting_action",
+  "processing",
+];
 export const CHECKOUT_TTL_HOURS = 24;
 
 /* ------------------------------------------------------------------ utils */
@@ -127,7 +131,8 @@ function paymentIntentIdFromSubscription(attrs: Record<string, any>): string | n
     if (pi && typeof pi === "object" && typeof pi.id === "string") return pi.id;
     if (typeof inv.payment_intent_id === "string") return inv.payment_intent_id;
   }
-  if (typeof attrs["latest_payment_intent_id"] === "string") return attrs["latest_payment_intent_id"];
+  if (typeof attrs["latest_payment_intent_id"] === "string")
+    return attrs["latest_payment_intent_id"];
   return null;
 }
 
@@ -149,7 +154,15 @@ function paymentMethodSummary(source: any): {
 
 export async function ensureProviderPlan(
   admin: Admin,
-  plan: { id: string; slug: string; name: string; price: number | string; description?: string | null; paymongo_plan_id?: string | null; paymongo_test_plan_id?: string | null },
+  plan: {
+    id: string;
+    slug: string;
+    name: string;
+    price: number | string;
+    description?: string | null;
+    paymongo_plan_id?: string | null;
+    paymongo_test_plan_id?: string | null;
+  },
   mode: PayMongoMode,
 ): Promise<string> {
   const col = providerPlanColumn(mode);
@@ -243,7 +256,11 @@ export async function ensureCustomer(
 
   // 2. Create one (PayMongo rejects duplicate emails, so fall back to lookup).
   const email = (input.business.email || input.fallbackEmail || "").trim().toLowerCase();
-  if (!email) throw new BillingError("missing_email", "Add a business email under Settings before subscribing.");
+  if (!email)
+    throw new BillingError(
+      "missing_email",
+      "Add a business email under Settings before subscribing.",
+    );
   const phone = normalisePhone(input.business.phone);
   const name = (input.business.name || "Daraven workspace").trim();
   const client = paymongoClient(mode);
@@ -311,8 +328,15 @@ export type CheckoutRow = {
   updated_at: string;
 };
 
-export async function getCheckoutRow(admin: Admin, checkoutId: string): Promise<CheckoutRow | null> {
-  const { data } = await admin.from("billing_checkouts").select("*").eq("id", checkoutId).maybeSingle();
+export async function getCheckoutRow(
+  admin: Admin,
+  checkoutId: string,
+): Promise<CheckoutRow | null> {
+  const { data } = await admin
+    .from("billing_checkouts")
+    .select("*")
+    .eq("id", checkoutId)
+    .maybeSingle();
   return (data as CheckoutRow) ?? null;
 }
 
@@ -353,8 +377,7 @@ export async function createCheckout(
     paymentMethodType?: "card" | "paymaya" | null;
   },
 ): Promise<
-  | { ok: true; checkoutId: string; mode: PayMongoMode }
-  | { ok: false; code: string; reason: string }
+  { ok: true; checkoutId: string; mode: PayMongoMode } | { ok: false; code: string; reason: string }
 > {
   const cfg = readConfig();
   if (!cfg.configured)
@@ -367,7 +390,8 @@ export async function createCheckout(
   const mode = cfg.mode;
 
   const plan = await planBySlug(admin, input.planSlug);
-  if (!plan || plan.status !== "active") return { ok: false, code: "plan_not_found", reason: "That plan is not available." };
+  if (!plan || plan.status !== "active")
+    return { ok: false, code: "plan_not_found", reason: "That plan is not available." };
   if (Number(plan.price) <= 0)
     return { ok: false, code: "free_plan", reason: "The Free plan does not need a checkout." };
 
@@ -390,12 +414,17 @@ export async function createCheckout(
     ["active", "past_due", "unpaid", "trialing"].includes(sub.status) &&
     !sub.cancel_at_period_end;
   if (providerLinked && sub.plan_id === plan.id)
-    return { ok: false, code: "already_subscribed", reason: `This workspace is already on ${plan.name}.` };
+    return {
+      ok: false,
+      code: "already_subscribed",
+      reason: `This workspace is already on ${plan.name}.`,
+    };
   if (providerLinked)
     return {
       ok: false,
       code: "use_change_plan",
-      reason: "This workspace already has an active subscription. Change the plan from Billing instead.",
+      reason:
+        "This workspace already has an active subscription. Change the plan from Billing instead.",
     };
 
   // Promo: validate now, redeem at activation (a failed checkout must not burn a code).
@@ -414,7 +443,9 @@ export async function createCheckout(
       return {
         ok: false,
         code: `promo_${check.error}`,
-        reason: (PROMO_ERROR_MESSAGE as Record<string, string>)[check.error] ?? "This promo code cannot be used.",
+        reason:
+          (PROMO_ERROR_MESSAGE as Record<string, string>)[check.error] ??
+          "This promo code cannot be used.",
       };
     promoCode = check.promo.code;
     promoSnapshot = {
@@ -445,7 +476,10 @@ export async function createCheckout(
     throw err;
   }
 
-  await admin.rpc("expire_subscriptions").then(() => undefined, () => undefined);
+  await admin.rpc("expire_subscriptions").then(
+    () => undefined,
+    () => undefined,
+  );
   await closeOpenCheckouts(admin, input.businessId, { status: "superseded" });
 
   const { data: row, error } = await admin
@@ -512,14 +546,17 @@ export async function activateFromProvider(
   const mappedPlan = input.planId
     ? null
     : await planByProviderId(admin, typeof providerPlanId === "string" ? providerPlanId : null);
-  const planId = input.planId ?? input.checkout?.plan_id ?? mappedPlan?.id ?? current?.plan_id ?? null;
-  if (!planId) throw new BillingError("plan_unresolved", "Could not resolve the plan for this subscription.");
+  const planId =
+    input.planId ?? input.checkout?.plan_id ?? mappedPlan?.id ?? current?.plan_id ?? null;
+  if (!planId)
+    throw new BillingError("plan_unresolved", "Could not resolve the plan for this subscription.");
 
   const period = periodFromSubscription(attrs);
   const start = period.start ?? nowIso();
   const end = period.end ?? addMonths(start, 1);
   const invoiceId = invoiceIdFromSubscription(attrs);
-  const piId = paymentIntentIdFromSubscription(attrs) ?? input.checkout?.paymongo_payment_intent_id ?? null;
+  const piId =
+    paymentIntentIdFromSubscription(attrs) ?? input.checkout?.paymongo_payment_intent_id ?? null;
   const customerId =
     input.customerId ??
     (typeof attrs["customer"] === "object" ? attrs["customer"]?.id : attrs["customer_id"]) ??
@@ -531,7 +568,11 @@ export async function activateFromProvider(
   // business is never billed twice.
   const previousProviderId: string | null = current?.paymongo_subscription_id ?? null;
   let replaced: string | null = null;
-  if (previousProviderId && previousProviderId !== input.providerSubscriptionId && modeOf(current) === mode) {
+  if (
+    previousProviderId &&
+    previousProviderId !== input.providerSubscriptionId &&
+    modeOf(current) === mode
+  ) {
     try {
       await paymongoClient(mode).cancelSubscription(previousProviderId);
       replaced = previousProviderId;
@@ -577,7 +618,8 @@ export async function activateFromProvider(
   if (error) throw error;
 
   const alreadyActive =
-    current?.status === "active" && current?.paymongo_subscription_id === input.providerSubscriptionId;
+    current?.status === "active" &&
+    current?.paymongo_subscription_id === input.providerSubscriptionId;
 
   // Checkout bookkeeping + promo redemption happen exactly once.
   const checkout =
@@ -601,7 +643,10 @@ export async function activateFromProvider(
       paymongo_invoice_id: invoiceId ?? checkout.paymongo_invoice_id,
       paymongo_payment_intent_id: piId ?? checkout.paymongo_payment_intent_id,
     });
-    await closeOpenCheckouts(admin, input.businessId, { exceptId: checkout.id, status: "superseded" });
+    await closeOpenCheckouts(admin, input.businessId, {
+      exceptId: checkout.id,
+      status: "superseded",
+    });
 
     if (checkout.promo_snapshot?.["code"]) {
       const { validatePromoCode, redeemPromoCode } = await import("./affiliate.server");
@@ -693,7 +738,11 @@ export async function recordInvoice(
     business_id: input.sub.business_id,
     subscription_id: input.sub.id,
     external_invoice_id: input.invoiceId,
-    invoice_number: (a["invoice_number"] as string) ?? (a["number"] as string) ?? existing?.invoice_number ?? null,
+    invoice_number:
+      (a["invoice_number"] as string) ??
+      (a["number"] as string) ??
+      existing?.invoice_number ??
+      null,
     amount,
     currency: (a["currency"] as string) ?? "PHP",
     status: finalStatus,
@@ -701,7 +750,8 @@ export async function recordInvoice(
     paid_at: finalStatus === "paid" ? (toIso(a["paid_at"]) ?? existing?.paid_at ?? nowIso()) : null,
     payment_intent_id: piId,
     description: (a["description"] as string) ?? null,
-    attempt_count: typeof a["attempt_count"] === "number" ? a["attempt_count"] : existing?.attempt_count ?? 0,
+    attempt_count:
+      typeof a["attempt_count"] === "number" ? a["attempt_count"] : (existing?.attempt_count ?? 0),
     next_retry_at: toIso(a["next_payment_attempt"] ?? a["next_retry_at"]) ?? null,
   };
   const { data, error } = await admin
@@ -764,7 +814,12 @@ export async function applyInvoicePaid(
   },
 ) {
   const { sub, attrs } = input;
-  const invoice = await recordInvoice(admin, { sub, invoiceId: input.invoiceId, attrs, statusOverride: "paid" });
+  const invoice = await recordInvoice(admin, {
+    sub,
+    invoiceId: input.invoiceId,
+    attrs,
+    statusOverride: "paid",
+  });
 
   const start = toIso(attrs["billing_cycle_start"] ?? attrs["period_start"]);
   const end = toIso(attrs["billing_cycle_end"] ?? attrs["period_end"]);
@@ -799,7 +854,10 @@ export async function applyInvoicePaid(
     externalReference: `invoice:${input.invoiceId}`,
     invoiceId: invoice.id,
     cycleKey: cycleKeyFor(
-      { id: sub.id, current_period_start: (patch["current_period_start"] as string) ?? sub.current_period_start },
+      {
+        id: sub.id,
+        current_period_start: (patch["current_period_start"] as string) ?? sub.current_period_start,
+      },
       attrs,
       input.invoiceId,
     ),
@@ -839,9 +897,15 @@ export async function applyPaymentFailure(
       .maybeSingle();
     alreadyCounted = existing?.status === "payment_failed";
     if (existing?.status === "paid") return sub; // late failure after success: ignore
-    await recordInvoice(admin, { sub, invoiceId: input.invoiceId, attrs: input.attrs, statusOverride: "payment_failed" });
+    await recordInvoice(admin, {
+      sub,
+      invoiceId: input.invoiceId,
+      attrs: input.attrs,
+      statusOverride: "payment_failed",
+    });
   }
-  if (alreadyCounted || !["active", "past_due", "unpaid", "trialing"].includes(sub.status)) return sub;
+  if (alreadyCounted || !["active", "past_due", "unpaid", "trialing"].includes(sub.status))
+    return sub;
 
   const next = nextStatusAfterFailure(sub.status);
   const { data: updated } = await admin
@@ -857,7 +921,12 @@ export async function applyPaymentFailure(
     businessId: sub.business_id,
     type: "payment.failed",
     source: input.source ?? "system",
-    payload: { invoice_id: input.invoiceId, from: sub.status, to: next, reason: input.reason ?? null },
+    payload: {
+      invoice_id: input.invoiceId,
+      from: sub.status,
+      to: next,
+      reason: input.reason ?? null,
+    },
     livemode: input.mode === "live",
   });
   return updated ?? sub;
@@ -874,10 +943,14 @@ export async function syncSubscriptionFromProvider(
   const mode = modeOf(sub) ?? readConfig().mode;
   if (!sub.paymongo_subscription_id) return sub;
   const attrs =
-    opts.attrs ?? (await paymongoClient(mode).getSubscription(sub.paymongo_subscription_id)).data.attributes;
+    opts.attrs ??
+    (await paymongoClient(mode).getSubscription(sub.paymongo_subscription_id)).data.attributes;
 
   const providerStatus = String(attrs["status"] ?? "");
-  const mapped = resolveSubscriptionStatus("subscription.updated", attrs as Record<string, unknown>);
+  const mapped = resolveSubscriptionStatus(
+    "subscription.updated",
+    attrs as Record<string, unknown>,
+  );
   const period = periodFromSubscription(attrs);
   const patch: Record<string, unknown> = { last_synced_at: nowIso() };
   if (period.start) patch["current_period_start"] = period.start;
@@ -905,8 +978,10 @@ export async function syncSubscriptionFromProvider(
   }
 
   if (mapped === "cancelled" || providerStatus === "cancelled" || providerStatus === "canceled") {
-    const endsLater = sub.current_period_end && new Date(sub.current_period_end).getTime() > Date.now();
-    patch["cancelled_at"] = sub.cancelled_at ?? toIso(attrs["canceled_at"] ?? attrs["cancelled_at"]) ?? nowIso();
+    const endsLater =
+      sub.current_period_end && new Date(sub.current_period_end).getTime() > Date.now();
+    patch["cancelled_at"] =
+      sub.cancelled_at ?? toIso(attrs["canceled_at"] ?? attrs["cancelled_at"]) ?? nowIso();
     if (endsLater && ["active", "past_due"].includes(sub.status)) {
       patch["cancel_at_period_end"] = true; // keep access until the paid period ends
     } else {
@@ -939,18 +1014,31 @@ export async function syncSubscriptionFromProvider(
         .eq("external_invoice_id", invoiceId)
         .maybeSingle();
       if (existing?.status !== "paid")
-        await applyInvoicePaid(admin, { sub: updated, invoiceId, attrs: invAttrs, mode, source: "system" });
+        await applyInvoicePaid(admin, {
+          sub: updated,
+          invoiceId,
+          attrs: invAttrs,
+          mode,
+          source: "system",
+        });
     } else {
-      await recordInvoice(admin, { sub: updated, invoiceId, attrs: invAttrs, statusOverride: null });
+      await recordInvoice(admin, {
+        sub: updated,
+        invoiceId,
+        attrs: invAttrs,
+        statusOverride: null,
+      });
     }
   }
 
   if (patch["status"] && patch["status"] !== sub.status) {
     const { setReferralStatus } = await import("./affiliate.server");
-    if (patch["status"] === "cancelled") await setReferralStatus(admin, sub.business_id, "cancelled");
+    if (patch["status"] === "cancelled")
+      await setReferralStatus(admin, sub.business_id, "cancelled");
     else if (patch["status"] === "past_due" || patch["status"] === "unpaid")
       await setReferralStatus(admin, sub.business_id, "past_due");
-    else if (patch["status"] === "active") await setReferralStatus(admin, sub.business_id, "active");
+    else if (patch["status"] === "active")
+      await setReferralStatus(admin, sub.business_id, "active");
     await logEvent(admin, {
       subscriptionId: sub.id,
       businessId: sub.business_id,
@@ -974,7 +1062,13 @@ export type AttemptResult =
 async function inspectIntent(
   mode: PayMongoMode,
   piId: string,
-): Promise<{ attrs: PayMongoPaymentIntentAttrs; status: CheckoutStatus; reason: string | null; code: string | null; redirectUrl: string | null }> {
+): Promise<{
+  attrs: PayMongoPaymentIntentAttrs;
+  status: CheckoutStatus;
+  reason: string | null;
+  code: string | null;
+  redirectUrl: string | null;
+}> {
   const pi = await paymongoClient(mode).getPaymentIntent(piId);
   const attrs = pi.data.attributes;
   const err = attrs.last_payment_error as any;
@@ -984,7 +1078,10 @@ async function inspectIntent(
     attrs,
     status,
     code: err?.failed_code ?? err?.code ?? null,
-    reason: status === "failed" ? describeFailure(err?.failed_code ?? err?.code, err?.failed_message ?? err?.detail) : null,
+    reason:
+      status === "failed"
+        ? describeFailure(err?.failed_code ?? err?.code, err?.failed_message ?? err?.detail)
+        : null,
     redirectUrl,
   };
 }
@@ -1002,7 +1099,9 @@ async function settleCheckout(
     let pm: { type?: string | null; brand?: string | null; last4?: string | null } | null = null;
     if (checkout.paymongo_payment_method_id) {
       try {
-        const method = await paymongoClient(mode).getPaymentMethod(checkout.paymongo_payment_method_id);
+        const method = await paymongoClient(mode).getPaymentMethod(
+          checkout.paymongo_payment_method_id,
+        );
         const s = paymentMethodSummary(method.data.attributes);
         pm = { type: s.type ?? checkout.payment_method_type, brand: s.brand, last4: s.last4 };
       } catch {
@@ -1028,8 +1127,13 @@ async function settleCheckout(
     const intent = await inspectIntent(mode, piId);
     if (intent.status === "succeeded" && providerSubId) {
       const refreshed = (await paymongoClient(mode).getSubscription(providerSubId)).data.attributes;
-      if (String(refreshed["status"]) === "active") return settleCheckout(admin, checkout, mode, refreshed, null);
-      const c = await updateCheckout(admin, checkout.id, { status: "processing", paymongo_payment_intent_id: piId, next_action_url: null });
+      if (String(refreshed["status"]) === "active")
+        return settleCheckout(admin, checkout, mode, refreshed, null);
+      const c = await updateCheckout(admin, checkout.id, {
+        status: "processing",
+        paymongo_payment_intent_id: piId,
+        next_action_url: null,
+      });
       return { status: "processing", checkout: c };
     }
     if (intent.status === "awaiting_action" && intent.redirectUrl) {
@@ -1055,9 +1159,17 @@ async function settleCheckout(
         payload: { checkout_id: checkout.id, code: intent.code, reason: intent.reason },
         livemode: mode === "live",
       });
-      return { status: "failed", checkout: c, reason: intent.reason ?? describeFailure(null), code: intent.code };
+      return {
+        status: "failed",
+        checkout: c,
+        reason: intent.reason ?? describeFailure(null),
+        code: intent.code,
+      };
     }
-    const c = await updateCheckout(admin, checkout.id, { status: "processing", paymongo_payment_intent_id: piId });
+    const c = await updateCheckout(admin, checkout.id, {
+      status: "processing",
+      paymongo_payment_intent_id: piId,
+    });
     return { status: "processing", checkout: c };
   }
 
@@ -1084,10 +1196,18 @@ export async function attachPaymentMethodToCheckout(
   if (!checkout) return { status: "invalid", reason: "Checkout not found.", checkout: null };
   if (checkout.status === "succeeded") return { status: "succeeded", checkout };
   if (!["pending", "failed", "awaiting_action", "processing"].includes(checkout.status))
-    return { status: "invalid", reason: "This checkout is no longer open. Start a new one.", checkout };
+    return {
+      status: "invalid",
+      reason: "This checkout is no longer open. Start a new one.",
+      checkout,
+    };
   if (new Date(checkout.expires_at).getTime() < Date.now()) {
     const c = await updateCheckout(admin, checkout.id, { status: "expired" });
-    return { status: "invalid", reason: "This checkout has expired. Start a new one.", checkout: c };
+    return {
+      status: "invalid",
+      reason: "This checkout has expired. Start a new one.",
+      checkout: c,
+    };
   }
 
   const mode: PayMongoMode = checkout.test_mode ? "test" : "live";
@@ -1136,8 +1256,10 @@ export async function attachPaymentMethodToCheckout(
       }
     } else {
       // Retry: pay the latest open invoice of the incomplete subscription.
-      const current = (await client.getSubscription(working.paymongo_subscription_id)).data.attributes as Record<string, any>;
-      if (String(current["status"]) === "active") return settleCheckout(admin, working, mode, current, null);
+      const current = (await client.getSubscription(working.paymongo_subscription_id)).data
+        .attributes as Record<string, any>;
+      if (String(current["status"]) === "active")
+        return settleCheckout(admin, working, mode, current, null);
       const invoiceId = invoiceIdFromSubscription(current) ?? working.paymongo_invoice_id;
       let paidAttrs: PayMongoInvoiceAttrs | null = null;
       if (invoiceId) {
@@ -1150,17 +1272,27 @@ export async function attachPaymentMethodToCheckout(
       } else {
         const currentPi = paymentIntentIdFromSubscription(current);
         if (!currentPi) throw new BillingError("no_invoice", "No open invoice to retry.");
-        await client.attachPaymentIntent(currentPi, { paymentMethodId: input.paymentMethodId, returnUrl: input.returnUrl });
+        await client.attachPaymentIntent(currentPi, {
+          paymentMethodId: input.paymentMethodId,
+          returnUrl: input.returnUrl,
+        });
         piId = currentPi;
       }
-      subAttrs = (await client.getSubscription(working.paymongo_subscription_id)).data.attributes as Record<string, any>;
+      subAttrs = (await client.getSubscription(working.paymongo_subscription_id)).data
+        .attributes as Record<string, any>;
       working = await updateCheckout(admin, working.id, {
         paymongo_invoice_id: invoiceId ?? working.paymongo_invoice_id,
         paymongo_payment_intent_id: piId ?? working.paymongo_payment_intent_id,
       });
     }
 
-    return await settleCheckout(admin, working, mode, subAttrs, piId ?? working.paymongo_payment_intent_id);
+    return await settleCheckout(
+      admin,
+      working,
+      mode,
+      subAttrs,
+      piId ?? working.paymongo_payment_intent_id,
+    );
   } catch (err) {
     const reason =
       err instanceof PayMongoError
@@ -1168,7 +1300,12 @@ export async function attachPaymentMethodToCheckout(
         : err instanceof BillingError
           ? err.message
           : "The payment could not be completed. Please try again.";
-    const code = err instanceof PayMongoError ? (err.code ?? `http_${err.status}`) : err instanceof BillingError ? err.code : "unexpected";
+    const code =
+      err instanceof PayMongoError
+        ? (err.code ?? `http_${err.status}`)
+        : err instanceof BillingError
+          ? err.code
+          : "unexpected";
     const c = await updateCheckout(admin, working.id, {
       status: "failed",
       failure_code: code,
@@ -1190,7 +1327,10 @@ export async function attachPaymentMethodToCheckout(
 }
 
 /** Re-check a checkout against the provider (after a 3DS return or while polling). */
-export async function verifyCheckout(admin: Admin, checkoutId: string): Promise<AttemptResult | { status: CheckoutStatus; checkout: CheckoutRow }> {
+export async function verifyCheckout(
+  admin: Admin,
+  checkoutId: string,
+): Promise<AttemptResult | { status: CheckoutStatus; checkout: CheckoutRow }> {
   const checkout = await getCheckoutRow(admin, checkoutId);
   if (!checkout) throw new BillingError("not_found", "Checkout not found.");
   if (["succeeded", "expired", "cancelled", "superseded"].includes(checkout.status))
@@ -1203,8 +1343,8 @@ export async function verifyCheckout(admin: Admin, checkoutId: string): Promise<
     return { status: checkout.status, checkout };
   }
   const mode: PayMongoMode = checkout.test_mode ? "test" : "live";
-  const subAttrs = (await paymongoClient(mode).getSubscription(checkout.paymongo_subscription_id)).data
-    .attributes as Record<string, any>;
+  const subAttrs = (await paymongoClient(mode).getSubscription(checkout.paymongo_subscription_id))
+    .data.attributes as Record<string, any>;
   const piId = paymentIntentIdFromSubscription(subAttrs) ?? checkout.paymongo_payment_intent_id;
   const result = await settleCheckout(admin, checkout, mode, subAttrs, piId);
   return result;
@@ -1213,10 +1353,13 @@ export async function verifyCheckout(admin: Admin, checkoutId: string): Promise<
 export async function abandonCheckout(admin: Admin, checkoutId: string) {
   const checkout = await getCheckoutRow(admin, checkoutId);
   if (!checkout) return null;
-  if (!OPEN_CHECKOUT_STATUSES.includes(checkout.status) && checkout.status !== "failed") return checkout;
+  if (!OPEN_CHECKOUT_STATUSES.includes(checkout.status) && checkout.status !== "failed")
+    return checkout;
   if (checkout.paymongo_subscription_id) {
     const mode: PayMongoMode = checkout.test_mode ? "test" : "live";
-    await paymongoClient(mode).cancelSubscription(checkout.paymongo_subscription_id).catch(() => undefined);
+    await paymongoClient(mode)
+      .cancelSubscription(checkout.paymongo_subscription_id)
+      .catch(() => undefined);
   }
   return updateCheckout(admin, checkout.id, { status: "cancelled" });
 }
@@ -1225,9 +1368,18 @@ export async function abandonCheckout(admin: Admin, checkoutId: string) {
 
 export async function cancelSubscriptionForBusiness(
   admin: Admin,
-  input: { businessId: string; userId: string | null; immediately?: boolean; reason?: string | null },
+  input: {
+    businessId: string;
+    userId: string | null;
+    immediately?: boolean;
+    reason?: string | null;
+  },
 ) {
-  const { data: sub } = await admin.from("subscriptions").select("*").eq("business_id", input.businessId).maybeSingle();
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", input.businessId)
+    .maybeSingle();
   if (!sub) return { ok: false as const, reason: "No subscription found." };
   const free = await planBySlug(admin, "free");
   if (!free) return { ok: false as const, reason: "Free plan missing." };
@@ -1248,7 +1400,9 @@ export async function cancelSubscriptionForBusiness(
 
   const periodEnd = sub.current_period_end ? new Date(sub.current_period_end).getTime() : 0;
   const keepsAccess =
-    !input.immediately && ["active", "past_due", "trialing"].includes(sub.status) && periodEnd > Date.now();
+    !input.immediately &&
+    ["active", "past_due", "trialing"].includes(sub.status) &&
+    periodEnd > Date.now();
 
   const patch: Record<string, unknown> = {
     cancelled_at: nowIso(),
@@ -1262,7 +1416,12 @@ export async function cancelSubscriptionForBusiness(
     patch["cancel_at_period_end"] = false;
     patch["ended_at"] = nowIso();
   }
-  const { data: updated } = await admin.from("subscriptions").update(patch).eq("id", sub.id).select("*").single();
+  const { data: updated } = await admin
+    .from("subscriptions")
+    .update(patch)
+    .eq("id", sub.id)
+    .select("*")
+    .single();
 
   const { setReferralStatus } = await import("./affiliate.server");
   await setReferralStatus(admin, input.businessId, "cancelled");
@@ -1279,19 +1438,31 @@ export async function cancelSubscriptionForBusiness(
     },
     livemode: mode === "live",
   });
-  return { ok: true as const, accessUntil: keepsAccess ? (sub.current_period_end as string) : null, subscription: updated };
+  return {
+    ok: true as const,
+    accessUntil: keepsAccess ? (sub.current_period_end as string) : null,
+    subscription: updated,
+  };
 }
 
 /** Undo a scheduled cancellation while the paid period is still running (trials only; provider cancels are final). */
-export async function resumeSubscriptionForBusiness(admin: Admin, input: { businessId: string; userId: string | null }) {
-  const { data: sub } = await admin.from("subscriptions").select("*").eq("business_id", input.businessId).maybeSingle();
+export async function resumeSubscriptionForBusiness(
+  admin: Admin,
+  input: { businessId: string; userId: string | null },
+) {
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", input.businessId)
+    .maybeSingle();
   if (!sub) return { ok: false as const, reason: "No subscription found." };
   if (!sub.cancel_at_period_end) return { ok: false as const, reason: "Nothing to resume." };
   if (sub.paymongo_subscription_id)
     return {
       ok: false as const,
       code: "resubscribe",
-      reason: "The payment provider has already closed this subscription. Start a new one to continue after the current period.",
+      reason:
+        "The payment provider has already closed this subscription. Start a new one to continue after the current period.",
     };
   const { data: updated } = await admin
     .from("subscriptions")
@@ -1299,7 +1470,13 @@ export async function resumeSubscriptionForBusiness(admin: Admin, input: { busin
     .eq("id", sub.id)
     .select("*")
     .single();
-  await logEvent(admin, { subscriptionId: sub.id, businessId: input.businessId, type: "subscription.resumed", source: "user", payload: { by: input.userId } });
+  await logEvent(admin, {
+    subscriptionId: sub.id,
+    businessId: input.businessId,
+    type: "subscription.resumed",
+    source: "user",
+    payload: { by: input.userId },
+  });
   return { ok: true as const, subscription: updated };
 }
 
@@ -1307,12 +1484,30 @@ export async function changePlanForBusiness(
   admin: Admin,
   input: { businessId: string; planSlug: string; userId: string | null },
 ) {
-  const { data: sub } = await admin.from("subscriptions").select("*").eq("business_id", input.businessId).maybeSingle();
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", input.businessId)
+    .maybeSingle();
   const target = await planBySlug(admin, input.planSlug);
-  if (!sub || !target) return { ok: false as const, code: "not_found", reason: "Subscription or plan not found." };
-  if (Number(target.price) <= 0) return { ok: false as const, code: "use_cancel", reason: "Cancel the subscription to move to Free." };
-  if (!sub.paymongo_subscription_id || !["active", "past_due"].includes(sub.status) || sub.cancel_at_period_end)
-    return { ok: false as const, code: "use_checkout", reason: "No active paid subscription to change. Start a checkout instead." };
+  if (!sub || !target)
+    return { ok: false as const, code: "not_found", reason: "Subscription or plan not found." };
+  if (Number(target.price) <= 0)
+    return {
+      ok: false as const,
+      code: "use_cancel",
+      reason: "Cancel the subscription to move to Free.",
+    };
+  if (
+    !sub.paymongo_subscription_id ||
+    !["active", "past_due"].includes(sub.status) ||
+    sub.cancel_at_period_end
+  )
+    return {
+      ok: false as const,
+      code: "use_checkout",
+      reason: "No active paid subscription to change. Start a checkout instead.",
+    };
   if (sub.plan_id === target.id && !sub.pending_plan_id)
     return { ok: false as const, code: "same_plan", reason: `Already on ${target.name}.` };
 
@@ -1321,10 +1516,16 @@ export async function changePlanForBusiness(
   const current = await planById(admin, sub.plan_id);
   const upgrade = !current || Number(target.price) >= Number(current.price);
 
-  const res = await paymongoClient(mode).changeSubscriptionPlan(sub.paymongo_subscription_id, providerPlanId);
+  const res = await paymongoClient(mode).changeSubscriptionPlan(
+    sub.paymongo_subscription_id,
+    providerPlanId,
+  );
   const attrs = res.data.attributes as Record<string, any>;
 
-  const patch: Record<string, unknown> = { paymongo_plan_id: providerPlanId, last_synced_at: nowIso() };
+  const patch: Record<string, unknown> = {
+    paymongo_plan_id: providerPlanId,
+    last_synced_at: nowIso(),
+  };
   if (upgrade) {
     patch["plan_id"] = target.id;
     patch["pending_plan_id"] = null;
@@ -1334,14 +1535,24 @@ export async function changePlanForBusiness(
   const period = periodFromSubscription(attrs);
   if (period.start) patch["current_period_start"] = period.start;
   if (period.end) patch["current_period_end"] = period.end;
-  const { data: updated } = await admin.from("subscriptions").update(patch).eq("id", sub.id).select("*").single();
+  const { data: updated } = await admin
+    .from("subscriptions")
+    .update(patch)
+    .eq("id", sub.id)
+    .select("*")
+    .single();
 
   await logEvent(admin, {
     subscriptionId: sub.id,
     businessId: input.businessId,
     type: upgrade ? "subscription.plan_changed" : "subscription.plan_change_scheduled",
     source: "user",
-    payload: { by: input.userId, from: current?.slug ?? null, to: target.slug, effective: upgrade ? "now" : "next_cycle" },
+    payload: {
+      by: input.userId,
+      from: current?.slug ?? null,
+      to: target.slug,
+      effective: upgrade ? "now" : "next_cycle",
+    },
     livemode: mode === "live",
   });
   return {
@@ -1354,19 +1565,38 @@ export async function changePlanForBusiness(
 
 export async function updatePaymentMethodForBusiness(
   admin: Admin,
-  input: { businessId: string; paymentMethodId: string; paymentMethodType: "card" | "paymaya"; returnUrl: string },
+  input: {
+    businessId: string;
+    paymentMethodId: string;
+    paymentMethodType: "card" | "paymaya";
+    returnUrl: string;
+  },
 ) {
-  const { data: sub } = await admin.from("subscriptions").select("*").eq("business_id", input.businessId).maybeSingle();
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", input.businessId)
+    .maybeSingle();
   if (!sub?.paymongo_subscription_id || ["cancelled", "incomplete_expired"].includes(sub.status))
     return { ok: false as const, reason: "There is no active subscription to update." };
   const mode = modeOf(sub) ?? readConfig().mode;
   const client = paymongoClient(mode);
-  const res = await client.changeSubscriptionPaymentMethod(sub.paymongo_subscription_id, input.paymentMethodId, input.returnUrl);
+  const res = await client.changeSubscriptionPaymentMethod(
+    sub.paymongo_subscription_id,
+    input.paymentMethodId,
+    input.returnUrl,
+  );
   const attrs = res.data.attributes as Record<string, any>;
   const redirectUrl: string | null =
-    attrs["next_action"]?.redirect?.url ?? attrs["payment_method_verification"]?.redirect?.url ?? null;
+    attrs["next_action"]?.redirect?.url ??
+    attrs["payment_method_verification"]?.redirect?.url ??
+    null;
 
-  let pm: { type: string | null; brand: string | null; last4: string | null } = { type: input.paymentMethodType, brand: null, last4: null };
+  let pm: { type: string | null; brand: string | null; last4: string | null } = {
+    type: input.paymentMethodType,
+    brand: null,
+    last4: null,
+  };
   try {
     const method = await client.getPaymentMethod(input.paymentMethodId);
     const s = paymentMethodSummary(method.data.attributes);
@@ -1376,7 +1606,12 @@ export async function updatePaymentMethodForBusiness(
   }
   await admin
     .from("subscriptions")
-    .update({ payment_method_type: pm.type, payment_method_brand: pm.brand, payment_method_last4: pm.last4, last_synced_at: nowIso() })
+    .update({
+      payment_method_type: pm.type,
+      payment_method_brand: pm.brand,
+      payment_method_last4: pm.last4,
+      last_synced_at: nowIso(),
+    })
     .eq("id", sub.id);
   await logEvent(admin, {
     subscriptionId: sub.id,
@@ -1390,9 +1625,17 @@ export async function updatePaymentMethodForBusiness(
 }
 
 /** Retry collection of the latest open/failed invoice (after a payment method update). */
-export async function retryOpenInvoiceForBusiness(admin: Admin, input: { businessId: string; returnUrl: string }) {
-  const { data: sub } = await admin.from("subscriptions").select("*").eq("business_id", input.businessId).maybeSingle();
-  if (!sub?.paymongo_subscription_id) return { ok: false as const, reason: "No provider subscription." };
+export async function retryOpenInvoiceForBusiness(
+  admin: Admin,
+  input: { businessId: string; returnUrl: string },
+) {
+  const { data: sub } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", input.businessId)
+    .maybeSingle();
+  if (!sub?.paymongo_subscription_id)
+    return { ok: false as const, reason: "No provider subscription." };
   const mode = modeOf(sub) ?? readConfig().mode;
   const client = paymongoClient(mode);
 
@@ -1404,8 +1647,10 @@ export async function retryOpenInvoiceForBusiness(admin: Admin, input: { busines
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const invoiceId: string | null = openInvoice?.external_invoice_id ?? sub.latest_invoice_id ?? null;
-  if (!invoiceId) return { ok: false as const, reason: "There is no outstanding invoice to retry." };
+  const invoiceId: string | null =
+    openInvoice?.external_invoice_id ?? sub.latest_invoice_id ?? null;
+  if (!invoiceId)
+    return { ok: false as const, reason: "There is no outstanding invoice to retry." };
 
   try {
     const res = await client.payInvoice(invoiceId, { returnUrl: input.returnUrl });
@@ -1418,14 +1663,24 @@ export async function retryOpenInvoiceForBusiness(admin: Admin, input: { busines
     if (piId) {
       const intent = await inspectIntent(mode, piId);
       if (intent.status === "awaiting_action" && intent.redirectUrl)
-        return { ok: true as const, status: "awaiting_action" as const, redirectUrl: intent.redirectUrl };
-      if (intent.status === "failed") return { ok: false as const, reason: intent.reason ?? describeFailure(null) };
+        return {
+          ok: true as const,
+          status: "awaiting_action" as const,
+          redirectUrl: intent.redirectUrl,
+        };
+      if (intent.status === "failed")
+        return { ok: false as const, reason: intent.reason ?? describeFailure(null) };
     }
     // Settle from the provider's subscription view.
     const synced = await syncSubscriptionFromProvider(admin, sub, { source: "user" });
-    return { ok: true as const, status: synced.status === "active" ? ("paid" as const) : ("processing" as const), redirectUrl: null };
+    return {
+      ok: true as const,
+      status: synced.status === "active" ? ("paid" as const) : ("processing" as const),
+      redirectUrl: null,
+    };
   } catch (err) {
-    if (err instanceof PayMongoError) return { ok: false as const, reason: describeFailure(err.code, err.message) };
+    if (err instanceof PayMongoError)
+      return { ok: false as const, reason: describeFailure(err.code, err.message) };
     throw err;
   }
 }
@@ -1449,8 +1704,12 @@ export type WebhookOutcome = {
 };
 
 /** Process one verified webhook event. Idempotent per PayMongo event id. */
-export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Promise<WebhookOutcome> {
-  const mode: PayMongoMode = ev.livemode === null ? ev.signatureMode : ev.livemode ? "live" : "test";
+export async function processWebhookEvent(
+  admin: Admin,
+  ev: WebhookEnvelope,
+): Promise<WebhookOutcome> {
+  const mode: PayMongoMode =
+    ev.livemode === null ? ev.signatureMode : ev.livemode ? "live" : "test";
   const attrs = (ev.resource?.attributes ?? {}) as Record<string, any>;
 
   // Idempotency: an event that was fully processed is acknowledged immediately;
@@ -1474,20 +1733,67 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
   let sub: Record<string, any> | null = null;
   let checkout: CheckoutRow | null = null;
   if (providerSubId) {
-    sub = (await admin.from("subscriptions").select("*").eq("paymongo_subscription_id", providerSubId).maybeSingle()).data ?? null;
-    checkout = (await admin.from("billing_checkouts").select("*").eq("paymongo_subscription_id", providerSubId).maybeSingle()).data ?? null;
+    sub =
+      (
+        await admin
+          .from("subscriptions")
+          .select("*")
+          .eq("paymongo_subscription_id", providerSubId)
+          .maybeSingle()
+      ).data ?? null;
+    checkout =
+      (
+        await admin
+          .from("billing_checkouts")
+          .select("*")
+          .eq("paymongo_subscription_id", providerSubId)
+          .maybeSingle()
+      ).data ?? null;
   }
   if (!sub && !checkout && piId) {
-    checkout = (await admin.from("billing_checkouts").select("*").eq("paymongo_payment_intent_id", piId).maybeSingle()).data ?? null;
+    checkout =
+      (
+        await admin
+          .from("billing_checkouts")
+          .select("*")
+          .eq("paymongo_payment_intent_id", piId)
+          .maybeSingle()
+      ).data ?? null;
     if (!checkout)
-      sub = (await admin.from("subscriptions").select("*").eq("latest_payment_intent_id", piId).maybeSingle()).data ?? null;
+      sub =
+        (
+          await admin
+            .from("subscriptions")
+            .select("*")
+            .eq("latest_payment_intent_id", piId)
+            .maybeSingle()
+        ).data ?? null;
     if (!sub && !checkout) {
-      const { data: inv } = await admin.from("billing_invoices").select("subscription_id").eq("payment_intent_id", piId).maybeSingle();
-      if (inv?.subscription_id) sub = (await admin.from("subscriptions").select("*").eq("id", inv.subscription_id).maybeSingle()).data ?? null;
+      const { data: inv } = await admin
+        .from("billing_invoices")
+        .select("subscription_id")
+        .eq("payment_intent_id", piId)
+        .maybeSingle();
+      if (inv?.subscription_id)
+        sub =
+          (
+            await admin
+              .from("subscriptions")
+              .select("*")
+              .eq("id", inv.subscription_id)
+              .maybeSingle()
+          ).data ?? null;
     }
   }
   if (!sub && checkout) {
-    sub = (await admin.from("subscriptions").select("*").eq("business_id", checkout.business_id).maybeSingle()).data ?? null;
+    sub =
+      (
+        await admin
+          .from("subscriptions")
+          .select("*")
+          .eq("business_id", checkout.business_id)
+          .maybeSingle()
+      ).data ?? null;
   }
   const businessId: string | null = sub?.business_id ?? checkout?.business_id ?? null;
 
@@ -1503,7 +1809,15 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
     payment_intent_ref: piId,
   };
   if (eventRowId) {
-    await admin.from("subscription_events").update({ payload: eventPayload, error: null, subscription_id: sub?.id ?? null, business_id: businessId }).eq("id", eventRowId);
+    await admin
+      .from("subscription_events")
+      .update({
+        payload: eventPayload,
+        error: null,
+        subscription_id: sub?.id ?? null,
+        business_id: businessId,
+      })
+      .eq("id", eventRowId);
   } else {
     const { data: inserted, error: insErr } = await admin
       .from("subscription_events")
@@ -1526,7 +1840,11 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
   }
 
   const finish = async (action: string) => {
-    if (eventRowId) await admin.from("subscription_events").update({ processed_at: nowIso() }).eq("id", eventRowId);
+    if (eventRowId)
+      await admin
+        .from("subscription_events")
+        .update({ processed_at: nowIso() })
+        .eq("id", eventRowId);
     return { action, subscriptionId: sub?.id ?? null, businessId } satisfies WebhookOutcome;
   };
 
@@ -1557,8 +1875,14 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
 
       if (!sub) {
         // An incomplete/cancelled provider subscription that only a checkout knows about.
-        if (checkout && (status === "incomplete_expired" || status === "cancelled") && OPEN_CHECKOUT_STATUSES.includes(checkout.status)) {
-          await updateCheckout(admin, checkout.id, { status: status === "cancelled" ? "cancelled" : "expired" });
+        if (
+          checkout &&
+          (status === "incomplete_expired" || status === "cancelled") &&
+          OPEN_CHECKOUT_STATUSES.includes(checkout.status)
+        ) {
+          await updateCheckout(admin, checkout.id, {
+            status: status === "cancelled" ? "cancelled" : "expired",
+          });
           return finish("checkout_closed");
         }
         return finish("unmatched_subscription");
@@ -1574,7 +1898,8 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
       if (!invoiceId) return finish("ignored_no_invoice_ref");
       if (!sub) {
         if (checkout && ev.type === "subscription.invoice.paid" && providerSubId) {
-          const providerSub = (await paymongoClient(mode).getSubscription(providerSubId)).data.attributes as Record<string, any>;
+          const providerSub = (await paymongoClient(mode).getSubscription(providerSubId)).data
+            .attributes as Record<string, any>;
           await activateFromProvider(admin, {
             businessId: checkout.business_id,
             providerSubscriptionId: providerSubId,
@@ -1584,18 +1909,38 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
             planId: checkout.plan_id,
             source: "webhook",
           });
-          const fresh = (await admin.from("subscriptions").select("*").eq("business_id", checkout.business_id).maybeSingle()).data;
-          if (fresh) await applyInvoicePaid(admin, { sub: fresh, invoiceId, attrs, mode, source: "webhook" });
+          const fresh = (
+            await admin
+              .from("subscriptions")
+              .select("*")
+              .eq("business_id", checkout.business_id)
+              .maybeSingle()
+          ).data;
+          if (fresh)
+            await applyInvoicePaid(admin, {
+              sub: fresh,
+              invoiceId,
+              attrs,
+              mode,
+              source: "webhook",
+            });
           return finish("activated_from_invoice");
         }
         return finish("unmatched_invoice");
       }
-      const mapped = INVOICE_STATUS_MAP[ev.type] ?? PROVIDER_INVOICE_STATUS_MAP[String(attrs["status"] ?? "")] ?? null;
+      const mapped =
+        INVOICE_STATUS_MAP[ev.type] ??
+        PROVIDER_INVOICE_STATUS_MAP[String(attrs["status"] ?? "")] ??
+        null;
       if (mapped === "paid") {
-        if (["incomplete", "cancelled", "incomplete_expired"].includes(sub.status) || checkout?.status !== "succeeded" && checkout) {
+        if (
+          ["incomplete", "cancelled", "incomplete_expired"].includes(sub.status) ||
+          (checkout?.status !== "succeeded" && checkout)
+        ) {
           // First payment of a checkout-created subscription arriving via invoice.
           const providerSub = providerSubId
-            ? ((await paymongoClient(mode).getSubscription(providerSubId)).data.attributes as Record<string, any>)
+            ? ((await paymongoClient(mode).getSubscription(providerSubId)).data
+                .attributes as Record<string, any>)
             : null;
           if (providerSub && providerSubId)
             await activateFromProvider(admin, {
@@ -1607,7 +1952,9 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
               planId: checkout?.plan_id ?? null,
               source: "webhook",
             });
-          sub = (await admin.from("subscriptions").select("*").eq("id", sub.id).maybeSingle()).data ?? sub;
+          sub =
+            (await admin.from("subscriptions").select("*").eq("id", sub.id).maybeSingle()).data ??
+            sub;
         }
         await applyInvoicePaid(admin, { sub: sub!, invoiceId, attrs, mode, source: "webhook" });
         return finish("invoice_paid");
@@ -1619,7 +1966,12 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
           invoiceId,
           attrs,
           mode,
-          reason: err ? describeFailure(err.failed_code ?? err.code, err.failed_message ?? err.detail ?? (typeof err === "string" ? err : null)) : null,
+          reason: err
+            ? describeFailure(
+                err.failed_code ?? err.code,
+                err.failed_message ?? err.detail ?? (typeof err === "string" ? err : null),
+              )
+            : null,
           source: "webhook",
         });
         return finish("invoice_payment_failed");
@@ -1635,15 +1987,23 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
     }
 
     /* ---- payment.* ------------------------------------------------------- */
-    if (ev.type.startsWith("payment.refunded") || ev.type.startsWith("payment.reversed") || ev.type.startsWith("refund.")) {
+    if (
+      ev.type.startsWith("payment.refunded") ||
+      ev.type.startsWith("payment.reversed") ||
+      ev.type.startsWith("refund.")
+    ) {
       const paymentRef = (attrs["payment_id"] as string) ?? ev.resource?.id ?? null;
       const { reverseCommissionFor } = await import("./affiliate.server");
       if (paymentRef) {
         await reverseCommissionFor(admin, `payment:${paymentRef}`, "Payment refunded");
-        await admin.from("subscription_payments").update({ status: "refunded", refunded_amount: fromCentavos(attrs["amount"]) ?? 0 }).eq("paymongo_payment_id", paymentRef);
+        await admin
+          .from("subscription_payments")
+          .update({ status: "refunded", refunded_amount: fromCentavos(attrs["amount"]) ?? 0 })
+          .eq("paymongo_payment_id", paymentRef);
       }
       const invoiceRef = (attrs["invoice_id"] as string) ?? null;
-      if (invoiceRef) await reverseCommissionFor(admin, `invoice:${invoiceRef}`, "Payment refunded");
+      if (invoiceRef)
+        await reverseCommissionFor(admin, `invoice:${invoiceRef}`, "Payment refunded");
       return finish("refund_recorded");
     }
 
@@ -1651,7 +2011,9 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
       if (!ev.resource?.id) return finish("ignored_no_payment_id");
       const paid = ev.type === "payment.paid";
       if (!sub && checkout && paid && checkout.paymongo_subscription_id) {
-        const providerSub = (await paymongoClient(mode).getSubscription(checkout.paymongo_subscription_id)).data.attributes as Record<string, any>;
+        const providerSub = (
+          await paymongoClient(mode).getSubscription(checkout.paymongo_subscription_id)
+        ).data.attributes as Record<string, any>;
         await activateFromProvider(admin, {
           businessId: checkout.business_id,
           providerSubscriptionId: checkout.paymongo_subscription_id,
@@ -1661,12 +2023,23 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
           planId: checkout.plan_id,
           source: "webhook",
         });
-        sub = (await admin.from("subscriptions").select("*").eq("business_id", checkout.business_id).maybeSingle()).data ?? null;
+        sub =
+          (
+            await admin
+              .from("subscriptions")
+              .select("*")
+              .eq("business_id", checkout.business_id)
+              .maybeSingle()
+          ).data ?? null;
       }
       if (!sub) return finish("unmatched_payment");
 
       const { data: invRow } = piId
-        ? await admin.from("billing_invoices").select("id, external_invoice_id, status").eq("payment_intent_id", piId).maybeSingle()
+        ? await admin
+            .from("billing_invoices")
+            .select("id, external_invoice_id, status")
+            .eq("payment_intent_id", piId)
+            .maybeSingle()
         : { data: null };
       const payment = await recordPayment(admin, {
         sub,
@@ -1687,8 +2060,12 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
         }
         await admin.from("subscriptions").update(patch).eq("id", sub.id);
         if (invRow && invRow.status !== "paid")
-          await admin.from("billing_invoices").update({ status: "paid", paid_at: toIso(attrs["paid_at"]) ?? nowIso() }).eq("id", invRow.id);
-        const { recordCommissionForPayment, setReferralStatus } = await import("./affiliate.server");
+          await admin
+            .from("billing_invoices")
+            .update({ status: "paid", paid_at: toIso(attrs["paid_at"]) ?? nowIso() })
+            .eq("id", invRow.id);
+        const { recordCommissionForPayment, setReferralStatus } =
+          await import("./affiliate.server");
         await recordCommissionForPayment(admin, {
           businessId: sub.business_id,
           subscriptionId: sub.id,
@@ -1719,7 +2096,10 @@ export async function processWebhookEvent(admin: Admin, ev: WebhookEnvelope): Pr
     if (eventRowId)
       await admin
         .from("subscription_events")
-        .update({ error: err instanceof Error ? err.message.slice(0, 500) : String(err), processed_at: null })
+        .update({
+          error: err instanceof Error ? err.message.slice(0, 500) : String(err),
+          processed_at: null,
+        })
         .eq("id", eventRowId);
     throw err;
   }
@@ -1740,7 +2120,10 @@ export async function runExpirySweep(admin: Admin) {
 
 /* ------------------------------------------------------------ DTOs */
 
-export function checkoutToView(row: CheckoutRow, plan: { slug: string; name: string; price: number | string } | null) {
+export function checkoutToView(
+  row: CheckoutRow,
+  plan: { slug: string; name: string; price: number | string } | null,
+) {
   const snap = row.promo_snapshot ?? {};
   return {
     id: row.id,

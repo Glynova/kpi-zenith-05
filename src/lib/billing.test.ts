@@ -68,7 +68,10 @@ describe("resolveAccess", () => {
 
   it("grants full Pro entitlements during an active trial", () => {
     const a = resolveAccess(
-      { ...snapshot, subscription: sub({ status: "trialing", trial_ends_at: "2026-01-22T00:00:00Z" }) },
+      {
+        ...snapshot,
+        subscription: sub({ status: "trialing", trial_ends_at: "2026-01-22T00:00:00Z" }),
+      },
       NOW,
     );
     expect(a.isTrialing).toBe(true);
@@ -78,7 +81,10 @@ describe("resolveAccess", () => {
 
   it("drops to Free entitlements when the trial has expired", () => {
     const a = resolveAccess(
-      { ...snapshot, subscription: sub({ status: "trialing", trial_ends_at: "2026-01-01T00:00:00Z" }) },
+      {
+        ...snapshot,
+        subscription: sub({ status: "trialing", trial_ends_at: "2026-01-01T00:00:00Z" }),
+      },
       NOW,
     );
     expect(a.trialExpired).toBe(true);

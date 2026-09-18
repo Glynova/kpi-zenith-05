@@ -42,9 +42,15 @@ export const Route = createFileRoute("/_authenticated/admin/promo-codes")({
   head: () => ({
     meta: [
       { title: "Promo Codes — Daraven ERP" },
-      { name: "description", content: "Create, edit and disable promo codes and review redemptions." },
+      {
+        name: "description",
+        content: "Create, edit and disable promo codes and review redemptions.",
+      },
       { property: "og:title", content: "Promo Codes — Daraven ERP" },
-      { property: "og:description", content: "Create, edit and disable promo codes and review redemptions." },
+      {
+        property: "og:description",
+        content: "Create, edit and disable promo codes and review redemptions.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -112,7 +118,17 @@ function AdminPromoCodes() {
             <Plus className="size-4" /> New code
           </Button>
         }
-        columns={["Code", "Discount", "Duration", "Plans", "Partner", "Used", "Window", "Active", ""]}
+        columns={[
+          "Code",
+          "Discount",
+          "Duration",
+          "Plans",
+          "Partner",
+          "Used",
+          "Window",
+          "Active",
+          "",
+        ]}
         rows={codes}
         empty={{ title: "No promo codes yet", description: "Create one to run a campaign." }}
         renderRow={(c: any) => (

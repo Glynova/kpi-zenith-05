@@ -9,13 +9,7 @@
  */
 
 export type SubscriptionStatus =
-  | "trialing"
-  | "active"
-  | "past_due"
-  | "unpaid"
-  | "cancelled"
-  | "suspended"
-  | "incomplete";
+  "trialing" | "active" | "past_due" | "unpaid" | "cancelled" | "suspended" | "incomplete";
 
 export type PlanSlug = "free" | "pro" | "business";
 
@@ -88,7 +82,12 @@ export const FEATURE_KEYS = [
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
-export const LIMIT_KEYS = ["max_users", "max_businesses", "max_products", "max_warehouses"] as const;
+export const LIMIT_KEYS = [
+  "max_users",
+  "max_businesses",
+  "max_products",
+  "max_warehouses",
+] as const;
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
 export const FEATURE_LABEL: Record<string, string> = {
@@ -158,7 +157,10 @@ export const STATUS_LABEL: Record<SubscriptionStatus, string> = {
   incomplete: "Incomplete",
 };
 
-export const STATUS_TONE: Record<SubscriptionStatus, "default" | "secondary" | "destructive" | "outline"> = {
+export const STATUS_TONE: Record<
+  SubscriptionStatus,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   trialing: "secondary",
   active: "default",
   past_due: "destructive",
@@ -309,7 +311,6 @@ export const PLAN_HIGHLIGHTS: Record<string, string[]> = {
     "Priority support",
   ],
 };
-
 
 /**
  * PayMongo recurring plans have fixed provider-side pricing: there is no API

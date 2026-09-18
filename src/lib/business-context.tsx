@@ -68,7 +68,6 @@ const BusinessContext = createContext<Ctx>({
   refreshSettings: () => {},
 });
 
-
 const STORAGE_KEY = "kpioptiva-business";
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
@@ -127,7 +126,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   }, [settingsRow, active]);
 
   const capabilities = useMemo(() => {
-    const stored = (settings.extra as Record<string, unknown> | undefined)?.["product_capabilities"];
+    const stored = (settings.extra as Record<string, unknown> | undefined)?.[
+      "product_capabilities"
+    ];
     return { ...DEFAULT_PRODUCT_CAPABILITIES, ...((stored as Record<string, boolean>) ?? {}) };
   }, [settings]);
 
@@ -170,9 +171,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     refreshSettings: () => void refetchSettings(),
   };
 
-
   return <BusinessContext.Provider value={value}>{children}</BusinessContext.Provider>;
 }
 
 export const useBusiness = () => useContext(BusinessContext);
-
