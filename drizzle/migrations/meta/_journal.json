@@ -43,6 +43,13 @@
       "when": 1789692988830,
       "tag": "0005_relax_capability_guards_for_receipts_and_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789777020148,
+      "tag": "0006_settings_enforcement_completion",
+      "breakpoints": true
     }
   ]
 }
