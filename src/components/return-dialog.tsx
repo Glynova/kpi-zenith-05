@@ -120,9 +120,7 @@ export function ReturnDialog({
       if (!picked.length) throw new Error("Enter a quantity for at least one item");
       for (const l of picked) {
         if (l.quantity > l.returnable + 0.0001)
-          throw new Error(
-            `${l.item.product_name ?? "Item"}: only ${l.returnable} left to return`,
-          );
+          throw new Error(`${l.item.product_name ?? "Item"}: only ${l.returnable} left to return`);
       }
       if (!reason.trim()) throw new Error("A return reason is required");
 
@@ -173,11 +171,11 @@ export function ReturnDialog({
           unit_cost: l.item.unit_cost ?? 0,
           discount: 0,
           tax_rate: l.item.tax_rate ?? 0,
-          tax: round2((l.quantity * Number(l.item.unit_price ?? 0) * Number(l.item.tax_rate ?? 0)) / 100),
+          tax: round2(
+            (l.quantity * Number(l.item.unit_price ?? 0) * Number(l.item.tax_rate ?? 0)) / 100,
+          ),
           total: round2(
-            l.quantity *
-              Number(l.item.unit_price ?? 0) *
-              (1 + Number(l.item.tax_rate ?? 0) / 100),
+            l.quantity * Number(l.item.unit_price ?? 0) * (1 + Number(l.item.tax_rate ?? 0) / 100),
           ),
           condition: l.condition,
         })),
@@ -207,8 +205,8 @@ export function ReturnDialog({
         <DialogHeader>
           <DialogTitle>Return items from {sale?.sale_number}</DialogTitle>
           <DialogDescription>
-            Choose what is coming back. Stock, cost of goods and the customer balance are
-            updated automatically for the exact item or variant that was sold.
+            Choose what is coming back. Stock, cost of goods and the customer balance are updated
+            automatically for the exact item or variant that was sold.
           </DialogDescription>
         </DialogHeader>
 

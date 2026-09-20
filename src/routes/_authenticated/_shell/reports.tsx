@@ -98,7 +98,9 @@ function Reports() {
     if (!parent) continue;
     const doc = String(parent.document_type ?? "sale");
     if (doc === "quote" || doc === "sales_order" || doc === "return") continue;
-    if (["draft", "voided", "cancelled", "rejected", "expired"].includes(String(parent.status ?? "")))
+    if (
+      ["draft", "voided", "cancelled", "rejected", "expired"].includes(String(parent.status ?? ""))
+    )
       continue;
 
     const key = `${it.product_id}::${it.variant_id ?? ""}`;
@@ -145,7 +147,6 @@ function Reports() {
     stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
   })) as unknown as Row[];
   const variantStockValue = variantStockRows.reduce((a, r) => a + Number(r.stock_value), 0);
-
 
   const reports = [
     {
