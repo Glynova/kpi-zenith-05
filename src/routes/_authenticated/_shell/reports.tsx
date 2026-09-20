@@ -190,6 +190,18 @@ function Reports() {
       value: formatCurrency(sum(data.ap, "amount") - sum(data.ap, "paid"), currency),
       note: `${data.ap.length} open items`,
     },
+    {
+      title: "Item & Variant Sales Report",
+      rows: itemRows,
+      value: formatCurrency(itemRevenue, currency),
+      note: `${formatNumber(itemRows.length)} items sold, returns deducted`,
+    },
+    {
+      title: "Variant Stock Report",
+      rows: variantStockRows,
+      value: formatCurrency(variantStockValue, currency),
+      note: `${formatNumber(variantStockRows.length)} variants tracked`,
+    },
   ];
 
   function exportRows(name: string, rows: Row[]) {
