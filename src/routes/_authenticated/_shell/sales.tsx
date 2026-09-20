@@ -708,6 +708,8 @@ function SalesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ReturnDialog sale={returning} onOpenChange={(o) => !o && setReturning(null)} />
     </div>
   );
 }
