@@ -72,21 +72,24 @@ export function ReturnDialog({
       return;
     }
     setLoading(true);
-    db.from("sale_items")
-      .select("*")
-      .eq("sale_id", sale.id)
-      .then(({ data }) => {
-        if (cancelled) return;
-        setLines(
-          ((data ?? []) as Row[]).map((item) => {
-            const returnable = round2(
-              Number(item.quantity ?? 0) - Number(item.returned_quantity ?? 0),
-            );
-            return { item, returnable: Math.max(returnable, 0), quantity: 0, condition: "resellable" };
-          }),
-        );
-        setLoading(false);
-      });
+    void (async () => {
+      const { data } = await db.from("sale_items").select("*").eq("sale_id", sale.id);
+      if (cancelled) return;
+      setLines(
+        ((data ?? []) as Row[]).map((item) => {
+          const returnable = round2(
+            Number(item.quantity ?? 0) - Number(item.returned_quantity ?? 0),
+          );
+          return {
+            item,
+            returnable: Math.max(returnable, 0),
+            quantity: 0,
+            condition: "resellable",
+          };
+        }),
+      );
+      setLoading(false);
+    })();
     return () => {
       cancelled = true;
     };
