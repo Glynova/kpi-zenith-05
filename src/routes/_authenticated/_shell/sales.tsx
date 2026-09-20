@@ -435,6 +435,17 @@ function SalesPage() {
                         >
                           <FileText className="size-4" />
                         </Button>
+                        {feature("enable_returns") &&
+                          String(row.document_type ?? "sale") !== "return" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setReturning(row)}
+                              aria-label="Return items"
+                            >
+                              <Undo2 className="size-4" />
+                            </Button>
+                          )}
                         <Button
                           variant="ghost"
                           size="icon"
