@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2, Eye, Printer, FileText } from "lucide-react";
+import { Plus, Search, Trash2, Eye, Printer, FileText, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
@@ -10,6 +10,7 @@ import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, titleCase, todayISO } from "@/lib/format";
 import { printDocument } from "@/lib/print";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import { ReturnDialog } from "@/components/return-dialog";
 import {
   LineItemsEditor,
   emptyLine,
@@ -62,12 +63,13 @@ const SALE_TYPES = ["walk_in", "wholesale", "credit", "return", "refund"];
 const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "mobile_money", "cheque", "credit"];
 
 function SalesPage() {
-  const { businessId, business, currency, canWrite, userId } = useBusiness();
+  const { businessId, business, currency, canWrite, userId, feature } = useBusiness();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState<Row | null>(null);
+  const [returning, setReturning] = useState<Row | null>(null);
   const [items, setItems] = useState<LineItem[]>([emptyLine()]);
   const [form, setForm] = useState<Row>({});
 
