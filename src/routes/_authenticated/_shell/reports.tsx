@@ -36,13 +36,23 @@ function Reports() {
     queryKey: ["reports", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, payroll, ar, ap] = await Promise.all([
+      const [sales, expenses, products, payroll, ar, ap, saleItems, variants] = await Promise.all([
         db.from("sales").select("*").eq("business_id", businessId),
         db.from("expenses").select("*").eq("business_id", businessId),
         db.from("products").select("*").eq("business_id", businessId),
         db.from("payroll").select("*").eq("business_id", businessId),
         db.from("accounts_receivable").select("*").eq("business_id", businessId),
         db.from("accounts_payable").select("*").eq("business_id", businessId),
+        db
+          .from("sale_items")
+          .select(
+            "product_id,variant_id,product_name,sku,quantity,returned_quantity,unit_price,unit_cost,discount,total,sales(document_type,status,inventory_posted)",
+          )
+          .eq("business_id", businessId),
+        db
+          .from("product_variants")
+          .select("id,product_id,name,sku,barcode,stock,cost_price,selling_price,status")
+          .eq("business_id", businessId),
       ]);
       return {
         sales: (sales.data ?? []) as Row[],
@@ -51,6 +61,8 @@ function Reports() {
         payroll: (payroll.data ?? []) as Row[],
         ar: (ar.data ?? []) as Row[],
         ap: (ap.data ?? []) as Row[],
+        saleItems: (saleItems.data ?? []) as Row[],
+        variants: (variants.data ?? []) as Row[],
       };
     },
   });
