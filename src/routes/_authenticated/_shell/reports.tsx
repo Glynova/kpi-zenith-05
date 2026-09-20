@@ -83,6 +83,70 @@ function Reports() {
   const expenseTotal = sum(data.expenses, "amount");
   const inventoryValue = inventoryValueOf(data.products);
 
+  /**
+   * Item-level reporting keyed on the exact sellable identity (product + variant).
+   * Quantities and money come from the immutable sale_item snapshot, so renamed
+   * or archived variants still report under what was actually sold. Returns are
+   * subtracted through returned_quantity and return documents are skipped so the
+   * same movement is never counted twice.
+   */
+  const variantById = new Map(data.variants.map((v) => [String(v.id), v]));
+  const productById = new Map(data.products.map((p) => [String(p.id), p]));
+  const itemStats = new Map<string, Row>();
+  for (const it of data.saleItems) {
+    const parent = (it as Row).sales as Row | null;
+    if (!parent) continue;
+    const doc = String(parent.document_type ?? "sale");
+    if (doc === "quote" || doc === "sales_order" || doc === "return") continue;
+    if (["draft", "voided", "cancelled", "rejected", "expired"].includes(String(parent.status ?? "")))
+      continue;
+
+    const key = `${it.product_id}::${it.variant_id ?? ""}`;
+    const variant = it.variant_id ? variantById.get(String(it.variant_id)) : null;
+    const netQty = Number(it.quantity ?? 0) - Number(it.returned_quantity ?? 0);
+    const price = Number(it.unit_price ?? 0);
+    const cost = Number(it.unit_cost ?? 0);
+    const row =
+      itemStats.get(key) ??
+      ({
+        product_id: it.product_id,
+        variant_id: it.variant_id ?? "",
+        item: it.product_name ?? productById.get(String(it.product_id))?.name ?? "Unknown",
+        variant: variant?.name ?? "",
+        sku: it.sku ?? variant?.sku ?? productById.get(String(it.product_id))?.sku ?? "",
+        barcode: variant?.barcode ?? productById.get(String(it.product_id))?.barcode ?? "",
+        quantity_sold: 0,
+        quantity_returned: 0,
+        revenue: 0,
+        cogs: 0,
+        gross_profit: 0,
+      } as Row);
+    row.quantity_sold = Number(row.quantity_sold) + netQty;
+    row.quantity_returned = Number(row.quantity_returned) + Number(it.returned_quantity ?? 0);
+    row.revenue = Number(row.revenue) + netQty * price;
+    row.cogs = Number(row.cogs) + netQty * cost;
+    row.gross_profit = Number(row.revenue) - Number(row.cogs);
+    itemStats.set(key, row);
+  }
+  const itemRows = Array.from(itemStats.values()).sort(
+    (a, b) => Number(b.revenue) - Number(a.revenue),
+  );
+  const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
+
+  const variantStockRows = data.variants.map((v) => ({
+    variant_id: v.id,
+    product: productById.get(String(v.product_id))?.name ?? "",
+    variant: v.name,
+    sku: v.sku ?? "",
+    barcode: v.barcode ?? "",
+    status: v.status ?? "active",
+    stock: Number(v.stock ?? 0),
+    unit_cost: Number(v.cost_price ?? 0),
+    stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
+  })) as unknown as Row[];
+  const variantStockValue = variantStockRows.reduce((a, r) => a + Number(r.stock_value), 0);
+
+
   const reports = [
     {
       title: "Sales Report",
