@@ -81,7 +81,25 @@ function Reports() {
   const revenue = m.revenue;
   const cogs = m.cogs;
   const expenseTotal = sum(data.expenses, "amount");
-  const inventoryValue = inventoryValueOf(data.products);
+  /**
+   * Inventory value is variant-aware: when a product carries variants the value
+   * comes from the variant rows only, so a parent and its variants are never
+   * counted twice. Products without variants fall back to the shared helper.
+   */
+  const variantsByProduct = new Map<string, Row[]>();
+  for (const v of data.variants) {
+    const list = variantsByProduct.get(String(v.product_id)) ?? [];
+    list.push(v);
+    variantsByProduct.set(String(v.product_id), list);
+  }
+  const parentsWithoutVariants = data.products.filter(
+    (p) => !(variantsByProduct.get(String(p.id))?.length ?? 0),
+  );
+  const variantInventoryValue = data.variants.reduce(
+    (a, v) => a + Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
+    0,
+  );
+  const inventoryValue = inventoryValueOf(parentsWithoutVariants) + variantInventoryValue;
 
   /**
    * Item-level reporting keyed on the exact sellable identity (product + variant).
