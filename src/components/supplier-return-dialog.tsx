@@ -85,7 +85,7 @@ export function SupplierReturnDialog({
       // Already-returned quantities per exact sellable identity.
       const returned = new Map<string, number>();
       for (const r of (returns.data ?? []) as Row[]) {
-        for (const ri of ((r.purchase_return_items ?? []) as Row[]) ?? []) {
+        for (const ri of (r.purchase_return_items ?? []) as Row[]) {
           const k = `${ri.product_id}::${ri.variant_id ?? ""}`;
           returned.set(k, (returned.get(k) ?? 0) + Number(ri.quantity ?? 0));
         }
