@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Copy,
   Ban,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ import {
 import { printDocument } from "@/lib/print";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReceiveDialog } from "@/components/receive-dialog";
+import { SupplierReturnDialog } from "@/components/supplier-return-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -122,6 +124,7 @@ function PurchaseOrdersPage() {
   const [viewing, setViewing] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [receiving, setReceiving] = useState<Row | null>(null);
+  const [returning, setReturning] = useState<Row | null>(null);
   const [items, setItems] = useState<PoLine[]>([emptyLine()]);
   const [form, setForm] = useState<Row>({});
 
@@ -689,6 +692,17 @@ function PurchaseOrdersPage() {
                             <PackageCheck className="size-4" />
                           </Button>
                         )}
+                        {canWrite && feature("enable_returns") && (p?.received ?? 0) > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setReturning(row)}
+                            title="Return goods to supplier"
+                            aria-label="Return goods to supplier"
+                          >
+                            <Undo2 className="size-4" />
+                          </Button>
+                        )}
                         {canWrite && (
                           <Button
                             variant="ghost"
@@ -1210,6 +1224,8 @@ function PurchaseOrdersPage() {
           trackSerial={feature("track_serial")}
         />
       )}
+
+      <SupplierReturnDialog order={returning} onOpenChange={(o) => !o && setReturning(null)} />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
