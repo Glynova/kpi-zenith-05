@@ -64,6 +64,13 @@
       "when": 1790061312577,
       "tag": "0008_returns_batch_serial_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790061352703,
+      "tag": "0009_sales_return_batch_serial_identity",
+      "breakpoints": true
     }
   ]
 }
