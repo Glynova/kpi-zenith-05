@@ -9,7 +9,7 @@
  * validates that identity and remains the only thing that touches inventory,
  * batch balances, serial lifecycle, COGS and receivables.
  */
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -298,7 +298,7 @@ export function ReturnDialog({
                   const showBatch = batchOn && l.trackBatch;
                   const showSerial = serialOn && l.trackSerial;
                   return (
-                    <>
+                    <Fragment key={String(l.item.id)}>
                       <TableRow key={l.item.id}>
                         <TableCell className="font-medium">{l.item.product_name}</TableCell>
                         <TableCell className="text-muted-foreground">
@@ -407,7 +407,7 @@ export function ReturnDialog({
                           </TableCell>
                         </TableRow>
                       ) : null}
-                    </>
+                    </Fragment>
                   );
                 })}
               </TableBody>
