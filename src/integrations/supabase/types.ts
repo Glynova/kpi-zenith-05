@@ -3779,6 +3779,7 @@ export type Database = {
       }
       purchase_return_items: {
         Row: {
+          batch_id: string | null
           business_id: string
           created_at: string
           id: string
@@ -3786,11 +3787,13 @@ export type Database = {
           quantity: number
           reason: string | null
           return_id: string
+          serial_ids: string[] | null
           total: number
           unit_cost: number
           variant_id: string | null
         }
         Insert: {
+          batch_id?: string | null
           business_id: string
           created_at?: string
           id?: string
@@ -3798,11 +3801,13 @@ export type Database = {
           quantity?: number
           reason?: string | null
           return_id: string
+          serial_ids?: string[] | null
           total?: number
           unit_cost?: number
           variant_id?: string | null
         }
         Update: {
+          batch_id?: string | null
           business_id?: string
           created_at?: string
           id?: string
@@ -3810,11 +3815,19 @@ export type Database = {
           quantity?: number
           reason?: string | null
           return_id?: string
+          serial_ids?: string[] | null
           total?: number
           unit_cost?: number
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "purchase_return_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "purchase_return_items_business_id_fkey"
             columns: ["business_id"]
@@ -3985,6 +3998,7 @@ export type Database = {
       }
       sale_items: {
         Row: {
+          batch_id: string | null
           business_id: string
           condition: string | null
           created_at: string
@@ -3998,6 +4012,7 @@ export type Database = {
           quantity: number
           returned_quantity: number
           sale_id: string
+          serial_ids: string[] | null
           sku: string | null
           tax: number
           tax_rate: number
@@ -4008,6 +4023,7 @@ export type Database = {
           variant_id: string | null
         }
         Insert: {
+          batch_id?: string | null
           business_id: string
           condition?: string | null
           created_at?: string
@@ -4021,6 +4037,7 @@ export type Database = {
           quantity?: number
           returned_quantity?: number
           sale_id: string
+          serial_ids?: string[] | null
           sku?: string | null
           tax?: number
           tax_rate?: number
@@ -4031,6 +4048,7 @@ export type Database = {
           variant_id?: string | null
         }
         Update: {
+          batch_id?: string | null
           business_id?: string
           condition?: string | null
           created_at?: string
@@ -4044,6 +4062,7 @@ export type Database = {
           quantity?: number
           returned_quantity?: number
           sale_id?: string
+          serial_ids?: string[] | null
           sku?: string | null
           tax?: number
           tax_rate?: number
@@ -4054,6 +4073,13 @@ export type Database = {
           variant_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "sale_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sale_items_business_id_fkey"
             columns: ["business_id"]
@@ -5833,6 +5859,19 @@ export type Database = {
       scan_business_alerts: { Args: { _business_id: string }; Returns: number }
       seed_business_defaults: {
         Args: { _business_id: string }
+        Returns: undefined
+      }
+      validate_return_identity: {
+        Args: {
+          _batch_id: string
+          _business_id: string
+          _label: string
+          _product_id: string
+          _quantity: number
+          _serial_ids: string[]
+          _variant_id: string
+          _warehouse_id: string
+        }
         Returns: undefined
       }
     }
