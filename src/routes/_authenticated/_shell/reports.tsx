@@ -33,12 +33,25 @@ export const Route = createFileRoute("/_authenticated/_shell/reports")({
 
 function Reports() {
   const { businessId, currency } = useBusiness();
+  const [filter, setFilter] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, payroll, ar, ap, saleItems, variants] = await Promise.all([
+      const [
+        sales,
+        expenses,
+        products,
+        payroll,
+        ar,
+        ap,
+        saleItems,
+        variants,
+        poItems,
+        returnItems,
+        movements,
+      ] = await Promise.all([
         db.from("sales").select("*").eq("business_id", businessId),
         db.from("expenses").select("*").eq("business_id", businessId),
         db.from("products").select("*").eq("business_id", businessId),
@@ -55,6 +68,24 @@ function Reports() {
           .from("product_variants")
           .select("id,product_id,name,sku,barcode,stock,cost_price,selling_price,status")
           .eq("business_id", businessId),
+        db
+          .from("purchase_order_items")
+          .select(
+            "product_id,variant_id,quantity,received_quantity,unit_cost,purchase_orders(status,order_date)",
+          )
+          .eq("business_id", businessId),
+        db
+          .from("purchase_return_items")
+          .select("product_id,variant_id,quantity,unit_cost,purchase_returns(status)")
+          .eq("business_id", businessId),
+        db
+          .from("inventory_movements")
+          .select(
+            "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date",
+          )
+          .eq("business_id", businessId)
+          .order("movement_date", { ascending: false })
+          .limit(5000),
       ]);
       return {
         sales: (sales.data ?? []) as Row[],
@@ -65,6 +96,9 @@ function Reports() {
         ap: (ap.data ?? []) as Row[],
         saleItems: (saleItems.data ?? []) as Row[],
         variants: (variants.data ?? []) as Row[],
+        poItems: (poItems.data ?? []) as Row[],
+        returnItems: (returnItems.data ?? []) as Row[],
+        movements: (movements.data ?? []) as Row[],
       };
     },
   });
