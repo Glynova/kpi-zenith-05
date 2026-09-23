@@ -184,23 +184,117 @@ function Reports() {
     row.gross_profit = Number(row.revenue) - Number(row.cogs);
     itemStats.set(key, row);
   }
-  const itemRows = Array.from(itemStats.values()).sort(
-    (a, b) => Number(b.revenue) - Number(a.revenue),
-  );
-  const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
+  /**
+   * A single free-text filter narrows every item-level report to one exact
+   * sellable identity — product name, variant name, SKU or barcode.
+   */
+  const needle = filter.trim().toLowerCase();
+  const matches = (...fields: unknown[]) =>
+    !needle || fields.some((f) => String(f ?? "").toLowerCase().includes(needle));
 
-  const variantStockRows = data.variants.map((v) => ({
-    variant_id: v.id,
-    product: productById.get(String(v.product_id))?.name ?? "",
-    variant: v.name,
-    sku: v.sku ?? "",
-    barcode: v.barcode ?? "",
-    status: v.status ?? "active",
-    stock: Number(v.stock ?? 0),
-    unit_cost: Number(v.cost_price ?? 0),
-    stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
-  })) as unknown as Row[];
+  const identityLabel = (productId: unknown, variantId: unknown) => {
+    const product = productById.get(String(productId));
+    const variant = variantId ? variantById.get(String(variantId)) : null;
+    return {
+      item: product?.name ?? "Unknown",
+      variant: variant?.name ?? "",
+      sku: String(variant?.sku ?? product?.sku ?? ""),
+      barcode: String(variant?.barcode ?? product?.barcode ?? ""),
+    };
+  };
+
+  const itemRows = Array.from(itemStats.values())
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode))
+    .sort((a, b) => Number(b.revenue) - Number(a.revenue))
+    .map((r) => ({
+      ...r,
+      margin_percent: marginPercent(Number(r.revenue), Number(r.cogs)),
+    })) as unknown as Row[];
+  const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
+  const itemCogs = itemRows.reduce((a, r) => a + Number(r.cogs), 0);
+
+  const variantStockRows = data.variants
+    .map((v) => ({
+      variant_id: v.id,
+      product: productById.get(String(v.product_id))?.name ?? "",
+      variant: v.name,
+      sku: v.sku ?? "",
+      barcode: v.barcode ?? "",
+      status: v.status ?? "active",
+      stock: Number(v.stock ?? 0),
+      unit_cost: Number(v.cost_price ?? 0),
+      stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
+    }))
+    .filter((r) => matches(r.product, r.variant, r.sku, r.barcode)) as unknown as Row[];
   const variantStockValue = variantStockRows.reduce((a, r) => a + Number(r.stock_value), 0);
+
+  /**
+   * Purchasing by exact variant. Value comes from the ordered line snapshot
+   * (received quantity × the unit cost that was actually paid), and posted
+   * supplier returns are subtracted against the same product::variant key so a
+   * parent product and its variants are never counted twice.
+   */
+  const purchaseStats = new Map<string, Row>();
+  const purchaseKeyOf = (r: Row) => `${r.product_id}::${r.variant_id ?? ""}`;
+  for (const it of data.poItems) {
+    const parent = it.purchase_orders as Row | null;
+    if (!parent) continue;
+    if (["draft", "cancelled", "rejected"].includes(String(parent.status ?? ""))) continue;
+    const received = Number(it.received_quantity ?? 0);
+    if (!received) continue;
+    const key = purchaseKeyOf(it);
+    const label = identityLabel(it.product_id, it.variant_id);
+    const row =
+      purchaseStats.get(key) ??
+      ({
+        product_id: it.product_id,
+        variant_id: it.variant_id ?? "",
+        ...label,
+        quantity_received: 0,
+        quantity_returned: 0,
+        purchase_value: 0,
+      } as Row);
+    row.quantity_received = Number(row.quantity_received) + received;
+    row.purchase_value = Number(row.purchase_value) + received * Number(it.unit_cost ?? 0);
+    purchaseStats.set(key, row);
+  }
+  for (const ri of data.returnItems) {
+    const parent = ri.purchase_returns as Row | null;
+    if (String(parent?.status ?? "") !== "posted") continue;
+    const key = purchaseKeyOf(ri);
+    const row = purchaseStats.get(key);
+    if (!row) continue;
+    const qty = Number(ri.quantity ?? 0);
+    row.quantity_returned = Number(row.quantity_returned) + qty;
+    row.purchase_value = Number(row.purchase_value) - qty * Number(ri.unit_cost ?? 0);
+  }
+  const purchaseRows = Array.from(purchaseStats.values())
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode))
+    .sort((a, b) => Number(b.purchase_value) - Number(a.purchase_value)) as Row[];
+  const purchaseValue = purchaseRows.reduce((a, r) => a + Number(r.purchase_value), 0);
+
+  /**
+   * Stock movement ledger straight from inventory_movements — the single record
+   * of every posted in/out, already keyed on the exact product + variant.
+   */
+  const movementRows = data.movements
+    .map((mv) => {
+      const label = identityLabel(mv.product_id, mv.variant_id);
+      return {
+        date: mv.movement_date,
+        type: mv.type,
+        ...label,
+        batch: mv.batch_number ?? "",
+        quantity: Number(mv.quantity ?? 0),
+        unit_cost: Number(mv.unit_cost ?? 0),
+        total_cost: Number(mv.total_cost ?? 0),
+        reference: mv.reference ?? "",
+        reference_type: mv.reference_type ?? "",
+      };
+    })
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode, r.reference)) as unknown as Row[];
+  const movementValue = movementRows.reduce((a, r) => a + Math.abs(Number(r.total_cost)), 0);
+
 
   const reports = [
     {
