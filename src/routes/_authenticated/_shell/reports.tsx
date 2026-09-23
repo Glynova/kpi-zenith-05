@@ -1,14 +1,16 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { Download, Search } from "lucide-react";
 
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
-import { salesMetrics, inventoryValueOf } from "@/lib/kpi";
+import { salesMetrics, inventoryValueOf, marginPercent } from "@/lib/kpi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/_shell/reports")({
@@ -31,12 +33,25 @@ export const Route = createFileRoute("/_authenticated/_shell/reports")({
 
 function Reports() {
   const { businessId, currency } = useBusiness();
+  const [filter, setFilter] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["reports", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, payroll, ar, ap, saleItems, variants] = await Promise.all([
+      const [
+        sales,
+        expenses,
+        products,
+        payroll,
+        ar,
+        ap,
+        saleItems,
+        variants,
+        poItems,
+        returnItems,
+        movements,
+      ] = await Promise.all([
         db.from("sales").select("*").eq("business_id", businessId),
         db.from("expenses").select("*").eq("business_id", businessId),
         db.from("products").select("*").eq("business_id", businessId),
@@ -53,6 +68,24 @@ function Reports() {
           .from("product_variants")
           .select("id,product_id,name,sku,barcode,stock,cost_price,selling_price,status")
           .eq("business_id", businessId),
+        db
+          .from("purchase_order_items")
+          .select(
+            "product_id,variant_id,quantity,received_quantity,unit_cost,purchase_orders(status,order_date)",
+          )
+          .eq("business_id", businessId),
+        db
+          .from("purchase_return_items")
+          .select("product_id,variant_id,quantity,unit_cost,purchase_returns(status)")
+          .eq("business_id", businessId),
+        db
+          .from("inventory_movements")
+          .select(
+            "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date",
+          )
+          .eq("business_id", businessId)
+          .order("movement_date", { ascending: false })
+          .limit(5000),
       ]);
       return {
         sales: (sales.data ?? []) as Row[],
@@ -63,6 +96,9 @@ function Reports() {
         ap: (ap.data ?? []) as Row[],
         saleItems: (saleItems.data ?? []) as Row[],
         variants: (variants.data ?? []) as Row[],
+        poItems: (poItems.data ?? []) as Row[],
+        returnItems: (returnItems.data ?? []) as Row[],
+        movements: (movements.data ?? []) as Row[],
       };
     },
   });
@@ -148,23 +184,117 @@ function Reports() {
     row.gross_profit = Number(row.revenue) - Number(row.cogs);
     itemStats.set(key, row);
   }
-  const itemRows = Array.from(itemStats.values()).sort(
-    (a, b) => Number(b.revenue) - Number(a.revenue),
-  );
-  const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
+  /**
+   * A single free-text filter narrows every item-level report to one exact
+   * sellable identity — product name, variant name, SKU or barcode.
+   */
+  const needle = filter.trim().toLowerCase();
+  const matches = (...fields: unknown[]) =>
+    !needle || fields.some((f) => String(f ?? "").toLowerCase().includes(needle));
 
-  const variantStockRows = data.variants.map((v) => ({
-    variant_id: v.id,
-    product: productById.get(String(v.product_id))?.name ?? "",
-    variant: v.name,
-    sku: v.sku ?? "",
-    barcode: v.barcode ?? "",
-    status: v.status ?? "active",
-    stock: Number(v.stock ?? 0),
-    unit_cost: Number(v.cost_price ?? 0),
-    stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
-  })) as unknown as Row[];
+  const identityLabel = (productId: unknown, variantId: unknown) => {
+    const product = productById.get(String(productId));
+    const variant = variantId ? variantById.get(String(variantId)) : null;
+    return {
+      item: product?.name ?? "Unknown",
+      variant: variant?.name ?? "",
+      sku: String(variant?.sku ?? product?.sku ?? ""),
+      barcode: String(variant?.barcode ?? product?.barcode ?? ""),
+    };
+  };
+
+  const itemRows = Array.from(itemStats.values())
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode))
+    .sort((a, b) => Number(b.revenue) - Number(a.revenue))
+    .map((r) => ({
+      ...r,
+      margin_percent: marginPercent(Number(r.revenue), Number(r.cogs)),
+    })) as unknown as Row[];
+  const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
+  const itemCogs = itemRows.reduce((a, r) => a + Number(r.cogs), 0);
+
+  const variantStockRows = data.variants
+    .map((v) => ({
+      variant_id: v.id,
+      product: productById.get(String(v.product_id))?.name ?? "",
+      variant: v.name,
+      sku: v.sku ?? "",
+      barcode: v.barcode ?? "",
+      status: v.status ?? "active",
+      stock: Number(v.stock ?? 0),
+      unit_cost: Number(v.cost_price ?? 0),
+      stock_value: Number(v.stock ?? 0) * Number(v.cost_price ?? 0),
+    }))
+    .filter((r) => matches(r.product, r.variant, r.sku, r.barcode)) as unknown as Row[];
   const variantStockValue = variantStockRows.reduce((a, r) => a + Number(r.stock_value), 0);
+
+  /**
+   * Purchasing by exact variant. Value comes from the ordered line snapshot
+   * (received quantity × the unit cost that was actually paid), and posted
+   * supplier returns are subtracted against the same product::variant key so a
+   * parent product and its variants are never counted twice.
+   */
+  const purchaseStats = new Map<string, Row>();
+  const purchaseKeyOf = (r: Row) => `${r.product_id}::${r.variant_id ?? ""}`;
+  for (const it of data.poItems) {
+    const parent = it.purchase_orders as Row | null;
+    if (!parent) continue;
+    if (["draft", "cancelled", "rejected"].includes(String(parent.status ?? ""))) continue;
+    const received = Number(it.received_quantity ?? 0);
+    if (!received) continue;
+    const key = purchaseKeyOf(it);
+    const label = identityLabel(it.product_id, it.variant_id);
+    const row =
+      purchaseStats.get(key) ??
+      ({
+        product_id: it.product_id,
+        variant_id: it.variant_id ?? "",
+        ...label,
+        quantity_received: 0,
+        quantity_returned: 0,
+        purchase_value: 0,
+      } as Row);
+    row.quantity_received = Number(row.quantity_received) + received;
+    row.purchase_value = Number(row.purchase_value) + received * Number(it.unit_cost ?? 0);
+    purchaseStats.set(key, row);
+  }
+  for (const ri of data.returnItems) {
+    const parent = ri.purchase_returns as Row | null;
+    if (String(parent?.status ?? "") !== "posted") continue;
+    const key = purchaseKeyOf(ri);
+    const row = purchaseStats.get(key);
+    if (!row) continue;
+    const qty = Number(ri.quantity ?? 0);
+    row.quantity_returned = Number(row.quantity_returned) + qty;
+    row.purchase_value = Number(row.purchase_value) - qty * Number(ri.unit_cost ?? 0);
+  }
+  const purchaseRows = Array.from(purchaseStats.values())
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode))
+    .sort((a, b) => Number(b.purchase_value) - Number(a.purchase_value)) as Row[];
+  const purchaseValue = purchaseRows.reduce((a, r) => a + Number(r.purchase_value), 0);
+
+  /**
+   * Stock movement ledger straight from inventory_movements — the single record
+   * of every posted in/out, already keyed on the exact product + variant.
+   */
+  const movementRows = data.movements
+    .map((mv) => {
+      const label = identityLabel(mv.product_id, mv.variant_id);
+      return {
+        date: mv.movement_date,
+        type: mv.type,
+        ...label,
+        batch: mv.batch_number ?? "",
+        quantity: Number(mv.quantity ?? 0),
+        unit_cost: Number(mv.unit_cost ?? 0),
+        total_cost: Number(mv.total_cost ?? 0),
+        reference: mv.reference ?? "",
+        reference_type: mv.reference_type ?? "",
+      };
+    })
+    .filter((r) => matches(r.item, r.variant, r.sku, r.barcode, r.reference)) as unknown as Row[];
+  const movementValue = movementRows.reduce((a, r) => a + Math.abs(Number(r.total_cost)), 0);
+
 
   const reports = [
     {
