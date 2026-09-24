@@ -63,7 +63,8 @@ import {
 describe("PayMongo event mapping", () => {
   it("maps the subscription events we subscribe to", () => {
     expect(SUBSCRIPTION_STATUS_MAP["subscription.activated"]).toBe("active");
-    expect(SUBSCRIPTION_STATUS_MAP["subscription.updated"]).toBe("active");
+    // subscription.updated is payload-driven, so it is intentionally not in the static map.
+    expect(SUBSCRIPTION_STATUS_MAP["subscription.updated"]).toBeUndefined();
     expect(SUBSCRIPTION_STATUS_MAP["subscription.past_due"]).toBe("past_due");
     expect(SUBSCRIPTION_STATUS_MAP["subscription.unpaid"]).toBe("unpaid");
     expect(SUBSCRIPTION_STATUS_MAP["subscription.cancelled"]).toBe("cancelled");
