@@ -208,7 +208,7 @@ function Reports() {
     .sort((a, b) => Number(b.revenue) - Number(a.revenue))
     .map((r) => ({
       ...r,
-      margin_percent: marginPercent(Number(r.revenue), Number(r.cogs)),
+      margin_percent: marginPercent(Number(r.revenue) - Number(r.cogs), Number(r.revenue)),
     })) as unknown as Row[];
   const itemRevenue = itemRows.reduce((a, r) => a + Number(r.revenue), 0);
   const itemCogs = itemRows.reduce((a, r) => a + Number(r.cogs), 0);
@@ -343,13 +343,25 @@ function Reports() {
       title: "Item & Variant Sales Report",
       rows: itemRows,
       value: formatCurrency(itemRevenue, currency),
-      note: `${formatNumber(itemRows.length)} items sold, returns deducted`,
+      note: `${formatNumber(itemRows.length)} items · margin ${marginPercent(itemRevenue - itemCogs, itemRevenue).toFixed(1)}%, returns deducted`,
     },
     {
       title: "Variant Stock Report",
       rows: variantStockRows,
       value: formatCurrency(variantStockValue, currency),
       note: `${formatNumber(variantStockRows.length)} variants tracked`,
+    },
+    {
+      title: "Purchasing by Variant",
+      rows: purchaseRows,
+      value: formatCurrency(purchaseValue, currency),
+      note: `${formatNumber(purchaseRows.length)} items received, supplier returns deducted`,
+    },
+    {
+      title: "Stock Movement Report",
+      rows: movementRows,
+      value: formatCurrency(movementValue, currency),
+      note: `${formatNumber(movementRows.length)} movements`,
     },
   ];
 
@@ -374,6 +386,16 @@ function Reports() {
         title="Reports"
         description="Board-ready summaries you can export in one click."
       />
+      <div className="relative max-w-md">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter item reports by product, variant, SKU or barcode"
+          aria-label="Filter item reports by product, variant, SKU or barcode"
+          className="pl-9"
+        />
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reports.map((r) => (
           <Card key={r.title}>
