@@ -301,9 +301,7 @@ export function ReturnDialog({
                     <Fragment key={String(l.item.id)}>
                       <TableRow key={l.item.id}>
                         <TableCell className="font-medium">{l.item.product_name}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {l.item.sku ?? "—"}
-                        </TableCell>
+                        <TableCell className="text-muted-foreground">{l.item.sku ?? "—"}</TableCell>
                         <TableCell className="text-right">{l.returnable}</TableCell>
                         <TableCell>
                           <Input
