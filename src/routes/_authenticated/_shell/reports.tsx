@@ -190,7 +190,12 @@ function Reports() {
    */
   const needle = filter.trim().toLowerCase();
   const matches = (...fields: unknown[]) =>
-    !needle || fields.some((f) => String(f ?? "").toLowerCase().includes(needle));
+    !needle ||
+    fields.some((f) =>
+      String(f ?? "")
+        .toLowerCase()
+        .includes(needle),
+    );
 
   const identityLabel = (productId: unknown, variantId: unknown) => {
     const product = productById.get(String(productId));
@@ -294,7 +299,6 @@ function Reports() {
     })
     .filter((r) => matches(r.item, r.variant, r.sku, r.barcode, r.reference)) as unknown as Row[];
   const movementValue = movementRows.reduce((a, r) => a + Math.abs(Number(r.total_cost)), 0);
-
 
   const reports = [
     {
