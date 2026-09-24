@@ -71,6 +71,13 @@
       "when": 1790061352703,
       "tag": "0009_sales_return_batch_serial_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790214244401,
+      "tag": "0010_unit_conversion_guard_allow_default_seed",
+      "breakpoints": true
     }
   ]
 }
