@@ -378,7 +378,9 @@ export function useProductVariants(businessId: string | null) {
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Cost</Label>
+                <Label className="mb-1 block text-[11px] text-muted-foreground">
+                  Cost (this variant)
+                </Label>
                 <Input
                   type="number"
                   step="any"
@@ -389,7 +391,9 @@ export function useProductVariants(businessId: string | null) {
                 />
               </div>
               <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Price</Label>
+                <Label className="mb-1 block text-[11px] text-muted-foreground">
+                  Selling price (this variant)
+                </Label>
                 <Input
                   type="number"
                   step="any"

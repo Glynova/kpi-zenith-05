@@ -12,7 +12,9 @@ export const LEGACY_MASTER_DATA_ROUTES: Record<string, MasterDataTab> = {
 };
 
 export function parseMasterDataTab(value: unknown): MasterDataTab {
-  return MASTER_DATA_TABS.includes(value as MasterDataTab) ? (value as MasterDataTab) : "categories";
+  return MASTER_DATA_TABS.includes(value as MasterDataTab)
+    ? (value as MasterDataTab)
+    : "categories";
 }
 
 const categoryColumns: Column[] = [
