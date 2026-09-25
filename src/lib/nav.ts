@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Package,
   Tags,
-  Truck,
   Users,
   Boxes,
   ClipboardList,
@@ -23,7 +22,6 @@ import {
   ScrollText,
   Palette,
   Ruler,
-  Warehouse,
   Barcode,
   ArrowLeftRight,
   ClipboardCheck,
@@ -44,6 +42,8 @@ export type NavItem = {
   feature?: FeatureKey;
   /** Extra words that should match in the command palette. */
   keywords?: string;
+  /** Tabs shown nested under this item (links carry ?tab=). */
+  children?: { title: string; tab: string; feature?: FeatureKey }[];
 };
 
 export type NavGroup = {
@@ -90,7 +90,17 @@ export const NAV_GROUPS: NavGroup[] = [
     icon: Boxes,
     items: [
       { title: "Products", url: "/products", icon: Package, keywords: "items catalog sku" },
-      { title: "Categories", url: "/categories", icon: Tags },
+      {
+        title: "Master Data",
+        url: "/inventory/master-data",
+        icon: Tags,
+        keywords: "categories suppliers vendors locations warehouse branch setup",
+        children: [
+          { title: "Categories", tab: "categories" },
+          { title: "Suppliers", tab: "suppliers", feature: "enable_purchasing" },
+          { title: "Locations", tab: "locations" },
+        ],
+      },
       { title: "Stock Movements", url: "/inventory", icon: Boxes, keywords: "ledger stock in out" },
       {
         title: "Stock Counts",
@@ -105,8 +115,6 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ClipboardList,
         keywords: "po purchasing receive",
       },
-      { title: "Suppliers", url: "/suppliers", icon: Truck, keywords: "vendors" },
-      { title: "Locations", url: "/locations", icon: Warehouse, keywords: "warehouse branch" },
       { title: "Units", url: "/units", icon: Ruler, keywords: "uom measure" },
       {
         title: "Batches",
