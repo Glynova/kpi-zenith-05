@@ -72,6 +72,7 @@ import { Route as AuthenticatedAffiliatePayoutsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAffiliatePromoCodesRouteImport } from './routes/_authenticated/affiliate/promo-codes'
 import { Route as AuthenticatedAffiliateReferralsRouteImport } from './routes/_authenticated/affiliate/referrals'
 import { Route as AuthenticatedAffiliateSettingsRouteImport } from './routes/_authenticated/affiliate/settings'
+import { Route as AuthenticatedShellInventoryMasterDataRouteImport } from './routes/_authenticated/_shell/inventory_.master-data'
 import { Route as AuthenticatedShellProductsProductIdRouteImport } from './routes/_authenticated/_shell/products_.$productId'
 import { Route as ApiPublicWebhooksPaymongoRouteImport } from './routes/api/public/webhooks/paymongo'
 
@@ -433,6 +434,12 @@ const AuthenticatedAffiliateSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAffiliateRouteRoute,
   } as any)
+const AuthenticatedShellInventoryMasterDataRoute =
+  AuthenticatedShellInventoryMasterDataRouteImport.update({
+    id: '/inventory_/master-data',
+    path: '/inventory/master-data',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellProductsProductIdRoute =
   AuthenticatedShellProductsProductIdRouteImport.update({
     id: '/products_/$productId',
@@ -508,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/affiliate/': typeof AuthenticatedAffiliateIndexRoute
+  '/inventory/master-data': typeof AuthenticatedShellInventoryMasterDataRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -571,6 +579,7 @@ export interface FileRoutesByTo {
   '/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/affiliate': typeof AuthenticatedAffiliateIndexRoute
+  '/inventory/master-data': typeof AuthenticatedShellInventoryMasterDataRoute
   '/products/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -639,6 +648,7 @@ export interface FileRoutesById {
   '/_authenticated/affiliate/settings': typeof AuthenticatedAffiliateSettingsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/affiliate/': typeof AuthenticatedAffiliateIndexRoute
+  '/_authenticated/_shell/inventory_/master-data': typeof AuthenticatedShellInventoryMasterDataRoute
   '/_authenticated/_shell/products_/$productId': typeof AuthenticatedShellProductsProductIdRoute
   '/api/public/webhooks/paymongo': typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -706,6 +716,7 @@ export interface FileRouteTypes {
     | '/affiliate/settings'
     | '/admin/'
     | '/affiliate/'
+    | '/inventory/master-data'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesByTo: FileRoutesByTo
@@ -769,6 +780,7 @@ export interface FileRouteTypes {
     | '/affiliate/settings'
     | '/admin'
     | '/affiliate'
+    | '/inventory/master-data'
     | '/products/$productId'
     | '/api/public/webhooks/paymongo'
   id:
@@ -836,6 +848,7 @@ export interface FileRouteTypes {
     | '/_authenticated/affiliate/settings'
     | '/_authenticated/admin/'
     | '/_authenticated/affiliate/'
+    | '/_authenticated/_shell/inventory_/master-data'
     | '/_authenticated/_shell/products_/$productId'
     | '/api/public/webhooks/paymongo'
   fileRoutesById: FileRoutesById
@@ -1296,6 +1309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAffiliateSettingsRouteImport
       parentRoute: typeof AuthenticatedAffiliateRouteRoute
     }
+    '/_authenticated/_shell/inventory_/master-data': {
+      id: '/_authenticated/_shell/inventory_/master-data'
+      path: '/inventory/master-data'
+      fullPath: '/inventory/master-data'
+      preLoaderRoute: typeof AuthenticatedShellInventoryMasterDataRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/products_/$productId': {
       id: '/_authenticated/_shell/products_/$productId'
       path: '/products/$productId'
@@ -1346,6 +1366,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
   AuthenticatedShellUpgradeRoute: typeof AuthenticatedShellUpgradeRoute
   AuthenticatedShellVariantsRoute: typeof AuthenticatedShellVariantsRoute
+  AuthenticatedShellInventoryMasterDataRoute: typeof AuthenticatedShellInventoryMasterDataRoute
   AuthenticatedShellProductsProductIdRoute: typeof AuthenticatedShellProductsProductIdRoute
 }
 
@@ -1385,6 +1406,8 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
     AuthenticatedShellUpgradeRoute: AuthenticatedShellUpgradeRoute,
     AuthenticatedShellVariantsRoute: AuthenticatedShellVariantsRoute,
+    AuthenticatedShellInventoryMasterDataRoute:
+      AuthenticatedShellInventoryMasterDataRoute,
     AuthenticatedShellProductsProductIdRoute:
       AuthenticatedShellProductsProductIdRoute,
   }

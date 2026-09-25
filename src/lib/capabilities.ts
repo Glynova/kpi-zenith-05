@@ -151,6 +151,8 @@ export const ROUTE_CAPABILITY: Record<string, CapabilityKey> = {
 };
 
 export function routeCapability(pathname: string): CapabilityKey | undefined {
+  // Master Data holds basic catalog setup; each tab is guarded individually.
+  if (pathname === "/inventory/master-data") return undefined;
   if (ROUTE_CAPABILITY[pathname]) return ROUTE_CAPABILITY[pathname];
   const base = Object.keys(ROUTE_CAPABILITY).find((r) => pathname.startsWith(`${r}/`));
   return base ? ROUTE_CAPABILITY[base] : undefined;

@@ -126,6 +126,23 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
                                   <span className="truncate">{item.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>
+                              {item.children && (
+                                <ul className="ml-5 mt-0.5 space-y-0.5 border-l border-sidebar-border pl-2">
+                                  {item.children
+                                    .filter((c) => !c.feature || feature(c.feature))
+                                    .map((c) => (
+                                      <li key={c.tab}>
+                                        <Link
+                                          to="/inventory/master-data"
+                                          search={{ tab: c.tab as "categories" }}
+                                          className="block rounded px-2 py-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                                        >
+                                          {c.title}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                </ul>
+                              )}
                             </SidebarMenuSubItem>
                           ))}
                         </SidebarMenuSub>

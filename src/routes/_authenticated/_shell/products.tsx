@@ -418,7 +418,8 @@ function ProductsPage() {
                 <div>
                   <Label className="text-xs font-semibold">This product has variants</Label>
                   <p className="text-[11px] text-muted-foreground">
-                    Stock, SKU and price are tracked per variant.
+                    Stock, SKU, cost and selling price are tracked per variant. The product cost and
+                    price above are only defaults for new variants.
                   </p>
                 </div>
                 <Switch
