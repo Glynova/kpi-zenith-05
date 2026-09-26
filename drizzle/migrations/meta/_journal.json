@@ -78,6 +78,13 @@
       "when": 1790214244401,
       "tag": "0010_unit_conversion_guard_allow_default_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790385915512,
+      "tag": "0011_variant_cost_isolation",
+      "breakpoints": true
     }
   ]
 }
