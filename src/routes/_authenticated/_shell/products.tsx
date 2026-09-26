@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useBusiness } from "@/lib/business-context";
 import { db, type Row } from "@/lib/db";
+import { formatCurrency } from "@/lib/format";
 import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
 const columns: Column[] = [
@@ -212,10 +213,8 @@ function ProductsPage() {
         .from("product_variants")
         .select("product_id,stock,status,cost_price,selling_price")
         .eq("business_id", businessId);
-      const map: Record<
-        string,
-        { count: number; stock: number; cost: number[]; price: number[] }
-      > = {};
+      const map: Record<string, { count: number; stock: number; cost: number[]; price: number[] }> =
+        {};
       for (const v of (data ?? []) as Row[]) {
         if (String(v.status) === "archived") continue;
         const pid = String(v.product_id);
@@ -331,7 +330,7 @@ function ProductsPage() {
                   // parent value is only a default, so show the variant range.
                   render: (row) => {
                     const s = variantSummary[row.id];
-                    const fmt = (n: number) => formatMoney(n, currency);
+                    const fmt = (n: number) => formatCurrency(n, currency);
                     if (!s?.count) return fmt(Number(row[c.key] ?? 0));
                     const list = c.key === "cost_price" ? s.cost : s.price;
                     const lo = Math.min(...list);
@@ -344,22 +343,24 @@ function ProductsPage() {
                   },
                 }
               : c.key === "stock" && variantsEnabled
-              ? {
-                  ...c,
-                  render: (row) => {
-                    const summary = variantSummary[row.id];
-                    const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
-                    return (
-                      <span className="tabular-nums">
-                        {qty}
-                        {summary?.count ? (
-                          <span className="ml-1 text-[11px] text-muted-foreground">(derived)</span>
-                        ) : null}
-                      </span>
-                    );
-                  },
-                }
-              : c,
+                ? {
+                    ...c,
+                    render: (row) => {
+                      const summary = variantSummary[row.id];
+                      const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
+                      return (
+                        <span className="tabular-nums">
+                          {qty}
+                          {summary?.count ? (
+                            <span className="ml-1 text-[11px] text-muted-foreground">
+                              (derived)
+                            </span>
+                          ) : null}
+                        </span>
+                      );
+                    },
+                  }
+                : c,
           ),
         ...(variantsEnabled
           ? [
