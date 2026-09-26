@@ -210,15 +210,20 @@ function ProductsPage() {
     queryFn: async () => {
       const { data } = await db
         .from("product_variants")
-        .select("product_id,stock,status")
+        .select("product_id,stock,status,cost_price,selling_price")
         .eq("business_id", businessId);
-      const map: Record<string, { count: number; stock: number }> = {};
+      const map: Record<
+        string,
+        { count: number; stock: number; cost: number[]; price: number[] }
+      > = {};
       for (const v of (data ?? []) as Row[]) {
         if (String(v.status) === "archived") continue;
         const pid = String(v.product_id);
-        map[pid] ??= { count: 0, stock: 0 };
+        map[pid] ??= { count: 0, stock: 0, cost: [], price: [] };
         map[pid].count += 1;
         map[pid].stock += Number(v.stock ?? 0);
+        map[pid].cost.push(Number(v.cost_price ?? 0));
+        map[pid].price.push(Number(v.selling_price ?? 0));
       }
       return map;
     },
@@ -319,7 +324,26 @@ function ProductsPage() {
         ...columns
           .filter((c) => keep(c.key))
           .map((c): Column =>
-            c.key === "stock" && variantsEnabled
+            (c.key === "cost_price" || c.key === "selling_price") && variantsEnabled
+              ? {
+                  ...c,
+                  // Variant products: the variant values are authoritative; the
+                  // parent value is only a default, so show the variant range.
+                  render: (row) => {
+                    const s = variantSummary[row.id];
+                    const fmt = (n: number) => formatMoney(n, currency);
+                    if (!s?.count) return fmt(Number(row[c.key] ?? 0));
+                    const list = c.key === "cost_price" ? s.cost : s.price;
+                    const lo = Math.min(...list);
+                    const hi = Math.max(...list);
+                    return (
+                      <span className="tabular-nums">
+                        {lo === hi ? fmt(lo) : `${fmt(lo)} – ${fmt(hi)}`}
+                      </span>
+                    );
+                  },
+                }
+              : c.key === "stock" && variantsEnabled
               ? {
                   ...c,
                   render: (row) => {
