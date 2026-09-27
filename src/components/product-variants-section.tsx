@@ -19,6 +19,30 @@ import { Label } from "@/components/ui/label";
 
 export type VariantOption = { key: string; name: string; values: string };
 
+export type VariantExtra = {
+  weight: number | null;
+  wholesale_price: number | null;
+  supplier_item_code: string;
+  min_stock: number | null;
+  max_stock: number | null;
+  reorder_level: number | null;
+  reorder_quantity: number | null;
+  bin_location: string;
+};
+
+const EXTRA_KEYS: { key: keyof VariantExtra; label: string; numeric: boolean }[] = [
+  { key: "wholesale_price", label: "Wholesale", numeric: true },
+  { key: "weight", label: "Weight", numeric: true },
+  { key: "supplier_item_code", label: "Supplier code", numeric: false },
+  { key: "bin_location", label: "Shelf / bin", numeric: false },
+  { key: "min_stock", label: "Min stock", numeric: true },
+  { key: "max_stock", label: "Max stock", numeric: true },
+  { key: "reorder_level", label: "Reorder point", numeric: true },
+  { key: "reorder_quantity", label: "Reorder qty", numeric: true },
+];
+
+const num = (v: unknown) => (v === null || v === undefined || v === "" ? null : Number(v));
+
 export type VariantDraft = {
   key: string;
   id: string | null;
@@ -30,6 +54,7 @@ export type VariantDraft = {
   selling_price: number;
   stock: number;
   status: string;
+  extra: VariantExtra;
   /** Set once the user edits price/cost so parent defaults never overwrite it. */
   overridden: boolean;
 };
@@ -100,7 +125,9 @@ export function useProductVariants(businessId: string | null) {
       }
       const { data } = await db
         .from("product_variants")
-        .select("id,name,sku,barcode,attributes,cost_price,selling_price,stock,status")
+        .select(
+          "id,name,sku,barcode,attributes,cost_price,selling_price,stock,status,weight,wholesale_price,supplier_item_code,min_stock,max_stock,reorder_level,reorder_quantity,bin_location",
+        )
         .eq("product_id", row.id)
         .order("created_at");
       const list = ((data ?? []) as Row[]).map((v) => ({
@@ -114,6 +141,16 @@ export function useProductVariants(businessId: string | null) {
         selling_price: Number(v.selling_price ?? 0),
         stock: Number(v.stock ?? 0),
         status: String(v.status ?? "active"),
+        extra: {
+          weight: num(v.weight),
+          wholesale_price: num(v.wholesale_price),
+          supplier_item_code: String(v.supplier_item_code ?? ""),
+          min_stock: num(v.min_stock),
+          max_stock: num(v.max_stock),
+          reorder_level: num(v.reorder_level),
+          reorder_quantity: num(v.reorder_quantity),
+          bin_location: String(v.bin_location ?? ""),
+        },
         overridden: true,
       }));
       setVariants(list);
@@ -184,6 +221,14 @@ export function useProductVariants(businessId: string | null) {
       cost_price: Number(v.cost_price ?? 0),
       selling_price: Number(v.selling_price ?? 0),
       status: v.status || "active",
+      weight: num(v.extra.weight),
+      wholesale_price: num(v.extra.wholesale_price),
+      supplier_item_code: v.extra.supplier_item_code.trim() || null,
+      min_stock: num(v.extra.min_stock),
+      max_stock: num(v.extra.max_stock),
+      reorder_level: num(v.extra.reorder_level) ?? 0,
+      reorder_quantity: num(v.extra.reorder_quantity),
+      bin_location: v.extra.bin_location.trim() || null,
     });
 
     for (const v of variants) {
@@ -228,10 +273,12 @@ export function useProductVariants(businessId: string | null) {
     parentCost,
     parentPrice,
     parentSku,
+    parentDefaults,
   }: {
     parentCost: number;
     parentPrice: number;
     parentSku: string;
+    parentDefaults?: Partial<VariantExtra>;
   }) {
     const activeCount = variants.filter((v) => v.status !== "archived").length;
     const totalStock = useMemo(
@@ -265,6 +312,16 @@ export function useProductVariants(businessId: string | null) {
             selling_price: parentPrice,
             stock: 0,
             status: "active",
+            extra: {
+              weight: num(parentDefaults?.weight),
+              wholesale_price: num(parentDefaults?.wholesale_price),
+              supplier_item_code: String(parentDefaults?.supplier_item_code ?? ""),
+              min_stock: num(parentDefaults?.min_stock),
+              max_stock: num(parentDefaults?.max_stock),
+              reorder_level: num(parentDefaults?.reorder_level),
+              reorder_quantity: num(parentDefaults?.reorder_quantity),
+              bin_location: String(parentDefaults?.bin_location ?? ""),
+            },
             overridden: false,
             _i: i,
           }));
@@ -435,6 +492,28 @@ export function useProductVariants(businessId: string | null) {
                     <Trash2 className="size-4 text-destructive" />
                   </Button>
                 </div>
+              </div>
+              <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-4 lg:grid-cols-8">
+                {EXTRA_KEYS.map((f) => (
+                  <div key={f.key} className="min-w-0">
+                    <Label className="mb-1 block text-[11px] text-muted-foreground">
+                      {f.label}
+                    </Label>
+                    <Input
+                      type={f.numeric ? "number" : "text"}
+                      step="any"
+                      value={(v.extra[f.key] ?? "") as string | number}
+                      onChange={(e) =>
+                        update(v.key, {
+                          extra: {
+                            ...v.extra,
+                            [f.key]: f.numeric ? num(e.target.value) : e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           ))}
