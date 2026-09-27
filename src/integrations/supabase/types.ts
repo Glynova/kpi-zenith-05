@@ -1444,27 +1444,33 @@ export type Database = {
       }
       categories: {
         Row: {
+          attribute_schema: Json
           business_id: string
           created_at: string
           description: string | null
           id: string
           name: string
+          parent_id: string | null
           updated_at: string
         }
         Insert: {
+          attribute_schema?: Json
           business_id: string
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          parent_id?: string | null
           updated_at?: string
         }
         Update: {
+          attribute_schema?: Json
           business_id?: string
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          parent_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1473,6 +1479,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -2916,50 +2929,71 @@ export type Database = {
         Row: {
           attributes: Json
           barcode: string | null
+          bin_location: string | null
           business_id: string
           cost_price: number
           created_at: string
           id: string
+          max_stock: number | null
+          min_stock: number | null
           name: string
           product_id: string
           reorder_level: number
+          reorder_quantity: number | null
           selling_price: number
           sku: string | null
           status: string
           stock: number
+          supplier_item_code: string | null
           updated_at: string
+          weight: number | null
+          wholesale_price: number | null
         }
         Insert: {
           attributes?: Json
           barcode?: string | null
+          bin_location?: string | null
           business_id: string
           cost_price?: number
           created_at?: string
           id?: string
+          max_stock?: number | null
+          min_stock?: number | null
           name: string
           product_id: string
           reorder_level?: number
+          reorder_quantity?: number | null
           selling_price?: number
           sku?: string | null
           status?: string
           stock?: number
+          supplier_item_code?: string | null
           updated_at?: string
+          weight?: number | null
+          wholesale_price?: number | null
         }
         Update: {
           attributes?: Json
           barcode?: string | null
+          bin_location?: string | null
           business_id?: string
           cost_price?: number
           created_at?: string
           id?: string
+          max_stock?: number | null
+          min_stock?: number | null
           name?: string
           product_id?: string
           reorder_level?: number
+          reorder_quantity?: number | null
           selling_price?: number
           sku?: string | null
           status?: string
           stock?: number
+          supplier_item_code?: string | null
           updated_at?: string
+          weight?: number | null
+          wholesale_price?: number | null
         }
         Relationships: [
           {
@@ -3081,27 +3115,35 @@ export type Database = {
           average_cost: number
           barcode: string | null
           batch_number: string | null
+          bin_location: string | null
           brand: string | null
           business_id: string
+          category_attributes: Json
           category_id: string | null
           cost_price: number
           created_at: string
           default_location_id: string | null
           description: string | null
+          dimensions: Json
           expiration_date: string | null
           has_bom: boolean
           has_variants: boolean
           id: string
           image_url: string | null
+          internal_ref: string | null
           inventory_model: string
           is_finished_good: boolean
+          is_purchasable: boolean
+          is_sellable: boolean
           max_stock: number | null
           min_stock: number
           name: string
+          price_includes_tax: boolean
           product_type: string
           purchase_conversion: number
           purchase_unit: string | null
           reorder_level: number
+          reorder_quantity: number | null
           reserved_stock: number
           selling_price: number
           serial_number: string | null
@@ -3109,7 +3151,9 @@ export type Database = {
           standard_cost: number
           status: string
           stock: number
+          subcategory_id: string | null
           supplier_id: string | null
+          supplier_item_code: string | null
           tax_rate: number
           track_batch: boolean
           track_expiry: boolean
@@ -3119,32 +3163,42 @@ export type Database = {
           updated_at: string
           variant_options: Json
           warranty_months: number | null
+          weight: number | null
+          wholesale_price: number | null
         }
         Insert: {
           average_cost?: number
           barcode?: string | null
           batch_number?: string | null
+          bin_location?: string | null
           brand?: string | null
           business_id: string
+          category_attributes?: Json
           category_id?: string | null
           cost_price?: number
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          dimensions?: Json
           expiration_date?: string | null
           has_bom?: boolean
           has_variants?: boolean
           id?: string
           image_url?: string | null
+          internal_ref?: string | null
           inventory_model?: string
           is_finished_good?: boolean
+          is_purchasable?: boolean
+          is_sellable?: boolean
           max_stock?: number | null
           min_stock?: number
           name: string
+          price_includes_tax?: boolean
           product_type?: string
           purchase_conversion?: number
           purchase_unit?: string | null
           reorder_level?: number
+          reorder_quantity?: number | null
           reserved_stock?: number
           selling_price?: number
           serial_number?: string | null
@@ -3152,7 +3206,9 @@ export type Database = {
           standard_cost?: number
           status?: string
           stock?: number
+          subcategory_id?: string | null
           supplier_id?: string | null
+          supplier_item_code?: string | null
           tax_rate?: number
           track_batch?: boolean
           track_expiry?: boolean
@@ -3162,32 +3218,42 @@ export type Database = {
           updated_at?: string
           variant_options?: Json
           warranty_months?: number | null
+          weight?: number | null
+          wholesale_price?: number | null
         }
         Update: {
           average_cost?: number
           barcode?: string | null
           batch_number?: string | null
+          bin_location?: string | null
           brand?: string | null
           business_id?: string
+          category_attributes?: Json
           category_id?: string | null
           cost_price?: number
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          dimensions?: Json
           expiration_date?: string | null
           has_bom?: boolean
           has_variants?: boolean
           id?: string
           image_url?: string | null
+          internal_ref?: string | null
           inventory_model?: string
           is_finished_good?: boolean
+          is_purchasable?: boolean
+          is_sellable?: boolean
           max_stock?: number | null
           min_stock?: number
           name?: string
+          price_includes_tax?: boolean
           product_type?: string
           purchase_conversion?: number
           purchase_unit?: string | null
           reorder_level?: number
+          reorder_quantity?: number | null
           reserved_stock?: number
           selling_price?: number
           serial_number?: string | null
@@ -3195,7 +3261,9 @@ export type Database = {
           standard_cost?: number
           status?: string
           stock?: number
+          subcategory_id?: string | null
           supplier_id?: string | null
+          supplier_item_code?: string | null
           tax_rate?: number
           track_batch?: boolean
           track_expiry?: boolean
@@ -3205,6 +3273,8 @@ export type Database = {
           updated_at?: string
           variant_options?: Json
           warranty_months?: number | null
+          weight?: number | null
+          wholesale_price?: number | null
         }
         Relationships: [
           {
@@ -3226,6 +3296,13 @@ export type Database = {
             columns: ["default_location_id"]
             isOneToOne: false
             referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
