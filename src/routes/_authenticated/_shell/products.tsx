@@ -160,6 +160,15 @@ const fields: Field[] = [
     label: "Maximum stock",
     type: "number",
   },
+  { key: "reorder_quantity", label: "Reorder quantity", type: "number" },
+  { key: "internal_ref", label: "Internal reference", type: "text" },
+  { key: "wholesale_price", label: "Wholesale price", type: "number" },
+  { key: "weight", label: "Weight", type: "number" },
+  { key: "supplier_item_code", label: "Supplier item code", type: "text" },
+  { key: "bin_location", label: "Bin / zone location", type: "text" },
+  { key: "price_includes_tax", label: "Price includes tax", type: "boolean", default: false },
+  { key: "is_sellable", label: "Sellable", type: "boolean", default: true },
+  { key: "is_purchasable", label: "Purchasable", type: "boolean", default: true },
   {
     key: "batch_number",
     label: "Batch number",
@@ -391,24 +400,40 @@ function ProductsPage() {
             "name",
             "inventory_model",
             "sku",
+            "internal_ref",
             "barcode",
             "category_id",
             "brand",
             "unit",
             "status",
+            "is_sellable",
+            "is_purchasable",
           ],
         },
         {
           title: "Pricing",
-          description: "Cost, price and tax. Recipes for finished products live here too.",
-          fields: ["cost_price", "selling_price", "tax_rate", "standard_cost"],
+          description:
+            "Cost, price and tax. With variants on, these are defaults only — actual price/stock is set per variant.",
+          fields: [
+            "cost_price",
+            "selling_price",
+            "wholesale_price",
+            "tax_rate",
+            "price_includes_tax",
+            "standard_cost",
+          ],
         },
         {
           title: "Stock",
-          description: "Reorder rules and tracking details.",
+          description:
+            "Reorder rules and tracking. With variants on, these are defaults for new variant rows.",
           fields: [
             "supplier_id",
+            "supplier_item_code",
+            "weight",
+            "bin_location",
             "reorder_level",
+            "reorder_quantity",
             "min_stock",
             "max_stock",
             "batch_number",
@@ -459,6 +484,16 @@ function ProductsPage() {
                   parentCost={Number(form.cost_price ?? 0)}
                   parentPrice={Number(form.selling_price ?? 0)}
                   parentSku={String(form.sku ?? "")}
+                  parentDefaults={{
+                    weight: form.weight ?? null,
+                    wholesale_price: form.wholesale_price ?? null,
+                    supplier_item_code: String(form.supplier_item_code ?? ""),
+                    min_stock: form.min_stock ?? null,
+                    max_stock: form.max_stock ?? null,
+                    reorder_level: form.reorder_level ?? null,
+                    reorder_quantity: form.reorder_quantity ?? null,
+                    bin_location: String(form.bin_location ?? ""),
+                  }}
                 />
               ) : null}
             </div>

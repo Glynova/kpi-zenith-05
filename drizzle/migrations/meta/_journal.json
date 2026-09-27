@@ -85,6 +85,13 @@
       "when": 1790385915512,
       "tag": "0011_variant_cost_isolation",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790476054590,
+      "tag": "0012_item_core_fields_and_variant_levels",
+      "breakpoints": true
     }
   ]
 }
