@@ -3,19 +3,17 @@
  * Variant editor embedded in the product form.
  *
  * Edit Product is the single source of truth for a product and all of its
- * variants. This hook reads and writes the same `product_variants` rows every
- * other module (purchasing, receiving, inventory, POS) resolves against, and
- * stores the attribute dimensions on `products.variant_options`.
+ * variants. Rows are written to `product_variants`; opening quantities post an
+ * `opening_balance` movement against the exact variant so the stock ledger,
+ * POs, receiving, alerts and POS all resolve the same variant_id.
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Wand2, ArchiveRestore, Archive } from "lucide-react";
+import { Wand2, X } from "lucide-react";
 
 import { db, type Row } from "@/lib/db";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export type VariantOption = { key: string; name: string; values: string };
 
@@ -25,21 +23,9 @@ export type VariantExtra = {
   supplier_item_code: string;
   min_stock: number | null;
   max_stock: number | null;
-  reorder_level: number | null;
   reorder_quantity: number | null;
   bin_location: string;
 };
-
-const EXTRA_KEYS: { key: keyof VariantExtra; label: string; numeric: boolean }[] = [
-  { key: "wholesale_price", label: "Wholesale", numeric: true },
-  { key: "weight", label: "Weight", numeric: true },
-  { key: "supplier_item_code", label: "Supplier code", numeric: false },
-  { key: "bin_location", label: "Shelf / bin", numeric: false },
-  { key: "min_stock", label: "Min stock", numeric: true },
-  { key: "max_stock", label: "Max stock", numeric: true },
-  { key: "reorder_level", label: "Reorder point", numeric: true },
-  { key: "reorder_quantity", label: "Reorder qty", numeric: true },
-];
 
 const num = (v: unknown) => (v === null || v === undefined || v === "" ? null : Number(v));
 
@@ -52,20 +38,19 @@ export type VariantDraft = {
   barcode: string;
   cost_price: number;
   selling_price: number;
+  opening_qty: number;
+  reorder_level: number;
   stock: number;
   status: string;
   extra: VariantExtra;
-  /** Set once the user edits price/cost so parent defaults never overwrite it. */
-  overridden: boolean;
 };
 
+export const MAX_OPTIONS = 3;
 const rid = () => Math.random().toString(36).slice(2);
+const newOption = (): VariantOption => ({ key: rid(), name: "", values: "" });
+const blankOptions = () => Array.from({ length: MAX_OPTIONS }, newOption);
 
-function newOption(): VariantOption {
-  return { key: rid(), name: "", values: "" };
-}
-
-function splitValues(raw: string) {
+export function splitValues(raw: string) {
   return Array.from(
     new Set(
       raw
@@ -76,7 +61,7 @@ function splitValues(raw: string) {
   );
 }
 
-/** Cartesian product of the attribute dimensions, e.g. Color × Size. */
+/** Cartesian product of the attribute dimensions, e.g. Size × Type. */
 export function combinations(options: VariantOption[]): Record<string, string>[] {
   const dims = options
     .map((o) => ({ name: o.name.trim(), values: splitValues(o.values) }))
@@ -99,30 +84,41 @@ export const comboLabel = (attrs: Record<string, string>) =>
     .map((k) => attrs[k])
     .join(" / ");
 
+export type VariantDefaults = {
+  cost: number;
+  price: number;
+  sku: string;
+  name: string;
+  reorderLevel: number;
+};
+
+function skuFor(base: string, attrs: Record<string, string>) {
+  const prefix = (base || "").trim().toUpperCase();
+  if (!prefix) return "";
+  return `${prefix}-${Object.values(attrs)
+    .map((v) =>
+      String(v)
+        .replace(/\s+/g, "")
+        .slice(0, 3)
+        .toUpperCase(),
+    )
+    .join("-")}`;
+}
+
 export function useProductVariants(businessId: string | null) {
   const queryClient = useQueryClient();
-  const [options, setOptions] = useState<VariantOption[]>([newOption()]);
+  const [options, setOptions] = useState<VariantOption[]>(blankOptions);
   const [variants, setVariants] = useState<VariantDraft[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async (row: Row | null) => {
-    setOptions([newOption()]);
+    setOptions(blankOptions());
     setVariants([]);
     setRemoved([]);
     if (!row?.id) return;
     setLoading(true);
     try {
-      const stored = Array.isArray(row.variant_options) ? (row.variant_options as any[]) : [];
-      if (stored.length) {
-        setOptions(
-          stored.map((o: any) => ({
-            key: rid(),
-            name: String(o?.name ?? ""),
-            values: Array.isArray(o?.values) ? o.values.join(", ") : String(o?.values ?? ""),
-          })),
-        );
-      }
       const { data } = await db
         .from("product_variants")
         .select(
@@ -130,7 +126,7 @@ export function useProductVariants(businessId: string | null) {
         )
         .eq("product_id", row.id)
         .order("created_at");
-      const list = ((data ?? []) as Row[]).map((v) => ({
+      const list: VariantDraft[] = ((data ?? []) as Row[]).map((v) => ({
         key: v.id,
         id: v.id as string,
         attributes: (v.attributes ?? {}) as Record<string, string>,
@@ -139,6 +135,8 @@ export function useProductVariants(businessId: string | null) {
         barcode: String(v.barcode ?? ""),
         cost_price: Number(v.cost_price ?? 0),
         selling_price: Number(v.selling_price ?? 0),
+        opening_qty: 0,
+        reorder_level: Number(v.reorder_level ?? 0),
         stock: Number(v.stock ?? 0),
         status: String(v.status ?? "active"),
         extra: {
@@ -147,70 +145,67 @@ export function useProductVariants(businessId: string | null) {
           supplier_item_code: String(v.supplier_item_code ?? ""),
           min_stock: num(v.min_stock),
           max_stock: num(v.max_stock),
-          reorder_level: num(v.reorder_level),
           reorder_quantity: num(v.reorder_quantity),
           bin_location: String(v.bin_location ?? ""),
         },
-        overridden: true,
       }));
       setVariants(list);
-      if (!stored.length && list.length) {
-        // Rebuild the dimensions from the saved combinations.
+
+      const stored = Array.isArray(row.variant_options) ? (row.variant_options as any[]) : [];
+      let opts: VariantOption[] = stored.map((o: any) => ({
+        key: rid(),
+        name: String(o?.name ?? ""),
+        values: Array.isArray(o?.values) ? o.values.join(", ") : String(o?.values ?? ""),
+      }));
+      if (!opts.length && list.length) {
         const dims = new Map<string, Set<string>>();
-        for (const v of list) {
+        for (const v of list)
           for (const [k, val] of Object.entries(v.attributes)) {
             if (!dims.has(k)) dims.set(k, new Set());
             dims.get(k)!.add(String(val));
           }
-        }
-        if (dims.size) {
-          setOptions(
-            Array.from(dims.entries()).map(([name, values]) => ({
-              key: rid(),
-              name,
-              values: Array.from(values).join(", "),
-            })),
-          );
-        }
+        opts = Array.from(dims.entries()).map(([name, values]) => ({
+          key: rid(),
+          name,
+          values: Array.from(values).join(", "),
+        }));
       }
+      opts = opts.slice(0, MAX_OPTIONS);
+      while (opts.length < MAX_OPTIONS) opts.push(newOption());
+      setOptions(opts);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  function validate(): string | null {
-    const active = variants.filter((v) => v.status !== "archived");
-    if (!active.length)
-      return "Add at least one variant, or switch this product back to a simple product";
+  const active = variants.filter((v) => v.status !== "archived");
+
+  /** `takenSkus` = lowercased SKUs used elsewhere in the business. */
+  function validate(takenSkus: Set<string>): string | null {
+    if (!active.length) return "Add at least one variant (fill in options and Generate variants)";
     const names = new Set<string>();
     const skus = new Set<string>();
-    const barcodes = new Set<string>();
     for (const v of active) {
       const label = v.name.trim();
       if (!label) return "Every variant needs a name";
       if (names.has(label.toLowerCase())) return `Duplicate variant "${label}"`;
       names.add(label.toLowerCase());
-      const key = comboKey(v.attributes);
-      if (key && names.has(`combo:${key}`)) return `Duplicate combination "${label}"`;
-      names.add(`combo:${key}`);
       const sku = v.sku.trim().toLowerCase();
       if (sku) {
-        if (skus.has(sku)) return `Duplicate SKU "${v.sku.trim()}"`;
+        if (skus.has(sku) || takenSkus.has(sku))
+          return `SKU "${v.sku.trim()}" is already used in this business`;
         skus.add(sku);
-      }
-      const bc = v.barcode.trim().toLowerCase();
-      if (bc) {
-        if (barcodes.has(bc)) return `Duplicate barcode "${v.barcode.trim()}"`;
-        barcodes.add(bc);
       }
       if (Number(v.selling_price) < 0 || Number(v.cost_price) < 0)
         return `${label}: price and cost cannot be negative`;
+      if (Number(v.opening_qty) < 0) return `${label}: opening quantity cannot be negative`;
     }
     return null;
   }
 
-  /** Writes variants + the dimension definitions for this product. */
-  async function persist(productId: string) {
+  /** Writes variants + opening stock. Returns draft key → saved variant id. */
+  async function persist(productId: string, warehouseId: string | null) {
+    const ids: Record<string, string> = {};
     const payload = (v: VariantDraft) => ({
       business_id: businessId,
       product_id: productId,
@@ -221,27 +216,17 @@ export function useProductVariants(businessId: string | null) {
       cost_price: Number(v.cost_price ?? 0),
       selling_price: Number(v.selling_price ?? 0),
       status: v.status || "active",
+      reorder_level: Number(v.reorder_level ?? 0),
       weight: num(v.extra.weight),
       wholesale_price: num(v.extra.wholesale_price),
       supplier_item_code: v.extra.supplier_item_code.trim() || null,
       min_stock: num(v.extra.min_stock),
       max_stock: num(v.extra.max_stock),
-      reorder_level: num(v.extra.reorder_level) ?? 0,
       reorder_quantity: num(v.extra.reorder_quantity),
       bin_location: v.extra.bin_location.trim() || null,
     });
 
-    for (const v of variants) {
-      if (v.id) {
-        const { error } = await db.from("product_variants").update(payload(v)).eq("id", v.id);
-        if (error) throw error;
-      } else {
-        const { error } = await db.from("product_variants").insert(payload(v));
-        if (error) throw error;
-      }
-    }
-
-    // Removed variants are archived, never hard-deleted when history exists.
+    // Removed rows first so their SKUs are free for replacement rows.
     for (const id of removed) {
       const { error } = await db.from("product_variants").delete().eq("id", id);
       if (error) {
@@ -250,6 +235,43 @@ export function useProductVariants(businessId: string | null) {
           .update({ status: "archived" })
           .eq("id", id);
         if (archiveError) throw archiveError;
+      }
+    }
+
+    for (const v of variants) {
+      let id = v.id;
+      if (id) {
+        const { error } = await db.from("product_variants").update(payload(v)).eq("id", id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await db
+          .from("product_variants")
+          .insert(payload(v))
+          .select("id")
+          .single();
+        if (error) throw error;
+        id = data.id as string;
+      }
+      ids[v.key] = id;
+      const qty = Number(v.opening_qty ?? 0);
+      if (!v.id && qty > 0) {
+        const cost = Number(v.cost_price ?? 0);
+        const { error } = await db.from("inventory_movements").insert({
+          business_id: businessId,
+          product_id: productId,
+          variant_id: id,
+          warehouse_id: warehouseId,
+          type: "opening_balance",
+          quantity: qty,
+          base_quantity: qty,
+          unit_cost: cost,
+          total_cost: cost * qty,
+          reference: "Opening stock",
+          reference_type: "opening",
+          reason: "Opening stock",
+          movement_date: new Date().toISOString().slice(0, 10),
+        });
+        if (error) throw error;
       }
     }
 
@@ -264,265 +286,249 @@ export function useProductVariants(businessId: string | null) {
     if (optionsError) throw optionsError;
 
     setRemoved([]);
+    setVariants((prev) =>
+      prev.map((v) => ({ ...v, id: ids[v.key] ?? v.id, opening_qty: 0 })),
+    );
     queryClient.invalidateQueries({ queryKey: ["product-variant-summary", businessId] });
     queryClient.invalidateQueries({ queryKey: ["resource", "products", businessId] });
     queryClient.invalidateQueries({ queryKey: ["products-lite", businessId] });
+    return ids;
   }
 
-  function Section({
-    parentCost,
-    parentPrice,
-    parentSku,
-    parentDefaults,
-  }: {
-    parentCost: number;
-    parentPrice: number;
-    parentSku: string;
-    parentDefaults?: Partial<VariantExtra>;
-  }) {
-    const activeCount = variants.filter((v) => v.status !== "archived").length;
-    const totalStock = useMemo(
-      () => variants.reduce((s, v) => s + Number(v.stock ?? 0), 0),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [variants],
-    );
+  function update(key: string, patch: Partial<VariantDraft>) {
+    setVariants((prev) => prev.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+  }
 
-    function update(key: string, patch: Partial<VariantDraft>) {
-      setVariants((prev) => prev.map((v) => (v.key === key ? { ...v, ...patch } : v)));
-    }
+  /** Rebuild the rows from the options, keeping typed values for surviving combinations. */
+  function generate(d: VariantDefaults) {
+    const combos = combinations(options);
+    const byCombo = new Map(variants.map((v) => [comboKey(v.attributes), v]));
+    const next: VariantDraft[] = combos.map((attributes) => {
+      const existing = byCombo.get(comboKey(attributes));
+      if (existing) return { ...existing, attributes, status: "active" };
+      return {
+        key: rid(),
+        id: null,
+        attributes,
+        name: comboLabel(attributes),
+        sku: skuFor(d.sku || d.name.slice(0, 3), attributes),
+        barcode: "",
+        cost_price: d.cost,
+        selling_price: d.price,
+        opening_qty: 0,
+        reorder_level: d.reorderLevel,
+        stock: 0,
+        status: "active",
+        extra: {
+          weight: null,
+          wholesale_price: null,
+          supplier_item_code: "",
+          min_stock: null,
+          max_stock: null,
+          reorder_quantity: null,
+          bin_location: "",
+        },
+      };
+    });
+    const keep = new Set(next.map((v) => v.key));
+    const dropped = variants.filter((v) => !keep.has(v.key) && v.id).map((v) => v.id!);
+    if (dropped.length) setRemoved((r) => [...r, ...dropped]);
+    setVariants(next);
+  }
 
-    function generate() {
-      const combos = combinations(options);
-      setVariants((prev) => {
-        const seen = new Set(prev.map((v) => comboKey(v.attributes)));
-        const added = combos
-          .filter((c) => !seen.has(comboKey(c)))
-          .map((attributes, i) => ({
-            key: rid(),
-            id: null,
-            attributes,
-            name: comboLabel(attributes),
-            sku: parentSku
-              ? `${parentSku}-${Object.values(attributes)
-                  .map((v) => String(v).slice(0, 3).toUpperCase())
-                  .join("-")}`
-              : "",
-            barcode: "",
-            cost_price: parentCost,
-            selling_price: parentPrice,
-            stock: 0,
-            status: "active",
-            extra: {
-              weight: num(parentDefaults?.weight),
-              wholesale_price: num(parentDefaults?.wholesale_price),
-              supplier_item_code: String(parentDefaults?.supplier_item_code ?? ""),
-              min_stock: num(parentDefaults?.min_stock),
-              max_stock: num(parentDefaults?.max_stock),
-              reorder_level: num(parentDefaults?.reorder_level),
-              reorder_quantity: num(parentDefaults?.reorder_quantity),
-              bin_location: String(parentDefaults?.bin_location ?? ""),
-            },
-            overridden: false,
-            _i: i,
-          }));
-        return [...prev, ...added.map(({ _i, ...v }) => v)];
-      });
-    }
+  function removeRow(v: VariantDraft) {
+    if (v.id) setRemoved((r) => [...r, v.id!]);
+    setVariants((prev) => prev.filter((x) => x.key !== v.key));
+  }
 
-    function remove(v: VariantDraft) {
-      if (v.id) setRemoved((r) => [...r, v.id!]);
-      setVariants((prev) => prev.filter((x) => x.key !== v.key));
-    }
+  const setVariantCost = (key: string, cost: number) => update(key, { cost_price: cost });
 
-    const error = validate();
-
+  /** Options card (plain render function so inputs keep focus). */
+  function renderOptions(d: VariantDefaults) {
+    const count = combinations(options).length;
     return (
-      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <Label className="text-xs font-semibold">Variants</Label>
-            <p className="text-[11px] text-muted-foreground">
-              Define your dimensions, then generate every combination. Stock is tracked per variant.
-            </p>
+      <div className="rounded-xl border border-border">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h3 className="text-sm font-semibold">Options</h3>
+          <span className="text-xs text-muted-foreground">Separate values with commas</span>
+        </div>
+        <div className="space-y-2 p-4">
+          {options.map((o, i) => (
+            <div key={o.key} className="grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] gap-2">
+              <Input
+                aria-label={`Option ${i + 1} name`}
+                value={o.name}
+                placeholder={i === 0 ? "Size" : i === 1 ? "Type" : "Option 3 (optional)"}
+                onChange={(e) =>
+                  setOptions((prev) =>
+                    prev.map((x) => (x.key === o.key ? { ...x, name: e.target.value } : x)),
+                  )
+                }
+              />
+              <Input
+                aria-label={`Option ${i + 1} values`}
+                value={o.values}
+                placeholder={i === 0 ? "Regular, Large" : i === 1 ? "Beef, Chicken" : "Values"}
+                onChange={(e) =>
+                  setOptions((prev) =>
+                    prev.map((x) => (x.key === o.key ? { ...x, values: e.target.value } : x)),
+                  )
+                }
+              />
+            </div>
+          ))}
+          <div className="flex items-center gap-3 pt-1">
+            <Button type="button" variant="outline" onClick={() => generate(d)}>
+              <Wand2 className="size-4" /> Generate variants
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {count} variant{count === 1 ? "" : "s"}
+            </span>
           </div>
-          <Badge variant="secondary">
-            {activeCount} active · {totalStock} in stock
-          </Badge>
         </div>
-
-        <div className="space-y-2">
-          {options.map((o) => (
-            <div
-              key={o.key}
-              className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]"
-            >
-              <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Attribute</Label>
-                <Input
-                  value={o.name}
-                  placeholder="Color"
-                  onChange={(e) =>
-                    setOptions((prev) =>
-                      prev.map((x) => (x.key === o.key ? { ...x, name: e.target.value } : x)),
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">
-                  Values (comma separated)
-                </Label>
-                <Input
-                  value={o.values}
-                  placeholder="Black, White"
-                  onChange={(e) =>
-                    setOptions((prev) =>
-                      prev.map((x) => (x.key === o.key ? { ...x, values: e.target.value } : x)),
-                    )
-                  }
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Remove attribute"
-                onClick={() => setOptions((prev) => prev.filter((x) => x.key !== o.key))}
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setOptions((prev) => [...prev, newOption()])}
-          >
-            <Plus className="size-4" /> Add attribute
-          </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={generate}>
-            <Wand2 className="size-4" /> Generate combinations
-          </Button>
-        </div>
-
-        {loading && <p className="text-xs text-muted-foreground">Loading variants…</p>}
-
-        <div className="space-y-2">
-          {variants.map((v) => (
-            <div
-              key={v.key}
-              className={`grid grid-cols-2 items-end gap-2 rounded-lg border border-border bg-background p-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_90px_90px_auto] ${
-                v.status === "archived" ? "opacity-60" : ""
-              }`}
-            >
-              <div className="col-span-2 min-w-0 sm:col-span-1">
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Variant</Label>
-                <Input value={v.name} onChange={(e) => update(v.key, { name: e.target.value })} />
-              </div>
-              <div className="min-w-0">
-                <Label className="mb-1 block text-[11px] text-muted-foreground">SKU</Label>
-                <Input value={v.sku} onChange={(e) => update(v.key, { sku: e.target.value })} />
-              </div>
-              <div className="min-w-0">
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Barcode</Label>
-                <Input
-                  value={v.barcode}
-                  onChange={(e) => update(v.key, { barcode: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">
-                  Cost (this variant)
-                </Label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={v.cost_price}
-                  onChange={(e) =>
-                    update(v.key, { cost_price: Number(e.target.value), overridden: true })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">
-                  Selling price (this variant)
-                </Label>
-                <Input
-                  type="number"
-                  step="any"
-                  value={v.selling_price}
-                  onChange={(e) =>
-                    update(v.key, { selling_price: Number(e.target.value), overridden: true })
-                  }
-                />
-              </div>
-              <div className="col-span-2 flex items-center justify-between gap-1 sm:col-span-1 sm:justify-end">
-                <span className="text-[11px] text-muted-foreground sm:hidden">
-                  {v.stock} in stock
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label={v.status === "archived" ? "Restore variant" : "Archive variant"}
-                    title={v.status === "archived" ? "Restore variant" : "Archive variant"}
-                    onClick={() =>
-                      update(v.key, { status: v.status === "archived" ? "active" : "archived" })
-                    }
-                  >
-                    {v.status === "archived" ? (
-                      <ArchiveRestore className="size-4" />
-                    ) : (
-                      <Archive className="size-4" />
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove variant"
-                    title="Removed variants with history are archived automatically"
-                    onClick={() => remove(v)}
-                  >
-                    <Trash2 className="size-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-              <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-6 sm:grid-cols-4 lg:grid-cols-8">
-                {EXTRA_KEYS.map((f) => (
-                  <div key={f.key} className="min-w-0">
-                    <Label className="mb-1 block text-[11px] text-muted-foreground">
-                      {f.label}
-                    </Label>
-                    <Input
-                      type={f.numeric ? "number" : "text"}
-                      step="any"
-                      value={(v.extra[f.key] ?? "") as string | number}
-                      onChange={(e) =>
-                        update(v.key, {
-                          extra: {
-                            ...v.extra,
-                            [f.key]: f.numeric ? num(e.target.value) : e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {error && <p className="text-[11px] text-destructive">{error}</p>}
       </div>
     );
   }
 
-  return { load, validate, persist, Section, variants, options };
+  function renderTable() {
+    const cell = "h-9 text-sm";
+    return (
+      <div className="rounded-xl border border-border">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h3 className="text-sm font-semibold">Variants</h3>
+          <span className="text-xs text-muted-foreground">Stock is tracked per row</span>
+        </div>
+        <div className="space-y-2 p-4">
+          {loading && <p className="text-xs text-muted-foreground">Loading variants…</p>}
+          {variants.length === 0 && !loading ? (
+            <p className="text-xs text-muted-foreground">
+              Fill in the options above and press Generate variants.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left">
+                <thead>
+                  <tr className="text-xs text-muted-foreground">
+                    <th className="pb-2 pr-2 font-medium">Variant</th>
+                    <th className="pb-2 pr-2 font-medium">SKU</th>
+                    <th className="pb-2 pr-2 font-medium">Cost</th>
+                    <th className="pb-2 pr-2 font-medium">Price</th>
+                    <th className="pb-2 pr-2 font-medium">Opening qty</th>
+                    <th className="pb-2 pr-2 font-medium">Reorder</th>
+                    <th className="pb-2" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {variants.map((v) => (
+                    <tr key={v.key}>
+                      <td className="py-1 pr-2">
+                        <Input
+                          className={cell}
+                          aria-label="Variant name"
+                          value={v.name}
+                          onChange={(e) => update(v.key, { name: e.target.value })}
+                        />
+                      </td>
+                      <td className="py-1 pr-2">
+                        <Input
+                          className={cell}
+                          aria-label="Variant SKU"
+                          value={v.sku}
+                          onChange={(e) => update(v.key, { sku: e.target.value })}
+                        />
+                      </td>
+                      <td className="w-24 py-1 pr-2">
+                        <Input
+                          className={cell}
+                          type="number"
+                          step="any"
+                          aria-label="Variant cost"
+                          value={v.cost_price}
+                          onChange={(e) => update(v.key, { cost_price: Number(e.target.value) })}
+                        />
+                      </td>
+                      <td className="w-24 py-1 pr-2">
+                        <Input
+                          className={cell}
+                          type="number"
+                          step="any"
+                          aria-label="Variant price"
+                          value={v.selling_price}
+                          onChange={(e) =>
+                            update(v.key, { selling_price: Number(e.target.value) })
+                          }
+                        />
+                      </td>
+                      <td className="w-24 py-1 pr-2">
+                        {v.id ? (
+                          <span
+                            className="block px-2 text-sm tabular-nums text-muted-foreground"
+                            title="Existing variant — adjust stock from Inventory"
+                          >
+                            {v.stock} on hand
+                          </span>
+                        ) : (
+                          <Input
+                            className={cell}
+                            type="number"
+                            step="any"
+                            min="0"
+                            aria-label="Opening quantity"
+                            value={v.opening_qty}
+                            onChange={(e) =>
+                              update(v.key, { opening_qty: Number(e.target.value) })
+                            }
+                          />
+                        )}
+                      </td>
+                      <td className="w-20 py-1 pr-2">
+                        <Input
+                          className={cell}
+                          type="number"
+                          step="any"
+                          aria-label="Reorder level"
+                          value={v.reorder_level}
+                          onChange={(e) =>
+                            update(v.key, { reorder_level: Number(e.target.value) })
+                          }
+                        />
+                      </td>
+                      <td className="py-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="size-9"
+                          aria-label={`Remove ${v.name}`}
+                          title="Removed variants with history are archived automatically"
+                          onClick={() => removeRow(v)}
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="rounded-lg bg-primary/10 px-3 py-2 text-xs text-primary">
+            Each row becomes its own item in the stock ledger, purchase orders, and POS. Remove a
+            row to skip that combination.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return {
+    load,
+    validate,
+    persist,
+    renderOptions,
+    renderTable,
+    setVariantCost,
+    variants: active,
+    options,
+  };
 }
