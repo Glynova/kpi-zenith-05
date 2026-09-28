@@ -92,6 +92,13 @@
       "when": 1790476054590,
       "tag": "0012_item_core_fields_and_variant_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790572874073,
+      "tag": "0013_variant_bom_and_sku_uniqueness",
+      "breakpoints": true
     }
   ]
 }
