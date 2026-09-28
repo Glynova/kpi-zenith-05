@@ -89,6 +89,10 @@ export type Field = {
 
   /** Hide the field entirely for the current form state. */
   hidden?: (ctx: FormCtx) => boolean;
+  /** Form-only value; never written to the table. */
+  transient?: boolean;
+  /** Save an empty value as null (e.g. unique SKU columns). */
+  nullIfEmpty?: boolean;
 };
 
 type Props = {
@@ -198,6 +202,11 @@ export function ResourcePage({
   const save = useMutation({
     mutationFn: async (values: Row) => {
       const payload: Row = { ...values, business_id: businessId };
+      for (const f of fields) {
+        if (f.transient) delete payload[f.key];
+        else if (f.nullIfEmpty && (payload[f.key] === "" || payload[f.key] === undefined))
+          payload[f.key] = null;
+      }
       let id = editing?.id as string | undefined;
       if (editing) {
         const { error } = await db.from(table).update(payload).eq("id", editing.id);
