@@ -480,21 +480,16 @@ function ProductsPage() {
                 />
               </div>
               {form.has_variants ? (
-                <variants.Section
-                  parentCost={Number(form.cost_price ?? 0)}
-                  parentPrice={Number(form.selling_price ?? 0)}
-                  parentSku={String(form.sku ?? "")}
-                  parentDefaults={{
-                    weight: form.weight ?? null,
-                    wholesale_price: form.wholesale_price ?? null,
-                    supplier_item_code: String(form.supplier_item_code ?? ""),
-                    min_stock: form.min_stock ?? null,
-                    max_stock: form.max_stock ?? null,
-                    reorder_level: form.reorder_level ?? null,
-                    reorder_quantity: form.reorder_quantity ?? null,
-                    bin_location: String(form.bin_location ?? ""),
-                  }}
-                />
+                <>
+                  {variants.renderOptions({
+                    cost: Number(form.cost_price ?? 0),
+                    price: Number(form.selling_price ?? 0),
+                    sku: String(form.sku ?? ""),
+                    name: String(form.name ?? ""),
+                    reorderLevel: Number(form.reorder_level ?? 0),
+                  })}
+                  {variants.renderTable()}
+                </>
               ) : null}
             </div>
           ) : null}
@@ -502,11 +497,12 @@ function ProductsPage() {
       )}
       validate={({ form }) =>
         (isFinished(form) ? bom.validate() : null) ??
-        (variantsEnabled && form.has_variants ? variants.validate() : null)
+        (variantsEnabled && form.has_variants ? variants.validate(new Set()) : null)
       }
       afterSave={async ({ form, id }) => {
         if (isFinished(form)) await bom.persist(id, String(form.name ?? ""));
-        if (variantsEnabled && form.has_variants) await variants.persist(id);
+        if (variantsEnabled && form.has_variants)
+          await variants.persist(id, (form.default_location_id as string) || null);
       }}
       rowActions={(row) => (
         <Button asChild variant="ghost" size="icon" title="View details">
