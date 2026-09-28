@@ -782,6 +782,7 @@ export type Database = {
           product_id: string
           type: string
           updated_at: string
+          variant_id: string | null
           waste_percent: number
         }
         Insert: {
@@ -796,6 +797,7 @@ export type Database = {
           product_id: string
           type?: string
           updated_at?: string
+          variant_id?: string | null
           waste_percent?: number
         }
         Update: {
@@ -810,6 +812,7 @@ export type Database = {
           product_id?: string
           type?: string
           updated_at?: string
+          variant_id?: string | null
           waste_percent?: number
         }
         Relationships: [
@@ -825,6 +828,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_of_materials_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
