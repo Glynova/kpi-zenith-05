@@ -205,6 +205,18 @@ const fields: Field[] = [
 
 const description = "Your catalog. The form shows only the fields your business actually uses.";
 
+/** Small units whose cost above 1 per unit is usually a unit mismatch; value = the 1000× unit. */
+const SMALL_UNITS: Record<string, string> = {
+  g: "kg",
+  gram: "kg",
+  grams: "kg",
+  gm: "kg",
+  ml: "L",
+  milliliter: "L",
+  millilitre: "L",
+  mg: "g",
+};
+
 /** Product form + table adapt to the business configuration from the setup wizard. */
 function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
@@ -279,22 +291,41 @@ function ProductsPage() {
         return {
           ...field,
           label: "Cost price",
-          render: ({ form, setForm }) =>
-            isFinished(form) ? (
+          render: ({ form, setForm }) => {
+            const unit = String(form.unit || "pcs");
+            const basis = (
+              <p className="mt-1 text-[11px] text-muted-foreground">Cost basis: per {unit}</p>
+            );
+            if (isFinished(form))
+              return (
+                <div>
+                  <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Auto-calculated from components
+                  </p>
+                  {basis}
+                </div>
+              );
+            const small = SMALL_UNITS[unit.toLowerCase()];
+            const cost = Number(form.cost_price ?? 0);
+            const warn = small && cost > 1;
+            return (
               <div>
-                <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Auto-calculated from components
-                </p>
+                <Input
+                  type="number"
+                  step="any"
+                  value={form.cost_price ?? ""}
+                  onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
+                />
+                {basis}
+                {warn ? (
+                  <p className="mt-1 text-[11px] font-medium text-destructive" role="alert">
+                    That's {formatCurrency(cost * 1000, currency)} per {small}. Is that correct?
+                  </p>
+                ) : null}
               </div>
-            ) : (
-              <Input
-                type="number"
-                step="any"
-                value={form.cost_price ?? ""}
-                onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
-              />
-            ),
+            );
+          },
         };
       }
       if (field.key === "selling_price") {
