@@ -1062,6 +1062,58 @@ export type Database = {
           },
         ]
       }
+      bundle_components: {
+        Row: {
+          bundle_product_id: string
+          business_id: string
+          component_product_id: string
+          created_at: string
+          id: string
+          quantity: number
+          unit_cost: number
+        }
+        Insert: {
+          bundle_product_id: string
+          business_id: string
+          component_product_id: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          unit_cost?: number
+        }
+        Update: {
+          bundle_product_id?: string
+          business_id?: string
+          component_product_id?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bundle_components_bundle_product_id_fkey"
+            columns: ["bundle_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_components_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_components_component_product_id_fkey"
+            columns: ["component_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_onboarding: {
         Row: {
           business_id: string
@@ -3122,15 +3174,20 @@ export type Database = {
       }
       products: {
         Row: {
+          assigned_employee_id: string | null
           average_cost: number
           barcode: string | null
           batch_number: string | null
+          billing_unit: string | null
           bin_location: string | null
           brand: string | null
+          bundle_fixed_price: boolean
           business_id: string
           category_attributes: Json
           category_id: string | null
+          commission_rate: number | null
           cost_price: number
+          costing_method: string | null
           created_at: string
           default_location_id: string | null
           description: string | null
@@ -3140,11 +3197,15 @@ export type Database = {
           has_variants: boolean
           id: string
           image_url: string | null
+          image_urls: string[]
+          income_account: string | null
           internal_ref: string | null
           inventory_model: string
           is_finished_good: boolean
           is_purchasable: boolean
           is_sellable: boolean
+          item_subtype: string | null
+          item_type: string
           max_stock: number | null
           min_stock: number
           name: string
@@ -3154,9 +3215,11 @@ export type Database = {
           purchase_unit: string | null
           reorder_level: number
           reorder_quantity: number | null
+          requires_booking: boolean
           reserved_stock: number
           selling_price: number
           serial_number: string | null
+          service_duration_minutes: number | null
           sku: string | null
           standard_cost: number
           status: string
@@ -3168,6 +3231,7 @@ export type Database = {
           track_batch: boolean
           track_expiry: boolean
           track_serial: boolean
+          track_stock: boolean
           track_warranty: boolean
           unit: string
           updated_at: string
@@ -3177,15 +3241,20 @@ export type Database = {
           wholesale_price: number | null
         }
         Insert: {
+          assigned_employee_id?: string | null
           average_cost?: number
           barcode?: string | null
           batch_number?: string | null
+          billing_unit?: string | null
           bin_location?: string | null
           brand?: string | null
+          bundle_fixed_price?: boolean
           business_id: string
           category_attributes?: Json
           category_id?: string | null
+          commission_rate?: number | null
           cost_price?: number
+          costing_method?: string | null
           created_at?: string
           default_location_id?: string | null
           description?: string | null
@@ -3195,11 +3264,15 @@ export type Database = {
           has_variants?: boolean
           id?: string
           image_url?: string | null
+          image_urls?: string[]
+          income_account?: string | null
           internal_ref?: string | null
           inventory_model?: string
           is_finished_good?: boolean
           is_purchasable?: boolean
           is_sellable?: boolean
+          item_subtype?: string | null
+          item_type?: string
           max_stock?: number | null
           min_stock?: number
           name: string
@@ -3209,9 +3282,11 @@ export type Database = {
           purchase_unit?: string | null
           reorder_level?: number
           reorder_quantity?: number | null
+          requires_booking?: boolean
           reserved_stock?: number
           selling_price?: number
           serial_number?: string | null
+          service_duration_minutes?: number | null
           sku?: string | null
           standard_cost?: number
           status?: string
@@ -3223,6 +3298,7 @@ export type Database = {
           track_batch?: boolean
           track_expiry?: boolean
           track_serial?: boolean
+          track_stock?: boolean
           track_warranty?: boolean
           unit?: string
           updated_at?: string
@@ -3232,15 +3308,20 @@ export type Database = {
           wholesale_price?: number | null
         }
         Update: {
+          assigned_employee_id?: string | null
           average_cost?: number
           barcode?: string | null
           batch_number?: string | null
+          billing_unit?: string | null
           bin_location?: string | null
           brand?: string | null
+          bundle_fixed_price?: boolean
           business_id?: string
           category_attributes?: Json
           category_id?: string | null
+          commission_rate?: number | null
           cost_price?: number
+          costing_method?: string | null
           created_at?: string
           default_location_id?: string | null
           description?: string | null
@@ -3250,11 +3331,15 @@ export type Database = {
           has_variants?: boolean
           id?: string
           image_url?: string | null
+          image_urls?: string[]
+          income_account?: string | null
           internal_ref?: string | null
           inventory_model?: string
           is_finished_good?: boolean
           is_purchasable?: boolean
           is_sellable?: boolean
+          item_subtype?: string | null
+          item_type?: string
           max_stock?: number | null
           min_stock?: number
           name?: string
@@ -3264,9 +3349,11 @@ export type Database = {
           purchase_unit?: string | null
           reorder_level?: number
           reorder_quantity?: number | null
+          requires_booking?: boolean
           reserved_stock?: number
           selling_price?: number
           serial_number?: string | null
+          service_duration_minutes?: number | null
           sku?: string | null
           standard_cost?: number
           status?: string
@@ -3278,6 +3365,7 @@ export type Database = {
           track_batch?: boolean
           track_expiry?: boolean
           track_serial?: boolean
+          track_stock?: boolean
           track_warranty?: boolean
           unit?: string
           updated_at?: string
@@ -3287,6 +3375,13 @@ export type Database = {
           wholesale_price?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "products_assigned_employee_id_fkey"
+            columns: ["assigned_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_business_id_fkey"
             columns: ["business_id"]
