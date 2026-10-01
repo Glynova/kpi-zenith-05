@@ -113,6 +113,13 @@
       "when": 1790732470795,
       "tag": "0015_item_form_single_page_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790813254298,
+      "tag": "0016_bundle_components_sale_deduction",
+      "breakpoints": true
     }
   ]
 }
