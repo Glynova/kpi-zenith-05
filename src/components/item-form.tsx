@@ -62,7 +62,7 @@ export function ItemForm({ form, setForm, editing, businessId, currency, variant
   }, [businessId, editing?.id, form.sku]);
   const set = (key: string, value: unknown) => setForm({ ...form, [key]: value });
   const text = (key: string, label: string, type = "text") => <div className="min-w-0 space-y-1.5"><Label htmlFor={`item-${key}`}>{label}</Label><Input id={`item-${key}`} type={type} min={type === "number" ? 0 : undefined} step={type === "number" ? "any" : undefined} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)} /></div>;
-  const choice = (key: string, label: string, options: { id: string; name: string }[], placeholder = "Select") => <div className="min-w-0 space-y-1.5"><Label>{label}</Label><Select value={String(form[key] || "none")} onValueChange={(v) => set(key, v === "none" ? null : v)}><SelectTrigger aria-label={label}><SelectValue placeholder={placeholder} /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{options.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select></div>;
+  const choice = (key: string, label: string, options: Row[], placeholder = "Select") => <div className="min-w-0 space-y-1.5"><Label>{label}</Label><Select value={String(form[key] || "none")} onValueChange={(v) => set(key, v === "none" ? null : v)}><SelectTrigger aria-label={label}><SelectValue placeholder={placeholder} /></SelectTrigger><SelectContent><SelectItem value="none">None</SelectItem>{options.map((o) => <SelectItem key={String(o.id)} value={String(o.id)}>{String(o.name)}</SelectItem>)}</SelectContent></Select></div>;
   const toggle = (key: string, label: string, disabled = false) => <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!form[key]} disabled={disabled} onCheckedChange={(v) => set(key, v === true)} />{label}</label>;
   const section = "space-y-4 rounded-md border border-border bg-card p-4 sm:p-5";
   const cost = Number(form.cost_price ?? 0), price = Number(form.selling_price ?? 0);
@@ -75,7 +75,7 @@ export function ItemForm({ form, setForm, editing, businessId, currency, variant
     <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
       <div className={section}>
         <div className="grid gap-4 sm:grid-cols-2">
-          {choice("item_type", "Item type", TYPES.map((id) => ({ id, name: titleCase(id) })))}
+          {<div className="space-y-1.5"><Label>Item type</Label><Select value={kind} onValueChange={(v) => setForm({ ...form, item_type: v, item_subtype: SUBTYPES[v][0], inventory_model: v === "service" ? "service" : v === "non_stock" || v === "bundle" ? "non_stocked_item" : "stocked_item", track_stock: v === "product", has_variants: v === "product" ? form.has_variants : false })}><SelectTrigger aria-label="Item type"><SelectValue /></SelectTrigger><SelectContent>{TYPES.map((id) => <SelectItem key={id} value={id}>{titleCase(id)}</SelectItem>)}</SelectContent></Select></div>}
           {choice("item_subtype", "Subtype", SUBTYPES[kind].map((id) => ({ id, name: titleCase(id) })))}
         </div>
         <div className="flex flex-wrap gap-2"><Badge variant="secondary">{titleCase(kind)}</Badge><Badge variant={form.status === "inactive" ? "secondary" : "default"}>{titleCase(String(form.status || "active"))}</Badge>{form.track_stock && <Badge variant="outline">Stock tracked</Badge>}{hasVariants && <Badge variant="outline">Variants</Badge>}</div>

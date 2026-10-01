@@ -122,6 +122,7 @@ type Props = {
   onOpenForm?: (row: Row | null) => void;
   /** Replace the generic form while retaining listing, save and edit behavior. */
   customForm?: (ctx: FormCtx & { submit: () => void; close: () => void; saving: boolean }) => ReactNode;
+  transformPayload?: (payload: Row, ctx: FormCtx) => Row;
   /** Split the form into a multi-step wizard. Field keys not listed fall into the last step. */
   steps?: { title: string; description?: string; fields: string[] }[];
   /** Illustration used on the empty state. */
@@ -146,6 +147,7 @@ export function ResourcePage({
   afterSave,
   onOpenForm,
   customForm,
+  transformPayload,
   steps,
   illustration = "generic",
 }: Props) {
@@ -302,7 +304,7 @@ export function ResourcePage({
         payload[f.key] = f.type === "number" ? Number(raw) : raw;
       }
     });
-    save.mutate(payload);
+    save.mutate(transformPayload ? transformPayload(payload, { form, setForm, editing }) : payload);
   }
 
   function exportCsv() {
