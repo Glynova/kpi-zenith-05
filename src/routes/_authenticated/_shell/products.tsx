@@ -4,13 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
-import { useProductBom } from "@/components/product-bom-section";
+import { ItemForm, newLine } from "@/components/item-form";
 import { useProductVariants } from "@/components/product-variants-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useBusiness } from "@/lib/business-context";
 import { db, type Row } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
@@ -220,9 +218,8 @@ const SMALL_UNITS: Record<string, string> = {
 /** Product form + table adapt to the business configuration from the setup wizard. */
 function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
-  const bom = useProductBom(businessId, currency);
+  const [bundleLines, setBundleLines] = useState([newLine()]);
   const variants = useProductVariants(businessId);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const variantsEnabled = feature("track_variants");
 
   /** Variant count + aggregate stock per parent product for the listing. */
@@ -282,77 +279,24 @@ function ProductsPage() {
     }
   };
 
-  const isFinished = (form: Row) => form.inventory_model === "finished_product";
-
-  const formFields = fields
-    .filter((f) => keep(f.key))
-    .map((field): Field => {
-      if (field.key === "cost_price") {
-        return {
-          ...field,
-          label: "Cost price",
-          render: ({ form, setForm }) => {
-            const unit = String(form.unit || "pcs");
-            const basis = (
-              <p className="mt-1 text-[11px] text-muted-foreground">Cost basis: per {unit}</p>
-            );
-            if (isFinished(form))
-              return (
-                <div>
-                  <Input value={Number(form.cost_price ?? 0).toFixed(2)} readOnly disabled />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Auto-calculated from components
-                  </p>
-                  {basis}
-                </div>
-              );
-            const small = SMALL_UNITS[unit.toLowerCase()];
-            const cost = Number(form.cost_price ?? 0);
-            const warn = small && cost > 1;
-            return (
-              <div>
-                <Input
-                  type="number"
-                  step="any"
-                  value={form.cost_price ?? ""}
-                  onChange={(e) => setForm({ ...form, cost_price: e.target.value })}
-                />
-                {basis}
-                {warn ? (
-                  <p className="mt-1 text-[11px] font-medium text-destructive" role="alert">
-                    That's {formatCurrency(cost * 1000, currency)} per {small}. Is that correct?
-                  </p>
-                ) : null}
-              </div>
-            );
-          },
-        };
-      }
-      if (field.key === "selling_price") {
-        return {
-          ...field,
-          render: ({ form, setForm }) => {
-            const price = Number(form.selling_price ?? 0);
-            const cost = Number(form.cost_price ?? 0);
-            const margin = price > 0 ? ((price - cost) / price) * 100 : null;
-            return (
-              <div>
-                <Input
-                  type="number"
-                  step="any"
-                  value={form.selling_price ?? ""}
-                  onChange={(e) => setForm({ ...form, selling_price: e.target.value })}
-                />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {margin === null ? "Margin: —" : `Margin: ${margin.toFixed(0)}%`}
-                </p>
-              </div>
-            );
-          },
-        };
-      }
-      return field;
-    });
+  const formFields: Field[] = [
+    ...fields,
+    { key: "item_type", label: "Item type", type: "select", default: "product" },
+    { key: "item_subtype", label: "Subtype", type: "text", default: "standard_product" },
+    { key: "costing_method", label: "Costing method", type: "text" },
+    { key: "track_stock", label: "Track stock", type: "boolean", default: true },
+    { key: "has_variants", label: "Has variants", type: "boolean", default: false },
+    { key: "bundle_fixed_price", label: "Fixed bundle price", type: "boolean", default: false },
+    { key: "service_duration_minutes", label: "Duration", type: "number" },
+    { key: "commission_rate", label: "Commission", type: "number" },
+    { key: "assigned_employee_id", label: "Employee", type: "text" },
+    { key: "income_account", label: "Income account", type: "text" },
+    { key: "requires_booking", label: "Requires booking", type: "boolean" },
+    { key: "billing_unit", label: "Billing unit", type: "text" },
+    { key: "default_location_id", label: "Location", type: "text" },
+    { key: "image_urls", label: "Images", type: "text" },
+    { key: "opening_quantity", label: "Opening quantity", type: "number", transient: true, default: 0 },
+  ];
 
   return (
     <ResourcePage
@@ -423,117 +367,39 @@ function ProductsPage() {
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
       illustration="inventory"
-      steps={[
-        {
-          title: "Basics",
-          description: "What is this product and how should it behave?",
-          fields: [
-            "name",
-            "inventory_model",
-            "sku",
-            "internal_ref",
-            "barcode",
-            "category_id",
-            "brand",
-            "unit",
-            "status",
-            "is_sellable",
-            "is_purchasable",
-          ],
-        },
-        {
-          title: "Pricing",
-          description:
-            "Cost, price and tax. With variants on, these are defaults only — actual price/stock is set per variant.",
-          fields: [
-            "cost_price",
-            "selling_price",
-            "wholesale_price",
-            "tax_rate",
-            "price_includes_tax",
-            "standard_cost",
-          ],
-        },
-        {
-          title: "Stock",
-          description:
-            "Reorder rules and tracking. With variants on, these are defaults for new variant rows.",
-          fields: [
-            "supplier_id",
-            "supplier_item_code",
-            "weight",
-            "bin_location",
-            "reorder_level",
-            "reorder_quantity",
-            "min_stock",
-            "max_stock",
-            "batch_number",
-            "serial_number",
-            "expiration_date",
-          ],
-        },
-        {
-          title: "Media",
-          description: "Photo and description shoppers and staff will see.",
-          fields: ["image_url", "description"],
-        },
-      ]}
+      customForm={(ctx) => <ItemForm {...ctx} businessId={businessId} currency={currency} variantsEnabled={variantsEnabled} variants={variants} bundleLines={bundleLines} setBundleLines={setBundleLines} />}
       onOpenForm={(row) => {
-        setEditingId(row?.id ?? null);
-        void bom.load(row);
         void variants.load(row);
+        setBundleLines([newLine()]);
+        if (row?.id && row.item_type === "bundle") {
+          void db.from("bundle_components").select("component_product_id,quantity").eq("bundle_product_id", row.id).then(({ data }: { data: Row[] | null }) => {
+            if (data?.length) setBundleLines(data.map((x) => ({ key: crypto.randomUUID(), productId: String(x.component_product_id), quantity: Number(x.quantity) })));
+          });
+        }
       }}
-      formExtrasAfter="cost_price"
-      formExtras={({ form, setForm }) => (
-        <>
-          {isFinished(form) ? (
-            <bom.Section
-              productName={String(form.name ?? "")}
-              excludeProductId={editingId}
-              onCostChange={(cost) => setForm({ ...form, cost_price: Number(cost.toFixed(4)) })}
-            />
-          ) : null}
-          {variantsEnabled ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-                <div>
-                  <Label className="text-xs font-semibold">This product has variants</Label>
-                  <p className="text-[11px] text-muted-foreground">
-                    Stock, SKU, cost and selling price are tracked per variant. The product cost and
-                    price above are only defaults for new variants.
-                  </p>
-                </div>
-                <Switch
-                  checked={!!form.has_variants}
-                  onCheckedChange={(v) =>
-                    setForm({ ...form, has_variants: v, product_type: v ? "variant" : "standard" })
-                  }
-                />
-              </div>
-              {form.has_variants ? (
-                <>
-                  {variants.renderOptions({
-                    cost: Number(form.cost_price ?? 0),
-                    price: Number(form.selling_price ?? 0),
-                    sku: String(form.sku ?? ""),
-                    name: String(form.name ?? ""),
-                    reorderLevel: Number(form.reorder_level ?? 0),
-                  })}
-                  {variants.renderTable()}
-                </>
-              ) : null}
-            </div>
-          ) : null}
-        </>
-      )}
-      validate={({ form }) =>
-        (isFinished(form) ? bom.validate() : null) ??
-        (variantsEnabled && form.has_variants ? variants.validate(new Set()) : null)
-      }
-      afterSave={async ({ form, id }) => {
-        if (isFinished(form)) await bom.persist(id, String(form.name ?? ""));
-        if (variantsEnabled && form.has_variants)
+      validate={({ form }) => {
+        const kind = String(form.item_type || "product");
+        const numeric = ["cost_price", "selling_price", "opening_quantity", "reorder_level", "reorder_quantity", "tax_rate", "service_duration_minutes", "commission_rate"];
+        if (numeric.some((key) => form[key] != null && form[key] !== "" && (!Number.isFinite(Number(form[key])) || Number(form[key]) < 0))) return "Numbers cannot be negative";
+        if (kind === "bundle" && (!bundleLines.length || bundleLines.some((line) => !line.productId || !(line.quantity > 0)))) return "Add at least one valid bundle component";
+        if (kind === "product" && form.has_variants) return variants.validate(new Set());
+        return null;
+      }}
+      afterSave={async ({ form, id, editing }) => {
+        if (form.item_type === "product" && form.has_variants && variantsEnabled)
           await variants.persist(id, (form.default_location_id as string) || null);
+        if (form.item_type === "bundle") {
+          const { error: delError } = await db.from("bundle_components").delete().eq("bundle_product_id", id);
+          if (delError) throw delError;
+          const { error } = await db.from("bundle_components").insert(bundleLines.map((line) => ({ business_id: businessId, bundle_product_id: id, component_product_id: line.productId, quantity: line.quantity })));
+          if (error) throw error;
+        }
+        const qty = Number(form.opening_quantity || 0);
+        if (!editing && qty > 0 && form.track_stock && !form.has_variants) {
+          const cost = Number(form.cost_price || 0);
+          const { error } = await db.from("inventory_movements").insert({ business_id: businessId, product_id: id, warehouse_id: form.default_location_id || null, type: "opening_balance", quantity: qty, base_quantity: qty, unit_cost: cost, total_cost: cost * qty, reference: "Opening stock", reference_type: "opening", reason: "Opening stock", movement_date: new Date().toISOString().slice(0, 10) });
+          if (error) throw error;
+        }
       }}
       rowActions={(row) => (
         <Button asChild variant="ghost" size="icon" title="View details">
