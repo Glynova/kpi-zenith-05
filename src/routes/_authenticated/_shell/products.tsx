@@ -364,6 +364,20 @@ function ProductsPage() {
           : []),
       ]}
       fields={formFields}
+      transformPayload={(payload, { form }) => {
+        const kind = String(form.item_type || "product");
+        payload.sku = String(form.sku || "").trim() || null;
+        payload.barcode = kind === "service" ? null : String(form.barcode || "").trim() || null;
+        payload.item_subtype = form.item_subtype || (kind === "service" ? "standard_service" : kind === "bundle" ? "fixed_bundle" : kind === "non_stock" ? "non_stock_item" : "standard_product");
+        payload.inventory_model = kind === "service" ? "service" : kind === "bundle" || kind === "non_stock" ? "non_stocked_item" : payload.inventory_model || "stocked_item";
+        payload.product_type = kind === "service" ? "service" : kind === "bundle" ? "bundle" : kind === "non_stock" ? "non_stocked" : form.has_variants ? "variant" : "standard";
+        payload.has_variants = kind === "product" && !!form.has_variants;
+        payload.track_stock = kind === "product" && !!form.track_stock;
+        payload.image_urls = Array.isArray(form.image_urls) ? form.image_urls : form.image_url ? [form.image_url] : [];
+        payload.image_url = payload.image_urls[0] ?? null;
+        payload.costing_method = form.costing_method || null;
+        return payload;
+      }}
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
       illustration="inventory"
