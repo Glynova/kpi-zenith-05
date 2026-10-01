@@ -121,7 +121,9 @@ type Props = {
   /** Called when the create/edit dialog opens. */
   onOpenForm?: (row: Row | null) => void;
   /** Replace the generic form while retaining listing, save and edit behavior. */
-  customForm?: (ctx: FormCtx & { submit: () => void; close: () => void; saving: boolean }) => ReactNode;
+  customForm?: (
+    ctx: FormCtx & { submit: () => void; close: () => void; saving: boolean },
+  ) => ReactNode;
   transformPayload?: (payload: Row, ctx: FormCtx) => Row;
   /** Split the form into a multi-step wizard. Field keys not listed fall into the last step. */
   steps?: { title: string; description?: string; fields: string[] }[];
@@ -282,7 +284,11 @@ export function ResourcePage({
 
   function submit() {
     const missing = fields.filter(
-      (f) => f.required && !f.hidden?.({ form, setForm, editing }) && f.type !== "boolean" && !String(form[f.key] ?? "").trim(),
+      (f) =>
+        f.required &&
+        !f.hidden?.({ form, setForm, editing }) &&
+        f.type !== "boolean" &&
+        !String(form[f.key] ?? "").trim(),
     );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
@@ -620,176 +626,199 @@ export function ResourcePage({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className={customForm ? "flex h-[calc(100dvh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl" : "sm:max-w-2xl"}>
-          {customForm ? customForm({ form, setForm, editing, submit, close: () => setOpen(false), saving: save.isPending }) : <>
-          <DialogHeader>
-            <DialogTitle>{editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}</DialogTitle>
-            <DialogDescription>
-              {activeStep?.description ?? "Fill in the details below and save."}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent
+          className={
+            customForm
+              ? "flex h-[calc(100dvh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
+              : "sm:max-w-2xl"
+          }
+        >
+          {customForm ? (
+            customForm({
+              form,
+              setForm,
+              editing,
+              submit,
+              close: () => setOpen(false),
+              saving: save.isPending,
+            })
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}
+                </DialogTitle>
+                <DialogDescription>
+                  {activeStep?.description ?? "Fill in the details below and save."}
+                </DialogDescription>
+              </DialogHeader>
 
-          {steps && steps.length > 1 && (
-            <ol className="flex flex-wrap items-center gap-2">
-              {steps.map((s, i) => (
-                <li key={s.title} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(i)}
-                    className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
-                      i === step
-                        ? "border-primary bg-primary text-primary-foreground shadow-elevate-1"
-                        : i < step
-                          ? "border-border bg-secondary text-secondary-foreground"
-                          : "border-dashed border-border text-muted-foreground"
-                    }`}
-                  >
-                    <span className="font-medium tabular-nums">{i + 1}</span>
-                    <span className="hidden sm:inline">{s.title}</span>
-                  </button>
-                  {i < steps.length - 1 && <span className="h-px w-4 bg-border" />}
-                </li>
-              ))}
-            </ol>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {visibleFields
-              .filter((field) => !activeStep || activeStep.keys.includes(field.key))
-              .flatMap((field) => [
-                <div
-                  key={field.key}
-                  className={
-                    field.type === "textarea" || field.type === "image"
-                      ? "sm:col-span-2"
-                      : "min-w-0"
-                  }
-                >
-                  <Label htmlFor={field.key} className="mb-1.5 block text-xs">
-                    {field.label}
-                    {field.required && <span className="text-destructive"> *</span>}
-                  </Label>
-                  {field.render ? (
-                    field.render({ form, setForm, editing })
-                  ) : field.type === "image" ? (
-                    <ImageUpload
-                      id={field.key}
-                      businessId={businessId}
-                      maxSizeMB={field.maxSizeMB}
-                      variant={field.uploadVariant}
-                      hint={field.uploadHint}
-                      value={form[field.key] ?? null}
-                      onChange={(v) => setForm({ ...form, [field.key]: v })}
-                    />
-                  ) : field.type === "boolean" ? (
-                    <div className="flex h-9 items-center">
-                      <Switch
-                        id={field.key}
-                        checked={form[field.key] === true || form[field.key] === "true"}
-                        onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
-                      />
-                    </div>
-                  ) : field.type === "textarea" ? (
-                    <Textarea
-                      id={field.key}
-                      value={form[field.key] ?? ""}
-                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    />
-                  ) : field.type === "select" ? (
-                    field.optionGroups ? (
-                      <GroupedSelect
-                        id={field.key}
-                        value={form[field.key] ? String(form[field.key]) : undefined}
-                        groups={field.optionGroups}
-                        searchable={field.searchable}
-                        onChange={(v) => setForm({ ...form, [field.key]: v })}
-                      />
-                    ) : (
-                      <Select
-                        value={form[field.key] ? String(form[field.key]) : undefined}
-                        onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+              {steps && steps.length > 1 && (
+                <ol className="flex flex-wrap items-center gap-2">
+                  {steps.map((s, i) => (
+                    <li key={s.title} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setStep(i)}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition-colors ${
+                          i === step
+                            ? "border-primary bg-primary text-primary-foreground shadow-elevate-1"
+                            : i < step
+                              ? "border-border bg-secondary text-secondary-foreground"
+                              : "border-dashed border-border text-muted-foreground"
+                        }`}
                       >
-                        <SelectTrigger id={field.key}>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(field.options ?? []).map((o) => (
-                            <SelectItem key={o} value={o}>
-                              {titleCase(o)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )
-                  ) : field.type === "relation" ? (
-                    <Select
-                      value={form[field.key] ? String(form[field.key]) : undefined}
-                      onValueChange={(v) => setForm({ ...form, [field.key]: v })}
-                    >
-                      <SelectTrigger id={field.key}>
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(relations?.[field.relation!.table] ?? []).map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o[field.relation!.labelKey ?? "name"] ?? o.id}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id={field.key}
-                      type={
-                        field.type === "number" ? "number" : field.type === "date" ? "date" : "text"
-                      }
-                      step={field.type === "number" ? "any" : undefined}
-                      placeholder={field.placeholder}
-                      value={form[field.key] ?? ""}
-                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    />
-                  )}
-                </div>,
-                ...(formExtras && field.key === formExtrasAfter
-                  ? [
-                      <div key={`${field.key}-extras`} className="sm:col-span-2">
-                        {formExtras({ form, setForm, editing })}
-                      </div>,
-                    ]
-                  : []),
-              ])}
-            {formExtras && !formExtrasAfter && (
-              <div className="sm:col-span-2">{formExtras({ form, setForm, editing })}</div>
-            )}
-          </div>
+                        <span className="font-medium tabular-nums">{i + 1}</span>
+                        <span className="hidden sm:inline">{s.title}</span>
+                      </button>
+                      {i < steps.length - 1 && <span className="h-px w-4 bg-border" />}
+                    </li>
+                  ))}
+                </ol>
+              )}
 
-          <DialogFooter className="gap-2 sm:justify-between">
-            <div className="flex items-center gap-2">
-              {stepPlan && step > 0 && (
-                <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
-                  Back
-                </Button>
-              )}
-              {stepPlan && (
-                <span className="text-xs text-muted-foreground">
-                  Step {Math.min(step + 1, stepPlan.length)} of {stepPlan.length}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              {!isLastStep ? (
-                <Button onClick={goNext}>Continue</Button>
-              ) : (
-                <Button onClick={submit} disabled={save.isPending}>
-                  {save.isPending ? "Saving..." : "Save"}
-                </Button>
-              )}
-            </div>
-          </DialogFooter>
-          </>}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {visibleFields
+                  .filter((field) => !activeStep || activeStep.keys.includes(field.key))
+                  .flatMap((field) => [
+                    <div
+                      key={field.key}
+                      className={
+                        field.type === "textarea" || field.type === "image"
+                          ? "sm:col-span-2"
+                          : "min-w-0"
+                      }
+                    >
+                      <Label htmlFor={field.key} className="mb-1.5 block text-xs">
+                        {field.label}
+                        {field.required && <span className="text-destructive"> *</span>}
+                      </Label>
+                      {field.render ? (
+                        field.render({ form, setForm, editing })
+                      ) : field.type === "image" ? (
+                        <ImageUpload
+                          id={field.key}
+                          businessId={businessId}
+                          maxSizeMB={field.maxSizeMB}
+                          variant={field.uploadVariant}
+                          hint={field.uploadHint}
+                          value={form[field.key] ?? null}
+                          onChange={(v) => setForm({ ...form, [field.key]: v })}
+                        />
+                      ) : field.type === "boolean" ? (
+                        <div className="flex h-9 items-center">
+                          <Switch
+                            id={field.key}
+                            checked={form[field.key] === true || form[field.key] === "true"}
+                            onCheckedChange={(v: boolean) => setForm({ ...form, [field.key]: v })}
+                          />
+                        </div>
+                      ) : field.type === "textarea" ? (
+                        <Textarea
+                          id={field.key}
+                          value={form[field.key] ?? ""}
+                          onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                        />
+                      ) : field.type === "select" ? (
+                        field.optionGroups ? (
+                          <GroupedSelect
+                            id={field.key}
+                            value={form[field.key] ? String(form[field.key]) : undefined}
+                            groups={field.optionGroups}
+                            searchable={field.searchable}
+                            onChange={(v) => setForm({ ...form, [field.key]: v })}
+                          />
+                        ) : (
+                          <Select
+                            value={form[field.key] ? String(form[field.key]) : undefined}
+                            onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                          >
+                            <SelectTrigger id={field.key}>
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(field.options ?? []).map((o) => (
+                                <SelectItem key={o} value={o}>
+                                  {titleCase(o)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )
+                      ) : field.type === "relation" ? (
+                        <Select
+                          value={form[field.key] ? String(form[field.key]) : undefined}
+                          onValueChange={(v) => setForm({ ...form, [field.key]: v })}
+                        >
+                          <SelectTrigger id={field.key}>
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(relations?.[field.relation!.table] ?? []).map((o) => (
+                              <SelectItem key={o.id} value={o.id}>
+                                {o[field.relation!.labelKey ?? "name"] ?? o.id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id={field.key}
+                          type={
+                            field.type === "number"
+                              ? "number"
+                              : field.type === "date"
+                                ? "date"
+                                : "text"
+                          }
+                          step={field.type === "number" ? "any" : undefined}
+                          placeholder={field.placeholder}
+                          value={form[field.key] ?? ""}
+                          onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                        />
+                      )}
+                    </div>,
+                    ...(formExtras && field.key === formExtrasAfter
+                      ? [
+                          <div key={`${field.key}-extras`} className="sm:col-span-2">
+                            {formExtras({ form, setForm, editing })}
+                          </div>,
+                        ]
+                      : []),
+                  ])}
+                {formExtras && !formExtrasAfter && (
+                  <div className="sm:col-span-2">{formExtras({ form, setForm, editing })}</div>
+                )}
+              </div>
+
+              <DialogFooter className="gap-2 sm:justify-between">
+                <div className="flex items-center gap-2">
+                  {stepPlan && step > 0 && (
+                    <Button variant="outline" onClick={() => setStep((s) => s - 1)}>
+                      Back
+                    </Button>
+                  )}
+                  {stepPlan && (
+                    <span className="text-xs text-muted-foreground">
+                      Step {Math.min(step + 1, stepPlan.length)} of {stepPlan.length}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  {!isLastStep ? (
+                    <Button onClick={goNext}>Continue</Button>
+                  ) : (
+                    <Button onClick={submit} disabled={save.isPending}>
+                      {save.isPending ? "Saving..." : "Save"}
+                    </Button>
+                  )}
+                </div>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -295,7 +295,13 @@ function ProductsPage() {
     { key: "billing_unit", label: "Billing unit", type: "text" },
     { key: "default_location_id", label: "Location", type: "text" },
     { key: "image_urls", label: "Images", type: "text" },
-    { key: "opening_quantity", label: "Opening quantity", type: "number", transient: true, default: 0 },
+    {
+      key: "opening_quantity",
+      label: "Opening quantity",
+      type: "number",
+      transient: true,
+      default: 0,
+    },
   ];
 
   return (
@@ -368,12 +374,38 @@ function ProductsPage() {
         const kind = String(form.item_type || "product");
         payload.sku = String(form.sku || "").trim() || null;
         payload.barcode = kind === "service" ? null : String(form.barcode || "").trim() || null;
-        payload.item_subtype = form.item_subtype || (kind === "service" ? "standard_service" : kind === "bundle" ? "fixed_bundle" : kind === "non_stock" ? "non_stock_item" : "standard_product");
-        payload.inventory_model = kind === "service" ? "service" : kind === "bundle" || kind === "non_stock" ? "non_stocked_item" : payload.inventory_model || "stocked_item";
-        payload.product_type = kind === "service" ? "service" : kind === "bundle" ? "bundle" : kind === "non_stock" ? "non_stocked" : form.has_variants ? "variant" : "standard";
+        payload.item_subtype =
+          form.item_subtype ||
+          (kind === "service"
+            ? "standard_service"
+            : kind === "bundle"
+              ? "fixed_bundle"
+              : kind === "non_stock"
+                ? "non_stock_item"
+                : "standard_product");
+        payload.inventory_model =
+          kind === "service"
+            ? "service"
+            : kind === "bundle" || kind === "non_stock"
+              ? "non_stocked_item"
+              : payload.inventory_model || "stocked_item";
+        payload.product_type =
+          kind === "service"
+            ? "service"
+            : kind === "bundle"
+              ? "bundle"
+              : kind === "non_stock"
+                ? "non_stocked"
+                : form.has_variants
+                  ? "variant"
+                  : "standard";
         payload.has_variants = kind === "product" && !!form.has_variants;
         payload.track_stock = kind === "product" && !!form.track_stock;
-        payload.image_urls = Array.isArray(form.image_urls) ? form.image_urls : form.image_url ? [form.image_url] : [];
+        payload.image_urls = Array.isArray(form.image_urls)
+          ? form.image_urls
+          : form.image_url
+            ? [form.image_url]
+            : [];
         payload.image_url = payload.image_urls[0] ?? null;
         payload.costing_method = form.costing_method || null;
         return payload;
@@ -381,21 +413,64 @@ function ProductsPage() {
       searchKeys={["name", "sku", "barcode", "brand"]}
       orderBy="created_at"
       illustration="inventory"
-      customForm={(ctx) => <ItemForm {...ctx} businessId={businessId} currency={currency} variantsEnabled={variantsEnabled} variants={variants} bundleLines={bundleLines} setBundleLines={setBundleLines} />}
+      customForm={(ctx) => (
+        <ItemForm
+          {...ctx}
+          businessId={businessId}
+          currency={currency}
+          variantsEnabled={variantsEnabled}
+          variants={variants}
+          bundleLines={bundleLines}
+          setBundleLines={setBundleLines}
+        />
+      )}
       onOpenForm={(row) => {
         void variants.load(row);
         setBundleLines([newLine()]);
         if (row?.id && row.item_type === "bundle") {
-          void db.from("bundle_components").select("component_product_id,quantity").eq("bundle_product_id", row.id).then(({ data }: { data: Row[] | null }) => {
-            if (data?.length) setBundleLines(data.map((x) => ({ key: crypto.randomUUID(), productId: String(x.component_product_id), quantity: Number(x.quantity) })));
-          });
+          void db
+            .from("bundle_components")
+            .select("component_product_id,quantity")
+            .eq("bundle_product_id", row.id)
+            .then(({ data }: { data: Row[] | null }) => {
+              if (data?.length)
+                setBundleLines(
+                  data.map((x) => ({
+                    key: crypto.randomUUID(),
+                    productId: String(x.component_product_id),
+                    quantity: Number(x.quantity),
+                  })),
+                );
+            });
         }
       }}
       validate={({ form }) => {
         const kind = String(form.item_type || "product");
-        const numeric = ["cost_price", "selling_price", "opening_quantity", "reorder_level", "reorder_quantity", "tax_rate", "service_duration_minutes", "commission_rate"];
-        if (numeric.some((key) => form[key] != null && form[key] !== "" && (!Number.isFinite(Number(form[key])) || Number(form[key]) < 0))) return "Numbers cannot be negative";
-        if (kind === "bundle" && (!bundleLines.length || bundleLines.some((line) => !line.productId || !(line.quantity > 0)))) return "Add at least one valid bundle component";
+        const numeric = [
+          "cost_price",
+          "selling_price",
+          "opening_quantity",
+          "reorder_level",
+          "reorder_quantity",
+          "tax_rate",
+          "service_duration_minutes",
+          "commission_rate",
+        ];
+        if (
+          numeric.some(
+            (key) =>
+              form[key] != null &&
+              form[key] !== "" &&
+              (!Number.isFinite(Number(form[key])) || Number(form[key]) < 0),
+          )
+        )
+          return "Numbers cannot be negative";
+        if (
+          kind === "bundle" &&
+          (!bundleLines.length ||
+            bundleLines.some((line) => !line.productId || !(line.quantity > 0)))
+        )
+          return "Add at least one valid bundle component";
         if (kind === "product" && form.has_variants) return variants.validate(new Set());
         return null;
       }}
@@ -403,15 +478,42 @@ function ProductsPage() {
         if (form.item_type === "product" && form.has_variants && variantsEnabled)
           await variants.persist(id, (form.default_location_id as string) || null);
         if (form.item_type === "bundle") {
-          const { error: delError } = await db.from("bundle_components").delete().eq("bundle_product_id", id);
+          const { error: delError } = await db
+            .from("bundle_components")
+            .delete()
+            .eq("bundle_product_id", id);
           if (delError) throw delError;
-          const { error } = await db.from("bundle_components").insert(bundleLines.map((line) => ({ business_id: businessId, bundle_product_id: id, component_product_id: line.productId, quantity: line.quantity })));
+          const { error } = await db
+            .from("bundle_components")
+            .insert(
+              bundleLines.map((line) => ({
+                business_id: businessId,
+                bundle_product_id: id,
+                component_product_id: line.productId,
+                quantity: line.quantity,
+              })),
+            );
           if (error) throw error;
         }
         const qty = Number(form.opening_quantity || 0);
         if (!editing && qty > 0 && form.track_stock && !form.has_variants) {
           const cost = Number(form.cost_price || 0);
-          const { error } = await db.from("inventory_movements").insert({ business_id: businessId, product_id: id, warehouse_id: form.default_location_id || null, type: "opening_balance", quantity: qty, base_quantity: qty, unit_cost: cost, total_cost: cost * qty, reference: "Opening stock", reference_type: "opening", reason: "Opening stock", movement_date: new Date().toISOString().slice(0, 10) });
+          const { error } = await db
+            .from("inventory_movements")
+            .insert({
+              business_id: businessId,
+              product_id: id,
+              warehouse_id: form.default_location_id || null,
+              type: "opening_balance",
+              quantity: qty,
+              base_quantity: qty,
+              unit_cost: cost,
+              total_cost: cost * qty,
+              reference: "Opening stock",
+              reference_type: "opening",
+              reason: "Opening stock",
+              movement_date: new Date().toISOString().slice(0, 10),
+            });
           if (error) throw error;
         }
       }}
