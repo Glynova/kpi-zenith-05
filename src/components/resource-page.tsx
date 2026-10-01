@@ -120,6 +120,8 @@ type Props = {
   afterSave?: (ctx: FormCtx & { id: string }) => Promise<void>;
   /** Called when the create/edit dialog opens. */
   onOpenForm?: (row: Row | null) => void;
+  /** Replace the generic form while retaining listing, save and edit behavior. */
+  customForm?: (ctx: FormCtx & { submit: () => void; close: () => void; saving: boolean }) => ReactNode;
   /** Split the form into a multi-step wizard. Field keys not listed fall into the last step. */
   steps?: { title: string; description?: string; fields: string[] }[];
   /** Illustration used on the empty state. */
@@ -143,6 +145,7 @@ export function ResourcePage({
   validate,
   afterSave,
   onOpenForm,
+  customForm,
   steps,
   illustration = "generic",
 }: Props) {
@@ -277,7 +280,7 @@ export function ResourcePage({
 
   function submit() {
     const missing = fields.filter(
-      (f) => f.required && f.type !== "boolean" && !String(form[f.key] ?? "").trim(),
+      (f) => f.required && !f.hidden?.({ form, setForm, editing }) && f.type !== "boolean" && !String(form[f.key] ?? "").trim(),
     );
     if (missing.length) {
       toast.error(`${missing[0].label} is required`);
@@ -615,7 +618,8 @@ export function ResourcePage({
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className={customForm ? "flex h-[calc(100dvh-1.5rem)] max-h-[calc(100dvh-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl" : "sm:max-w-2xl"}>
+          {customForm ? customForm({ form, setForm, editing, submit, close: () => setOpen(false), saving: save.isPending }) : <>
           <DialogHeader>
             <DialogTitle>{editing ? `Edit ${singularTitle}` : `New ${singularTitle}`}</DialogTitle>
             <DialogDescription>
@@ -783,6 +787,7 @@ export function ResourcePage({
               )}
             </div>
           </DialogFooter>
+          </>}
         </DialogContent>
       </Dialog>
 
