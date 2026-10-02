@@ -370,7 +370,7 @@ function ProductsPage() {
           : []),
       ]}
       fields={formFields}
-      transformPayload={(payload, { form }) => {
+      transformPayload={(payload, { form, editing }) => {
         const kind = String(form.item_type || "product");
         payload.sku =
           String(form.sku || "").trim() ||
