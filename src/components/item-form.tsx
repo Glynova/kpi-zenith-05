@@ -165,7 +165,7 @@ export function ItemForm({
         <div>
           <h2 className="text-xl font-semibold">{editing ? "Edit item" : "New item"}</h2>
           <p className="text-sm text-muted-foreground">
-            {editing ? "Update item details" : "Create an item in your catalog"}
+            Products, services, bundles and non-stock items all live in one catalog.
           </p>
         </div>
         <div className="flex gap-2">
