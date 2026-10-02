@@ -467,10 +467,10 @@ function ProductsPage() {
           )
         )
           return "Numbers cannot be negative";
+        const filledLines = bundleLines.filter((line) => line.productId);
         if (
           kind === "bundle" &&
-          (!bundleLines.length ||
-            bundleLines.some((line) => !line.productId || !(line.quantity > 0)))
+          (!filledLines.length || filledLines.some((line) => !(Number(line.quantity) > 0)))
         )
           return "Add at least one valid bundle component";
         if (kind === "product" && form.has_variants) return variants.validate(new Set());
@@ -486,7 +486,9 @@ function ProductsPage() {
             .eq("bundle_product_id", id);
           if (delError) throw delError;
           const { error } = await db.from("bundle_components").insert(
-            bundleLines.map((line) => ({
+            bundleLines
+              .filter((line) => line.productId)
+              .map((line) => ({
               business_id: businessId,
               bundle_product_id: id,
               component_product_id: line.productId,
