@@ -483,37 +483,33 @@ function ProductsPage() {
             .delete()
             .eq("bundle_product_id", id);
           if (delError) throw delError;
-          const { error } = await db
-            .from("bundle_components")
-            .insert(
-              bundleLines.map((line) => ({
-                business_id: businessId,
-                bundle_product_id: id,
-                component_product_id: line.productId,
-                quantity: line.quantity,
-              })),
-            );
+          const { error } = await db.from("bundle_components").insert(
+            bundleLines.map((line) => ({
+              business_id: businessId,
+              bundle_product_id: id,
+              component_product_id: line.productId,
+              quantity: line.quantity,
+            })),
+          );
           if (error) throw error;
         }
         const qty = Number(form.opening_quantity || 0);
         if (!editing && qty > 0 && form.track_stock && !form.has_variants) {
           const cost = Number(form.cost_price || 0);
-          const { error } = await db
-            .from("inventory_movements")
-            .insert({
-              business_id: businessId,
-              product_id: id,
-              warehouse_id: form.default_location_id || null,
-              type: "opening_balance",
-              quantity: qty,
-              base_quantity: qty,
-              unit_cost: cost,
-              total_cost: cost * qty,
-              reference: "Opening stock",
-              reference_type: "opening",
-              reason: "Opening stock",
-              movement_date: new Date().toISOString().slice(0, 10),
-            });
+          const { error } = await db.from("inventory_movements").insert({
+            business_id: businessId,
+            product_id: id,
+            warehouse_id: form.default_location_id || null,
+            type: "opening_balance",
+            quantity: qty,
+            base_quantity: qty,
+            unit_cost: cost,
+            total_cost: cost * qty,
+            reference: "Opening stock",
+            reference_type: "opening",
+            reason: "Opening stock",
+            movement_date: new Date().toISOString().slice(0, 10),
+          });
           if (error) throw error;
         }
       }}

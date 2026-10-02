@@ -40,7 +40,8 @@ export function consumeFifo(layers: CostLayer[], qty: number) {
     const take = Math.min(need, l.quantity);
     cogs += take * l.unitCost;
     need -= take;
-    if (l.quantity - take > 0) remaining.push({ quantity: l.quantity - take, unitCost: l.unitCost });
+    if (l.quantity - take > 0)
+      remaining.push({ quantity: l.quantity - take, unitCost: l.unitCost });
   }
   return { cogs, remaining, shortfall: Math.max(need, 0) };
 }
@@ -98,10 +99,9 @@ export function resolveUnitPrice(
  * Variant generation uses parent price/cost only as defaults; existing
  * explicit variant values are kept.
  */
-export function inheritDefaults<T extends { cost_price?: number | null; selling_price?: number | null }>(
-  variant: T,
-  parent: { cost_price: number; selling_price: number },
-): T {
+export function inheritDefaults<
+  T extends { cost_price?: number | null; selling_price?: number | null },
+>(variant: T, parent: { cost_price: number; selling_price: number }): T {
   return {
     ...variant,
     cost_price: variant.cost_price ?? parent.cost_price,
