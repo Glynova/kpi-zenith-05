@@ -489,11 +489,11 @@ function ProductsPage() {
             bundleLines
               .filter((line) => line.productId)
               .map((line) => ({
-              business_id: businessId,
-              bundle_product_id: id,
-              component_product_id: line.productId,
-              quantity: line.quantity,
-            })),
+                business_id: businessId,
+                bundle_product_id: id,
+                component_product_id: line.productId,
+                quantity: Number(line.quantity),
+              })),
           );
           if (error) throw error;
         }
