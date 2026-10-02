@@ -96,12 +96,7 @@ function skuFor(base: string, attrs: Record<string, string>) {
   const prefix = (base || "").trim().toUpperCase();
   if (!prefix) return "";
   return `${prefix}-${Object.values(attrs)
-    .map((v) =>
-      String(v)
-        .replace(/\s+/g, "")
-        .slice(0, 3)
-        .toUpperCase(),
-    )
+    .map((v) => String(v).replace(/\s+/g, "").slice(0, 3).toUpperCase())
     .join("-")}`;
 }
 
@@ -286,9 +281,7 @@ export function useProductVariants(businessId: string | null) {
     if (optionsError) throw optionsError;
 
     setRemoved([]);
-    setVariants((prev) =>
-      prev.map((v) => ({ ...v, id: ids[v.key] ?? v.id, opening_qty: 0 })),
-    );
+    setVariants((prev) => prev.map((v) => ({ ...v, id: ids[v.key] ?? v.id, opening_qty: 0 })));
     queryClient.invalidateQueries({ queryKey: ["product-variant-summary", businessId] });
     queryClient.invalidateQueries({ queryKey: ["resource", "products", businessId] });
     queryClient.invalidateQueries({ queryKey: ["products-lite", businessId] });
@@ -454,9 +447,7 @@ export function useProductVariants(businessId: string | null) {
                           step="any"
                           aria-label="Variant price"
                           value={v.selling_price}
-                          onChange={(e) =>
-                            update(v.key, { selling_price: Number(e.target.value) })
-                          }
+                          onChange={(e) => update(v.key, { selling_price: Number(e.target.value) })}
                         />
                       </td>
                       <td className="w-24 py-1 pr-2">
@@ -475,9 +466,7 @@ export function useProductVariants(businessId: string | null) {
                             min="0"
                             aria-label="Opening quantity"
                             value={v.opening_qty}
-                            onChange={(e) =>
-                              update(v.key, { opening_qty: Number(e.target.value) })
-                            }
+                            onChange={(e) => update(v.key, { opening_qty: Number(e.target.value) })}
                           />
                         )}
                       </td>
@@ -488,9 +477,7 @@ export function useProductVariants(businessId: string | null) {
                           step="any"
                           aria-label="Reorder level"
                           value={v.reorder_level}
-                          onChange={(e) =>
-                            update(v.key, { reorder_level: Number(e.target.value) })
-                          }
+                          onChange={(e) => update(v.key, { reorder_level: Number(e.target.value) })}
                         />
                       </td>
                       <td className="py-1">

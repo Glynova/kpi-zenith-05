@@ -86,7 +86,7 @@ export function ItemImages({ businessId, images, onChange }: Props) {
     canvas.getContext("2d")?.drawImage(video, 0, 0);
     setShot(canvas.toDataURL("image/jpeg", 0.85));
   }
-  async function usePhoto() {
+  async function acceptPhoto() {
     if (!shot) return;
     const blob = await (await fetch(shot)).blob();
     await upload(new File([blob], "camera.jpg", { type: "image/jpeg" }));
@@ -209,7 +209,7 @@ export function ItemImages({ businessId, images, onChange }: Props) {
                 <Button type="button" variant="outline" onClick={() => setShot(null)}>
                   Retake
                 </Button>
-                <Button type="button" disabled={busy} onClick={() => void usePhoto()}>
+                <Button type="button" disabled={busy} onClick={() => void acceptPhoto()}>
                   Use photo
                 </Button>
               </>

@@ -32,7 +32,10 @@ describe("variant pricing", () => {
       cost_price: 100,
       selling_price: 150,
     });
-    expect(inheritDefaults(variants.blkL, tshirt)).toMatchObject({ cost_price: 120, selling_price: 180 });
+    expect(inheritDefaults(variants.blkL, tshirt)).toMatchObject({
+      cost_price: 120,
+      selling_price: 180,
+    });
   });
 });
 

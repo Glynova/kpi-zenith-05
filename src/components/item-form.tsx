@@ -62,6 +62,9 @@ export function ItemForm({
   const { data: references } = useQuery({
     queryKey: ["item-form-references", businessId],
     enabled: !!businessId,
+    // Always refresh when the form opens so newly created items can be picked as components.
+    refetchOnMount: "always",
+    staleTime: 0,
     queryFn: async () => {
       const [categories, suppliers, employees, locations, products] = await Promise.all([
         db.from("categories").select("id,name").eq("business_id", businessId),
@@ -165,7 +168,7 @@ export function ItemForm({
         <div>
           <h2 className="text-xl font-semibold">{editing ? "Edit item" : "New item"}</h2>
           <p className="text-sm text-muted-foreground">
-            {editing ? "Update item details" : "Create an item in your catalog"}
+            Products, services, bundles and non-stock items all live in one catalog.
           </p>
         </div>
         <div className="flex gap-2">

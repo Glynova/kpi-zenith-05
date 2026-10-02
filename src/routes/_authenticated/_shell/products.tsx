@@ -370,9 +370,11 @@ function ProductsPage() {
           : []),
       ]}
       fields={formFields}
-      transformPayload={(payload, { form }) => {
+      transformPayload={(payload, { form, editing }) => {
         const kind = String(form.item_type || "product");
-        payload.sku = String(form.sku || "").trim() || null;
+        payload.sku =
+          String(form.sku || "").trim() ||
+          (editing ? null : `ITM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`);
         payload.barcode = kind === "service" ? null : String(form.barcode || "").trim() || null;
         payload.item_subtype =
           form.item_subtype ||
@@ -465,55 +467,66 @@ function ProductsPage() {
           )
         )
           return "Numbers cannot be negative";
+        const filledLines = bundleLines.filter((line) => line.productId);
         if (
           kind === "bundle" &&
-          (!bundleLines.length ||
-            bundleLines.some((line) => !line.productId || !(line.quantity > 0)))
+          (!filledLines.length || filledLines.some((line) => !(Number(line.quantity) > 0)))
         )
           return "Add at least one valid bundle component";
         if (kind === "product" && form.has_variants) return variants.validate(new Set());
         return null;
       }}
       afterSave={async ({ form, id, editing }) => {
+        // Opening stock must land in a real location so sales at that location can use it.
+        let locationId = (form.default_location_id as string) || null;
+        if (!locationId) {
+          const { data: loc } = await db
+            .from("warehouses")
+            .select("id")
+            .eq("business_id", businessId)
+            .order("is_default", { ascending: false })
+            .order("created_at")
+            .limit(1)
+            .maybeSingle();
+          locationId = loc?.id ?? null;
+        }
         if (form.item_type === "product" && form.has_variants && variantsEnabled)
-          await variants.persist(id, (form.default_location_id as string) || null);
+          await variants.persist(id, locationId);
         if (form.item_type === "bundle") {
           const { error: delError } = await db
             .from("bundle_components")
             .delete()
             .eq("bundle_product_id", id);
           if (delError) throw delError;
-          const { error } = await db
-            .from("bundle_components")
-            .insert(
-              bundleLines.map((line) => ({
+          const { error } = await db.from("bundle_components").insert(
+            bundleLines
+              .filter((line) => line.productId)
+              .map((line) => ({
                 business_id: businessId,
                 bundle_product_id: id,
                 component_product_id: line.productId,
-                quantity: line.quantity,
+                quantity: Number(line.quantity),
               })),
-            );
+          );
           if (error) throw error;
         }
         const qty = Number(form.opening_quantity || 0);
         if (!editing && qty > 0 && form.track_stock && !form.has_variants) {
           const cost = Number(form.cost_price || 0);
-          const { error } = await db
-            .from("inventory_movements")
-            .insert({
-              business_id: businessId,
-              product_id: id,
-              warehouse_id: form.default_location_id || null,
-              type: "opening_balance",
-              quantity: qty,
-              base_quantity: qty,
-              unit_cost: cost,
-              total_cost: cost * qty,
-              reference: "Opening stock",
-              reference_type: "opening",
-              reason: "Opening stock",
-              movement_date: new Date().toISOString().slice(0, 10),
-            });
+          const { error } = await db.from("inventory_movements").insert({
+            business_id: businessId,
+            product_id: id,
+            warehouse_id: locationId,
+            type: "opening_balance",
+            quantity: qty,
+            base_quantity: qty,
+            unit_cost: cost,
+            total_cost: cost * qty,
+            reference: "Opening stock",
+            reference_type: "opening",
+            reason: "Opening stock",
+            movement_date: new Date().toISOString().slice(0, 10),
+          });
           if (error) throw error;
         }
       }}
