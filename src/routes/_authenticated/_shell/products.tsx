@@ -477,8 +477,21 @@ function ProductsPage() {
         return null;
       }}
       afterSave={async ({ form, id, editing }) => {
+        // Opening stock must land in a real location so sales at that location can use it.
+        let locationId = (form.default_location_id as string) || null;
+        if (!locationId) {
+          const { data: loc } = await db
+            .from("warehouses")
+            .select("id")
+            .eq("business_id", businessId)
+            .order("is_default", { ascending: false })
+            .order("created_at")
+            .limit(1)
+            .maybeSingle();
+          locationId = loc?.id ?? null;
+        }
         if (form.item_type === "product" && form.has_variants && variantsEnabled)
-          await variants.persist(id, (form.default_location_id as string) || null);
+          await variants.persist(id, locationId);
         if (form.item_type === "bundle") {
           const { error: delError } = await db
             .from("bundle_components")
@@ -503,7 +516,7 @@ function ProductsPage() {
           const { error } = await db.from("inventory_movements").insert({
             business_id: businessId,
             product_id: id,
-            warehouse_id: form.default_location_id || null,
+            warehouse_id: locationId,
             type: "opening_balance",
             quantity: qty,
             base_quantity: qty,
