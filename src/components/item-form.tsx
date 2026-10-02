@@ -62,6 +62,9 @@ export function ItemForm({
   const { data: references } = useQuery({
     queryKey: ["item-form-references", businessId],
     enabled: !!businessId,
+    // Always refresh when the form opens so newly created items can be picked as components.
+    refetchOnMount: "always",
+    staleTime: 0,
     queryFn: async () => {
       const [categories, suppliers, employees, locations, products] = await Promise.all([
         db.from("categories").select("id,name").eq("business_id", businessId),
