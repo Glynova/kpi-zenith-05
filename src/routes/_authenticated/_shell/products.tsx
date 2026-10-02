@@ -372,7 +372,9 @@ function ProductsPage() {
       fields={formFields}
       transformPayload={(payload, { form }) => {
         const kind = String(form.item_type || "product");
-        payload.sku = String(form.sku || "").trim() || null;
+        payload.sku =
+          String(form.sku || "").trim() ||
+          (editing ? null : `ITM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`);
         payload.barcode = kind === "service" ? null : String(form.barcode || "").trim() || null;
         payload.item_subtype =
           form.item_subtype ||
