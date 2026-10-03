@@ -315,6 +315,7 @@ export function ItemForm({
                   <Label>Qty</Label>
                   <Input
                     type="number"
+                    aria-label="Qty"
                     min="0.001"
                     step="any"
                     value={line.quantity}
