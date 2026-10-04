@@ -1866,6 +1866,7 @@ export type Database = {
           accepted_quantity: number
           batch_number: string | null
           business_id: string
+          condition: string | null
           created_at: string
           damaged_quantity: number
           expiry_date: string | null
@@ -1887,6 +1888,7 @@ export type Database = {
           accepted_quantity?: number
           batch_number?: string | null
           business_id: string
+          condition?: string | null
           created_at?: string
           damaged_quantity?: number
           expiry_date?: string | null
@@ -1908,6 +1910,7 @@ export type Database = {
           accepted_quantity?: number
           batch_number?: string | null
           business_id?: string
+          condition?: string | null
           created_at?: string
           damaged_quantity?: number
           expiry_date?: string | null
