@@ -315,7 +315,7 @@ function PurchaseOrdersPage() {
       if (!valid.length) throw new Error("Add at least one line item");
       for (const i of valid) {
         if (variantsFor(i.product_id).length && !i.variant_id)
-          throw new Error("Choose the exact variant for every line with variants");
+          throw new Error("Choose a variant");
       }
       if (!form.supplier_id) throw new Error("Choose a supplier");
 
