@@ -154,7 +154,6 @@ function SalesPage() {
         if (needsVariant && !i.variant_id)
           throw new Error(`Choose a variant for ${i.product_name || "the selected product"}`);
       }
-      if (!form.sale_number) throw new Error("Sale number is required");
 
       const { data: sale, error } = await db
         .from("sales")
@@ -250,13 +249,22 @@ function SalesPage() {
     onError: (e: any) => toast.error(e.message ?? "Could not record the sale"),
   });
 
+  const [voidReason, setVoidReason] = useState("");
+  const isPosted = (row: Row | null) =>
+    !!row && (row.inventory_posted || ["completed", "fulfilled"].includes(String(row.status)));
   const remove = useMutation({
     mutationFn: async (row: Row) => {
+      if (isPosted(row)) {
+        const { error } = await db.rpc("void_sale", { _sale_id: row.id, _reason: voidReason });
+        if (error) throw error;
+        return;
+      }
       const { error } = await db.from("sales").delete().eq("id", row.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast.success("Sale deleted");
+    onSuccess: (_d, row) => {
+      toast.success(isPosted(row) ? "Sale voided. The original is kept with a reversal." : "Sale deleted");
+      setVoidReason("");
       queryClient.invalidateQueries({ queryKey: ["sales", businessId] });
       setDeleting(null);
     },
@@ -275,7 +283,7 @@ function SalesPage() {
         business_id: businessId,
         sale_id: sale.id,
         customer_id: sale.customer_id,
-        invoice_number: `INV-${String(sale.sale_number).replace(/^SO-?/i, "")}`,
+        invoice_number: "pending", // replaced by the server's sequential number
         status: Number(sale.paid) >= Number(sale.total) ? "paid" : "unpaid",
         issue_date: sale.sale_date,
         subtotal: sale.subtotal,
@@ -309,7 +317,7 @@ function SalesPage() {
 
   function openCreate() {
     setForm({
-      sale_number: `SO-${Date.now().toString().slice(-6)}`,
+      sale_number: "",
       sale_type: "walk_in",
       payment_method: "cash",
       payment_status: "paid",
@@ -446,14 +454,16 @@ function SalesPage() {
                               <Undo2 className="size-4" />
                             </Button>
                           )}
+                        {row.status !== "voided" && (
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => setDeleting(row)}
-                          aria-label="Delete"
+                          aria-label={isPosted(row) ? "Void sale" : "Delete"}
                         >
                           <Trash2 className="size-4 text-destructive" />
                         </Button>
+                        )}
                       </>
                     )}
                   </TableCell>
@@ -475,11 +485,8 @@ function SalesPage() {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <Label className="mb-1.5 block text-xs">Sale number *</Label>
-              <Input
-                value={form.sale_number ?? ""}
-                onChange={(e) => setForm({ ...form, sale_number: e.target.value })}
-              />
+              <Label className="mb-1.5 block text-xs">Sale number</Label>
+              <Input value="Assigned when saved" disabled readOnly />
             </div>
             <div>
               <Label className="mb-1.5 block text-xs">Date</Label>
@@ -694,16 +701,29 @@ function SalesPage() {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this sale?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isPosted(deleting) ? `Void sale ${deleting?.sale_number}?` : "Delete this draft?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              The sale and its line items are removed. Stock movements already posted are kept for
-              the audit trail.
+              {isPosted(deleting)
+                ? "Posted sales are never deleted. Voiding keeps the original, puts the stock back at its original cost and records a reversal in the audit trail. Only owners, admins and managers can void."
+                : "This draft has not been posted, so it can be removed."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {isPosted(deleting) && (
+            <Textarea
+              placeholder="Reason for voiding (required)"
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+            />
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleting && remove.mutate(deleting)}>
-              Delete
+            <AlertDialogAction
+              disabled={isPosted(deleting) && voidReason.trim().length < 3}
+              onClick={() => deleting && remove.mutate(deleting)}
+            >
+              {isPosted(deleting) ? "Void sale" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
