@@ -63,6 +63,30 @@ function isStocked(p: Row) {
   return p.track_stock !== false;
 }
 
+type OfflineSale = {
+  id: string;
+  customerId: string | null;
+  locationId: string | null;
+  registerId: string | null;
+  saleDate: string;
+  orderDiscount: number;
+  orderDiscountType: any;
+  lines: CartLine[];
+  payments: any[];
+  offline?: boolean;
+};
+const queueKey = (b: string) => `daraven-pos-queue-${b}`;
+function loadQueue(b: string): OfflineSale[] {
+  try {
+    return JSON.parse(localStorage.getItem(queueKey(b)) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+function saveQueue(b: string, q: OfflineSale[]) {
+  localStorage.setItem(queueKey(b), JSON.stringify(q));
+}
+
 function POSPage() {
   const { businessId, business, currency, canWrite, userId, settings, role } = useBusiness();
   const queryClient = useQueryClient();
@@ -514,6 +538,75 @@ function POSPage() {
   const paidTotal = round2(payments.reduce((s, p) => s + Number(p.amount || 0), 0));
   const balance = round2(totals.total - paidTotal);
 
+  async function postSale(o: OfflineSale) {
+    const sale = await createSale({
+      businessId: businessId!,
+      documentType: "pos_sale",
+      customerId: o.customerId,
+      locationId: o.locationId,
+      registerId: o.registerId,
+      channel: "pos",
+      source: o.offline ? "pos_offline" : "pos",
+      currency,
+      taxInclusive,
+      saleDate: o.saleDate,
+      status: "draft",
+      orderDiscount: o.orderDiscount,
+      orderDiscountType: o.orderDiscountType,
+      salespersonId: userId,
+      createdBy: userId,
+      lines: o.lines,
+    });
+    for (const p of o.payments) {
+      await recordPayment({
+        businessId: businessId!,
+        saleId: sale.id,
+        registerId: o.registerId,
+        method: p.method,
+        amount: Number(p.amount),
+        tendered: p.tendered ?? null,
+        createdBy: userId,
+      });
+    }
+    await completeSale(sale.id);
+    return sale;
+  }
+
+  const [queued, setQueued] = useState(0);
+  const syncing = useRef(false);
+  useEffect(() => {
+    if (!businessId) return;
+    setQueued(loadQueue(businessId).length);
+    if (!online || syncing.current) return;
+    const pending = loadQueue(businessId);
+    if (!pending.length) return;
+    syncing.current = true;
+    (async () => {
+      let sent = 0;
+      for (const o of pending) {
+        try {
+          await postSale({ ...o, offline: true });
+          sent++;
+          saveQueue(
+            businessId,
+            loadQueue(businessId).filter((x) => x.id !== o.id),
+          );
+        } catch (e: any) {
+          toast.error(`An offline sale could not be sent: ${e.message ?? "error"}`);
+          break;
+        }
+      }
+      setQueued(loadQueue(businessId).length);
+      syncing.current = false;
+      if (sent) {
+        toast.success(`${sent} offline sale${sent > 1 ? "s" : ""} sent`);
+        queryClient.invalidateQueries({ queryKey: ["sales"] });
+        queryClient.invalidateQueries({ queryKey: ["pos-availability"] });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online, businessId]);
+
   const checkout = useMutation({
     mutationFn: async () => {
       if (!cart.length) throw new Error("Cart is empty");
@@ -522,44 +615,38 @@ function POSPage() {
       if (balance > 0.009 && !customerId && !walkIn?.id)
         throw new Error("Select a customer for the unpaid balance");
 
-      const sale = await createSale({
-        businessId: businessId!,
-        documentType: "pos_sale",
+      const payload: OfflineSale = {
+        id: crypto.randomUUID(),
         customerId: customerId || walkIn?.id || null,
         locationId: locationId || null,
         registerId: register?.id ?? null,
-        channel: "pos",
-        source: "pos",
-        currency,
-        taxInclusive,
         saleDate: todayISO(),
-        status: "draft",
         orderDiscount,
         orderDiscountType,
-        salespersonId: userId,
-        createdBy: userId,
         lines: cart,
-      });
-
-      for (const p of valid) {
-        await recordPayment({
-          businessId: businessId!,
-          saleId: sale.id,
-          registerId: register?.id ?? null,
-          method: p.method,
-          amount: Number(p.amount),
-          tendered: p.tendered ?? null,
-          createdBy: userId,
-        });
+        payments: valid,
+      };
+      if (!navigator.onLine) {
+        saveQueue(businessId!, [...loadQueue(businessId!), payload]);
+        setQueued(loadQueue(businessId!).length);
+        return { offline: true as const };
       }
-
-      await completeSale(sale.id);
+      const sale = await postSale(payload);
 
       const { data: fresh } = await db.from("sales").select("*").eq("id", sale.id).single();
       const { data: items } = await db.from("sale_items").select("*").eq("sale_id", sale.id);
       return { sale: (fresh ?? sale) as Row, items: (items ?? []) as Row[], payments: valid };
     },
-    onSuccess: ({ sale, items, payments: paid }) => {
+    onSuccess: (res) => {
+      if ("offline" in res) {
+        toast.success("Saved on this device. It will be sent when the internet is back.");
+        setCart([]);
+        setPayments([{ method: "cash", amount: 0, tendered: 0 }]);
+        setOrderDiscount(0);
+        setPayOpen(false);
+        return;
+      }
+      const { sale, items, payments: paid } = res;
       printReceipt({
         business,
         sale,
@@ -597,8 +684,13 @@ function POSPage() {
           role="status"
           className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
         >
-          You're offline. Sales can't be saved until the internet is back — keep this page open and
-          charge again once it reconnects.
+          You're offline. Sales are saved on this device and sent automatically when the internet is
+          back. Stock shown may be out of date.
+        </div>
+      )}
+      {online && queued > 0 && (
+        <div role="status" className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+          Sending {queued} sale{queued > 1 ? "s" : ""} saved while offline…
         </div>
       )}
       <PageHeader

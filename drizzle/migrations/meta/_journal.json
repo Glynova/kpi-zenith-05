@@ -169,6 +169,13 @@
       "when": 1791172738820,
       "tag": "0023_cost_fields_wastage",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791176327616,
+      "tag": "0024_last_purchase_costing",
+      "breakpoints": true
     }
   ]
 }
