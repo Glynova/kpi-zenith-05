@@ -33,9 +33,15 @@ export const Route = createFileRoute("/_authenticated/_shell/tax")({
   head: () => ({
     meta: [
       { title: "Tax Records — Daraven ERP" },
-      { name: "description", content: "VAT, exempt, zero-rated and withholding tax records with certificate exports." },
+      {
+        name: "description",
+        content: "VAT, exempt, zero-rated and withholding tax records with certificate exports.",
+      },
       { property: "og:title", content: "Tax Records — Daraven ERP" },
-      { property: "og:description", content: "VAT, exempt, zero-rated and withholding tax records with certificate exports." },
+      {
+        property: "og:description",
+        content: "VAT, exempt, zero-rated and withholding tax records with certificate exports.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -44,12 +50,16 @@ export const Route = createFileRoute("/_authenticated/_shell/tax")({
 });
 
 const esc = (v: unknown) =>
-  String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  String(v ?? "").replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!,
+  );
 
 function printCertificate(c: Row, currency: string) {
   const w = window.open("", "_blank");
   if (!w) return;
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.certificate_number ?? "Certificate")}</title>
+  w.document
+    .write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(c.certificate_number ?? "Certificate")}</title>
 <style>body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #999;padding:6px;font-size:13px;text-align:left}.n{font-size:11px;color:#555;border:1px dashed #999;padding:8px;margin-top:16px}</style></head><body>
 <h1>Certificate of Creditable Tax Withheld at Source (${esc(c.form_code)} format)</h1>
 <div class="n">Generated from your records in Daraven. This is not a BIR-issued form. Check it against the current official form before filing or giving it to the payee.</div>
@@ -102,19 +112,23 @@ function TaxPage() {
     },
   });
 
-  const summary = (txns.data ?? []).reduce<Record<string, { base: number; tax: number }>>((acc, t) => {
-    const k = t.tax_type as string;
-    acc[k] ??= { base: 0, tax: 0 };
-    acc[k].base += Number(t.taxable_amount);
-    acc[k].tax += Number(t.tax_amount);
-    return acc;
-  }, {});
+  const summary = (txns.data ?? []).reduce<Record<string, { base: number; tax: number }>>(
+    (acc, t) => {
+      const k = t.tax_type as string;
+      acc[k] ??= { base: 0, tax: 0 };
+      acc[k].base += Number(t.taxable_amount);
+      acc[k].tax += Number(t.tax_amount);
+      return acc;
+    },
+    {},
+  );
 
   const add = useMutation({
     mutationFn: async () => {
       const base = Number(f.taxable_amount);
       const rate = Number(f.rate);
-      if (!f.payer_name || !f.atc || !(base >= 0) || !(rate >= 0)) throw new Error("Fill in payer, ATC, amount and rate");
+      if (!f.payer_name || !f.atc || !(base >= 0) || !(rate >= 0))
+        throw new Error("Fill in payer, ATC, amount and rate");
       const { error } = await db.from("withholding_certificates").insert({
         business_id: businessId,
         direction: "received",
@@ -145,7 +159,10 @@ function TaxPage() {
   });
 
   async function voidCert(c: Row) {
-    const { error } = await db.from("withholding_certificates").update({ status: "void" }).eq("id", c.id);
+    const { error } = await db
+      .from("withholding_certificates")
+      .update({ status: "void" })
+      .eq("id", c.id);
     if (error) return toast.error(error.message);
     toast.success("Certificate voided");
     qc.invalidateQueries({ queryKey: ["wht", businessId] });
@@ -155,7 +172,12 @@ function TaxPage() {
   const field = (k: string, label: string, type = "text") => (
     <div>
       <Label className="text-xs">{label}</Label>
-      <Input className="mt-1.5" type={type} value={f[k] ?? ""} onChange={(e) => setF({ ...f, [k]: e.target.value })} />
+      <Input
+        className="mt-1.5"
+        type={type}
+        value={f[k] ?? ""}
+        onChange={(e) => setF({ ...f, [k]: e.target.value })}
+      />
     </div>
   );
 
@@ -164,11 +186,33 @@ function TaxPage() {
       <PageHeader
         title="Tax Records"
         description="Tax recorded automatically when sales post, plus tax your customers withheld."
-        actions={canWrite && <Button onClick={() => setOpen(true)}><Plus className="size-4" /> Record withholding</Button>}
+        actions={
+          canWrite && (
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> Record withholding
+            </Button>
+          )
+        }
       />
       <div className="flex flex-wrap gap-3">
-        <div><Label className="text-xs">From</Label><Input type="date" className="mt-1.5" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-        <div><Label className="text-xs">To</Label><Input type="date" className="mt-1.5" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+        <div>
+          <Label className="text-xs">From</Label>
+          <Input
+            type="date"
+            className="mt-1.5"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">To</Label>
+          <Input
+            type="date"
+            className="mt-1.5"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
+        </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         {["VAT", "VAT_EXEMPT", "ZERO_RATED", "WITHHOLDING"].map((k) => (
@@ -176,63 +220,130 @@ function TaxPage() {
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground">{titleCase(k.toLowerCase())}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
-                {formatCurrency(k === "VAT" || k === "WITHHOLDING" ? summary[k]?.tax : summary[k]?.base, currency)}
+                {formatCurrency(
+                  k === "VAT" || k === "WITHHOLDING" ? summary[k]?.tax : summary[k]?.base,
+                  currency,
+                )}
               </p>
-              <p className="text-xs text-muted-foreground">on {formatCurrency(summary[k]?.base, currency)}</p>
+              <p className="text-xs text-muted-foreground">
+                on {formatCurrency(summary[k]?.base, currency)}
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Withholding certificates (2307 format)</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Withholding certificates (2307 format)</CardTitle>
+        </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader><TableRow>
-              <TableHead>Period</TableHead><TableHead>Payer</TableHead><TableHead>ATC</TableHead>
-              <TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Withheld</TableHead><TableHead /><TableHead />
-            </TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Period</TableHead>
+                <TableHead>Payer</TableHead>
+                <TableHead>ATC</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Withheld</TableHead>
+                <TableHead />
+                <TableHead />
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {(certs.data ?? []).map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="whitespace-nowrap">{c.period_from} – {c.period_to}</TableCell>
-                  <TableCell>{c.payer_name}<div className="text-xs text-muted-foreground">{c.payer_tin}</div></TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {c.period_from} – {c.period_to}
+                  </TableCell>
+                  <TableCell>
+                    {c.payer_name}
+                    <div className="text-xs text-muted-foreground">{c.payer_tin}</div>
+                  </TableCell>
                   <TableCell>{c.atc}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(c.taxable_amount, currency)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(c.withholding_amount, currency)}</TableCell>
-                  <TableCell>{c.status === "void" && <Badge variant="secondary">Void</Badge>}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(c.taxable_amount, currency)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(c.withholding_amount, currency)}
+                  </TableCell>
+                  <TableCell>
+                    {c.status === "void" && <Badge variant="secondary">Void</Badge>}
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-right">
-                    <Button variant="ghost" size="icon" aria-label="Print" onClick={() => printCertificate(c, currency)}><Printer className="size-4" /></Button>
-                    {isAdmin && c.status !== "void" && <Button variant="ghost" size="sm" onClick={() => voidCert(c)}>Void</Button>}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Print"
+                      onClick={() => printCertificate(c, currency)}
+                    >
+                      <Printer className="size-4" />
+                    </Button>
+                    {isAdmin && c.status !== "void" && (
+                      <Button variant="ghost" size="sm" onClick={() => voidCert(c)}>
+                        Void
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
-              {!certs.data?.length && <TableRow><TableCell colSpan={7} className="text-muted-foreground">No certificates recorded.</TableCell></TableRow>}
+              {!certs.data?.length && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-muted-foreground">
+                    No certificates recorded.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Tax entries</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Tax entries</CardTitle>
+        </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader><TableRow>
-              <TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Reference</TableHead><TableHead>Customer / party</TableHead>
-              <TableHead className="text-right">Base</TableHead><TableHead className="text-right">Tax</TableHead>
-            </TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Reference</TableHead>
+                <TableHead>Customer / party</TableHead>
+                <TableHead className="text-right">Base</TableHead>
+                <TableHead className="text-right">Tax</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {(txns.data ?? []).map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>{t.txn_date}</TableCell>
-                  <TableCell><Badge variant="outline">{titleCase(String(t.tax_type).toLowerCase())}</Badge></TableCell>
-                  <TableCell>{t.reference}<div className="text-xs text-muted-foreground">{titleCase(String(t.source_type))}</div></TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{titleCase(String(t.tax_type).toLowerCase())}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {t.reference}
+                    <div className="text-xs text-muted-foreground">
+                      {titleCase(String(t.source_type))}
+                    </div>
+                  </TableCell>
                   <TableCell>{t.counterparty_name ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(t.taxable_amount, currency)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(t.tax_amount, currency)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(t.taxable_amount, currency)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(t.tax_amount, currency)}
+                  </TableCell>
                 </TableRow>
               ))}
-              {!txns.data?.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No tax entries in this period.</TableCell></TableRow>}
+              {!txns.data?.length && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-muted-foreground">
+                    No tax entries in this period.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -240,7 +351,9 @@ function TaxPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader><DialogTitle>Record tax withheld by a customer</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Record tax withheld by a customer</DialogTitle>
+          </DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             {field("payer_name", "Customer (payer) *")}
             {field("payer_tin", "Customer TIN")}
@@ -255,11 +368,20 @@ function TaxPage() {
             {field("reference", "Invoice / reference")}
           </div>
           <p className="text-xs text-muted-foreground">
-            Tax withheld: {formatCurrency((Number(f.taxable_amount) || 0) * (Number(f.rate) || 0) / 100, currency)}. Recorded certificates can't be edited; void and record again to correct.
+            Tax withheld:{" "}
+            {formatCurrency(
+              ((Number(f.taxable_amount) || 0) * (Number(f.rate) || 0)) / 100,
+              currency,
+            )}
+            . Recorded certificates can't be edited; void and record again to correct.
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => add.mutate()} disabled={add.isPending}>Save</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => add.mutate()} disabled={add.isPending}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

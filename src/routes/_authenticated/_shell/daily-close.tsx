@@ -39,9 +39,15 @@ export const Route = createFileRoute("/_authenticated/_shell/daily-close")({
   head: () => ({
     meta: [
       { title: "Daily Close (Z Reading) — Daraven ERP" },
-      { name: "description", content: "Close the day with a numbered Z reading that matches posted sales." },
+      {
+        name: "description",
+        content: "Close the day with a numbered Z reading that matches posted sales.",
+      },
       { property: "og:title", content: "Daily Close (Z Reading) — Daraven ERP" },
-      { property: "og:description", content: "Close the day with a numbered Z reading that matches posted sales." },
+      {
+        property: "og:description",
+        content: "Close the day with a numbered Z reading that matches posted sales.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -59,7 +65,10 @@ function DailyClosePage() {
     queryKey: ["z-preview", businessId, date],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data, error } = await db.rpc("z_reading_preview", { _business_id: businessId, _date: date });
+      const { data, error } = await db.rpc("z_reading_preview", {
+        _business_id: businessId,
+        _date: date,
+      });
       if (error) throw error;
       return data as Row;
     },
@@ -96,27 +105,47 @@ function DailyClosePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Daily Close" description="Z reading from posted sales. Once closed, a day's reading can't be edited." />
+      <PageHeader
+        title="Daily Close"
+        description="Z reading from posted sales. Once closed, a day's reading can't be edited."
+      />
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <Label className="text-xs" htmlFor="zdate">Day</Label>
-          <Input id="zdate" type="date" className="mt-1.5" value={date} onChange={(e) => setDate(e.target.value)} />
+          <Label className="text-xs" htmlFor="zdate">
+            Day
+          </Label>
+          <Input
+            id="zdate"
+            type="date"
+            className="mt-1.5"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
         </div>
         {closed ? (
-          <span className="text-sm text-muted-foreground">Closed as Z #{closed.z_number} on {formatDateTime(closed.created_at)}</span>
+          <span className="text-sm text-muted-foreground">
+            Closed as Z #{closed.z_number} on {formatDateTime(closed.created_at)}
+          </span>
         ) : (
           <Button disabled={!canClose || close.isPending} onClick={() => close.mutate()}>
             {close.isPending ? "Closing…" : "Close this day"}
           </Button>
         )}
-        {!canClose && !closed && <span className="text-xs text-muted-foreground">Only owners, admins and managers can close the day.</span>}
+        {!canClose && !closed && (
+          <span className="text-xs text-muted-foreground">
+            Only owners, admins and managers can close the day.
+          </span>
+        )}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{closed ? `Z reading #${closed.z_number}` : "Preview"}</CardTitle>
+          <CardTitle className="text-base">
+            {closed ? `Z reading #${closed.z_number}` : "Preview"}
+          </CardTitle>
           <p className="text-xs text-muted-foreground">
-            Receipts {p.beginning_invoice ?? "—"} to {p.ending_invoice ?? "—"} · {p.transaction_count ?? 0} sales · {p.void_count ?? 0} voided
+            Receipts {p.beginning_invoice ?? "—"} to {p.ending_invoice ?? "—"} ·{" "}
+            {p.transaction_count ?? 0} sales · {p.void_count ?? 0} voided
           </p>
         </CardHeader>
         <CardContent className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
@@ -136,7 +165,9 @@ function DailyClosePage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Past readings</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Past readings</CardTitle>
+        </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
@@ -150,16 +181,28 @@ function DailyClosePage() {
             </TableHeader>
             <TableBody>
               {(history.data ?? []).map((z) => (
-                <TableRow key={z.id} className="cursor-pointer" onClick={() => setDate(z.reading_date)}>
+                <TableRow
+                  key={z.id}
+                  className="cursor-pointer"
+                  onClick={() => setDate(z.reading_date)}
+                >
                   <TableCell>{z.z_number}</TableCell>
                   <TableCell>{z.reading_date}</TableCell>
                   <TableCell className="text-right">{z.transaction_count}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(z.net_sales, currency)}</TableCell>
-                  <TableCell className="text-right tabular-nums">{formatCurrency(z.ending_grand_total, currency)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(z.net_sales, currency)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(z.ending_grand_total, currency)}
+                  </TableCell>
                 </TableRow>
               ))}
               {!history.data?.length && (
-                <TableRow><TableCell colSpan={5} className="text-muted-foreground">No days closed yet.</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={5} className="text-muted-foreground">
+                    No days closed yet.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>

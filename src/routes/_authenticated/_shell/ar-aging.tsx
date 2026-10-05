@@ -33,9 +33,15 @@ export const Route = createFileRoute("/_authenticated/_shell/ar-aging")({
   head: () => ({
     meta: [
       { title: "Receivables Aging — Daraven ERP" },
-      { name: "description", content: "Unpaid customer balances by days past due, as of any date." },
+      {
+        name: "description",
+        content: "Unpaid customer balances by days past due, as of any date.",
+      },
       { property: "og:title", content: "Receivables Aging — Daraven ERP" },
-      { property: "og:description", content: "Unpaid customer balances by days past due, as of any date." },
+      {
+        property: "og:description",
+        content: "Unpaid customer balances by days past due, as of any date.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -56,13 +62,18 @@ function AgingPage() {
     },
   });
   const totals = Object.fromEntries(
-    [...BUCKETS.map((b) => b[0]), "total"].map((k) => [k, data.reduce((s, r) => s + Number(r[k] ?? 0), 0)]),
+    [...BUCKETS.map((b) => b[0]), "total"].map((k) => [
+      k,
+      data.reduce((s, r) => s + Number(r[k] ?? 0), 0),
+    ]),
   );
 
   function exportCsv() {
     const head = ["Customer", ...BUCKETS.map((b) => b[1]), "Total"];
     const rows = data.map((r) => [r.customer_name, ...BUCKETS.map((b) => r[b[0]]), r.total]);
-    const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = [head, ...rows]
+      .map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     a.download = `ar-aging-${asOf}.csv`;
@@ -81,8 +92,16 @@ function AgingPage() {
         }
       />
       <div className="max-w-xs">
-        <Label className="text-xs" htmlFor="asof">As of date</Label>
-        <Input id="asof" type="date" className="mt-1.5" value={asOf} onChange={(e) => setAsOf(e.target.value)} />
+        <Label className="text-xs" htmlFor="asof">
+          As of date
+        </Label>
+        <Input
+          id="asof"
+          type="date"
+          className="mt-1.5"
+          value={asOf}
+          onChange={(e) => setAsOf(e.target.value)}
+        />
       </div>
       <Card>
         <CardContent className="overflow-x-auto p-0">
@@ -91,17 +110,27 @@ function AgingPage() {
               <TableRow>
                 <TableHead>Customer</TableHead>
                 {BUCKETS.map((b) => (
-                  <TableHead key={b[0]} className="text-right">{b[1]}</TableHead>
+                  <TableHead key={b[0]} className="text-right">
+                    {b[1]}
+                  </TableHead>
                 ))}
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow><TableCell colSpan={8} className="text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={8} className="text-muted-foreground">
+                    Loading…
+                  </TableCell>
+                </TableRow>
               )}
               {!isLoading && !data.length && (
-                <TableRow><TableCell colSpan={8} className="text-muted-foreground">Nothing owed as of this date.</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={8} className="text-muted-foreground">
+                    Nothing owed as of this date.
+                  </TableCell>
+                </TableRow>
               )}
               {data.map((r) => (
                 <TableRow key={r.customer_id ?? "none"}>
@@ -111,16 +140,22 @@ function AgingPage() {
                       {Number(r[b[0]]) ? formatCurrency(r[b[0]], currency) : "—"}
                     </TableCell>
                   ))}
-                  <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(r.total, currency)}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">
+                    {formatCurrency(r.total, currency)}
+                  </TableCell>
                 </TableRow>
               ))}
               {data.length > 0 && (
                 <TableRow className="border-t-2">
                   <TableCell className="font-semibold">Total</TableCell>
                   {BUCKETS.map((b) => (
-                    <TableCell key={b[0]} className="text-right font-semibold tabular-nums">{formatCurrency(totals[b[0]], currency)}</TableCell>
+                    <TableCell key={b[0]} className="text-right font-semibold tabular-nums">
+                      {formatCurrency(totals[b[0]], currency)}
+                    </TableCell>
                   ))}
-                  <TableCell className="text-right font-semibold tabular-nums">{formatCurrency(totals.total, currency)}</TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">
+                    {formatCurrency(totals.total, currency)}
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

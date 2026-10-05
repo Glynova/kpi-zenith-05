@@ -263,7 +263,9 @@ function SalesPage() {
       if (error) throw error;
     },
     onSuccess: (_d, row) => {
-      toast.success(isPosted(row) ? "Sale voided. The original is kept with a reversal." : "Sale deleted");
+      toast.success(
+        isPosted(row) ? "Sale voided. The original is kept with a reversal." : "Sale deleted",
+      );
       setVoidReason("");
       queryClient.invalidateQueries({ queryKey: ["sales", businessId] });
       setDeleting(null);
@@ -455,14 +457,14 @@ function SalesPage() {
                             </Button>
                           )}
                         {row.status !== "voided" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleting(row)}
-                          aria-label={isPosted(row) ? "Void sale" : "Delete"}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleting(row)}
+                            aria-label={isPosted(row) ? "Void sale" : "Delete"}
+                          >
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
                         )}
                       </>
                     )}

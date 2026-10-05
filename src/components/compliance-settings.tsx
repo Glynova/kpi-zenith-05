@@ -52,7 +52,11 @@ export function ComplianceSettings() {
     enabled: !!businessId,
     queryFn: async () => {
       const [{ data: bs }, { count }] = await Promise.all([
-        db.from("business_settings").select("costing_method").eq("business_id", businessId).maybeSingle(),
+        db
+          .from("business_settings")
+          .select("costing_method")
+          .eq("business_id", businessId)
+          .maybeSingle(),
         db
           .from("products")
           .select("id", { count: "exact", head: true })

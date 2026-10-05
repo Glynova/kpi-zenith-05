@@ -68,7 +68,10 @@ function AuditPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Audit Logs" description="Permanent record of who changed what, and when. Entries can't be edited or deleted." />
+      <PageHeader
+        title="Audit Logs"
+        description="Permanent record of who changed what, and when. Entries can't be edited or deleted."
+      />
       <div className="grid gap-3 sm:grid-cols-5">
         {filter("Action (e.g. VOID)", action, setAction)}
         {filter("Area", moduleName, setModuleName)}
@@ -79,35 +82,68 @@ function AuditPage() {
       <Card>
         <CardContent className="overflow-x-auto p-0">
           <Table>
-            <TableHeader><TableRow>
-              <TableHead>When</TableHead><TableHead>User</TableHead><TableHead>Action</TableHead><TableHead>Area</TableHead><TableHead>Record</TableHead><TableHead>IP</TableHead>
-            </TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>When</TableHead>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Area</TableHead>
+                <TableHead>Record</TableHead>
+                <TableHead>IP</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
-              {isLoading && <TableRow><TableCell colSpan={6} className="text-muted-foreground">Loading…</TableCell></TableRow>}
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-muted-foreground">
+                    Loading…
+                  </TableCell>
+                </TableRow>
+              )}
               {data.map((r) => (
                 <TableRow key={r.id} className="cursor-pointer" onClick={() => setOpen(r)}>
-                  <TableCell className="whitespace-nowrap">{formatDateTime(r.created_at)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(r.created_at)}
+                  </TableCell>
                   <TableCell>{r.user_email ?? "System"}</TableCell>
-                  <TableCell><Badge variant="outline">{r.action}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{r.action}</Badge>
+                  </TableCell>
                   <TableCell>{r.module}</TableCell>
-                  <TableCell className="max-w-40 truncate text-xs text-muted-foreground">{r.record_id}</TableCell>
+                  <TableCell className="max-w-40 truncate text-xs text-muted-foreground">
+                    {r.record_id}
+                  </TableCell>
                   <TableCell className="text-xs">{r.ip_address ?? "—"}</TableCell>
                 </TableRow>
               ))}
-              {!isLoading && !data.length && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No entries match.</TableCell></TableRow>}
+              {!isLoading && !data.length && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-muted-foreground">
+                    No entries match.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
       <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader><DialogTitle>{open?.action} · {open?.module}</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">{formatDateTime(open?.created_at)} · {open?.user_email ?? "System"} · {open?.record_id}</p>
+          <DialogHeader>
+            <DialogTitle>
+              {open?.action} · {open?.module}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            {formatDateTime(open?.created_at)} · {open?.user_email ?? "System"} · {open?.record_id}
+          </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {(["old_value", "new_value"] as const).map((k) => (
               <div key={k} className="min-w-0">
                 <p className="mb-1 text-xs font-medium">{k === "old_value" ? "Before" : "After"}</p>
-                <pre className="max-h-96 overflow-auto rounded-md bg-muted p-2 text-xs">{open?.[k] ? JSON.stringify(open[k], null, 2) : "—"}</pre>
+                <pre className="max-h-96 overflow-auto rounded-md bg-muted p-2 text-xs">
+                  {open?.[k] ? JSON.stringify(open[k], null, 2) : "—"}
+                </pre>
               </div>
             ))}
           </div>
