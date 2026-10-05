@@ -5,6 +5,9 @@ import { Eye } from "lucide-react";
 
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
 import { ItemForm, newLine } from "@/components/item-form";
+import type { MadeFromLine } from "@/components/made-from-section";
+import { MADE_FROM, kindOf } from "@/lib/item-kinds";
+import { normalizeUnit, toStockUnit } from "@/lib/units";
 import { useProductVariants } from "@/components/product-variants-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -218,7 +221,7 @@ const SMALL_UNITS: Record<string, string> = {
 /** Product form + table adapt to the business configuration from the setup wizard. */
 function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
-  const [bundleLines, setBundleLines] = useState([newLine()]);
+  const [bundleLines, setBundleLines] = useState<MadeFromLine[]>([newLine()]);
   const variants = useProductVariants(businessId);
   const variantsEnabled = feature("track_variants");
 
@@ -287,6 +290,11 @@ function ProductsPage() {
     { key: "track_stock", label: "Track stock", type: "boolean", default: true },
     { key: "has_variants", label: "Has variants", type: "boolean", default: false },
     { key: "bundle_fixed_price", label: "Fixed bundle price", type: "boolean", default: false },
+    { key: "consumption_mode", label: "Consumption mode", type: "text", default: "on_sale" },
+    { key: "output_quantity", label: "Output quantity", type: "number", default: 1 },
+    { key: "labor_hours", label: "Labor hours", type: "number", default: 0 },
+    { key: "labor_rate", label: "Labor rate", type: "number", default: 0 },
+    { key: "overhead_per_unit", label: "Overhead per unit", type: "number", default: 0 },
     { key: "service_duration_minutes", label: "Duration", type: "number" },
     { key: "commission_rate", label: "Commission", type: "number" },
     { key: "assigned_employee_id", label: "Employee", type: "text" },
@@ -372,6 +380,8 @@ function ProductsPage() {
       fields={formFields}
       transformPayload={(payload, { form, editing }) => {
         const kind = String(form.item_type || "product");
+        const card = kindOf(form);
+        const madeFrom = MADE_FROM.includes(card);
         payload.sku =
           String(form.sku || "").trim() ||
           (editing ? null : `ITM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`);
@@ -385,12 +395,20 @@ function ProductsPage() {
               : kind === "non_stock"
                 ? "non_stock_item"
                 : "standard_product");
+        payload.consumption_mode =
+          form.consumption_mode === "on_production" ? "on_production" : "on_sale";
+        payload.track_stock =
+          kind === "service" || kind === "non_stock"
+            ? false
+            : madeFrom
+              ? payload.consumption_mode === "on_production"
+              : !!form.track_stock;
         payload.inventory_model =
           kind === "service"
             ? "service"
-            : kind === "bundle" || kind === "non_stock"
-              ? "non_stocked_item"
-              : payload.inventory_model || "stocked_item";
+            : payload.track_stock
+              ? "stocked_item"
+              : "non_stocked_item";
         payload.product_type =
           kind === "service"
             ? "service"
@@ -401,15 +419,22 @@ function ProductsPage() {
                 : form.has_variants
                   ? "variant"
                   : "standard";
-        payload.has_variants = kind === "product" && !!form.has_variants;
-        payload.track_stock = kind === "product" && !!form.track_stock;
+        payload.has_variants = card === "ready" && !!form.has_variants;
+        // One alert level: "alert me below" feeds both legacy low-stock fields.
+        if (form.reorder_level != null && form.reorder_level !== "")
+          payload.min_stock = Number(form.reorder_level);
+        payload.output_quantity =
+          Number(form.output_quantity) > 0 ? Number(form.output_quantity) : 1;
+        payload.labor_hours = Number(form.labor_hours || 0);
+        payload.labor_rate = Number(form.labor_rate || 0);
+        payload.overhead_per_unit = Number(form.overhead_per_unit || 0);
         payload.image_urls = Array.isArray(form.image_urls)
           ? form.image_urls
           : form.image_url
             ? [form.image_url]
             : [];
         payload.image_url = payload.image_urls[0] ?? null;
-        payload.costing_method = form.costing_method || null;
+        payload.costing_method = madeFrom ? null : form.costing_method || null;
         return payload;
       }}
       searchKeys={["name", "sku", "barcode", "brand"]}
@@ -428,11 +453,13 @@ function ProductsPage() {
       )}
       onOpenForm={(row) => {
         void variants.load(row);
-        setBundleLines([newLine()]);
-        if (row?.id && row.item_type === "bundle") {
+        setBundleLines([]);
+        if (row?.id) {
           void db
             .from("bundle_components")
-            .select("component_product_id,quantity")
+            .select(
+              "component_product_id,variant_id,quantity,entered_quantity,entered_unit,waste_percent",
+            )
             .eq("bundle_product_id", row.id)
             .then(({ data }: { data: Row[] | null }) => {
               if (data?.length)
@@ -440,23 +467,30 @@ function ProductsPage() {
                   data.map((x) => ({
                     key: crypto.randomUUID(),
                     productId: String(x.component_product_id),
-                    quantity: Number(x.quantity),
+                    variantId: x.variant_id ?? null,
+                    quantity: Number(x.entered_quantity ?? x.quantity),
+                    unit: String(x.entered_unit ?? ""),
+                    waste: Number(x.waste_percent ?? 0),
                   })),
                 );
             });
-        }
+        } else setBundleLines([newLine()]);
       }}
       validate={({ form }) => {
-        const kind = String(form.item_type || "product");
+        const kind = kindOf(form);
         const numeric = [
           "cost_price",
           "selling_price",
           "opening_quantity",
           "reorder_level",
           "reorder_quantity",
+          "max_stock",
           "tax_rate",
           "service_duration_minutes",
           "commission_rate",
+          "labor_hours",
+          "labor_rate",
+          "overhead_per_unit",
         ];
         if (
           numeric.some(
@@ -467,13 +501,23 @@ function ProductsPage() {
           )
         )
           return "Numbers cannot be negative";
-        const filledLines = bundleLines.filter((line) => line.productId);
         if (
-          kind === "bundle" &&
-          (!filledLines.length || filledLines.some((line) => !(Number(line.quantity) > 0)))
+          form.output_quantity != null &&
+          form.output_quantity !== "" &&
+          !(Number(form.output_quantity) > 0)
         )
-          return "Add at least one valid bundle component";
-        if (kind === "product" && form.has_variants) return variants.validate(new Set());
+          return "Output quantity must be more than zero";
+        if (Number(form.commission_rate || 0) > 100) return "Commission cannot be over 100%";
+        if (Number(form.max_stock) > 0 && Number(form.reorder_level) > Number(form.max_stock))
+          return "Alert level cannot be above maximum stock";
+        const filledLines = bundleLines.filter((line) => line.productId);
+        if (MADE_FROM.includes(kind) && !filledLines.length)
+          return "Add at least one item this is made from";
+        if (filledLines.some((l) => !(Number(l.quantity) > 0)))
+          return "Each component needs a quantity above zero";
+        if (filledLines.some((l) => Number(l.waste) < 0 || Number(l.waste) > 100))
+          return "Waste must be between 0 and 100%";
+        if (kind === "ready" && form.has_variants) return variants.validate(new Set());
         return null;
       }}
       afterSave={async ({ form, id, editing }) => {
@@ -492,21 +536,43 @@ function ProductsPage() {
         }
         if (form.item_type === "product" && form.has_variants && variantsEnabled)
           await variants.persist(id, locationId);
-        if (form.item_type === "bundle") {
+        const kind = kindOf(form);
+        const usesComponents = MADE_FROM.includes(kind) || form.item_type === "service";
+        const filled = bundleLines.filter((line) => line.productId);
+        if (usesComponents || editing) {
           const { error: delError } = await db
             .from("bundle_components")
             .delete()
             .eq("bundle_product_id", id);
           if (delError) throw delError;
+        }
+        if (usesComponents && filled.length) {
+          const { data: comps } = await db
+            .from("products")
+            .select("id,unit")
+            .in(
+              "id",
+              filled.map((l) => l.productId),
+            );
+          const unitOf = new Map(
+            ((comps ?? []) as Row[]).map((c) => [c.id, normalizeUnit(c.unit)]),
+          );
           const { error } = await db.from("bundle_components").insert(
-            bundleLines
-              .filter((line) => line.productId)
-              .map((line) => ({
+            filled.map((line) => {
+              const stockUnit = unitOf.get(line.productId) ?? "pcs";
+              const entered = line.unit || stockUnit;
+              return {
                 business_id: businessId,
                 bundle_product_id: id,
                 component_product_id: line.productId,
-                quantity: Number(line.quantity),
-              })),
+                variant_id: line.variantId,
+                quantity:
+                  toStockUnit(Number(line.quantity), entered, stockUnit) ?? Number(line.quantity),
+                entered_quantity: Number(line.quantity),
+                entered_unit: entered,
+                waste_percent: Number(line.waste || 0),
+              };
+            }),
           );
           if (error) throw error;
         }

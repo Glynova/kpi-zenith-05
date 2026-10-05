@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,23 @@ import {
 } from "@/components/ui/select";
 import { GroupedSelect } from "@/components/grouped-select";
 import { ItemImages } from "@/components/item-images";
+import { MadeFromSection, type MadeFromLine } from "@/components/made-from-section";
 import { db, type Row } from "@/lib/db";
-import { formatCurrency } from "@/lib/format";
-import { titleCase } from "@/lib/format";
+import { formatCurrency, titleCase } from "@/lib/format";
 import { UNIT_OPTION_GROUPS } from "@/lib/business-config";
+import { useBusiness } from "@/lib/business-context";
+import {
+  ALL_KINDS,
+  KIND_INFO,
+  MADE_FROM,
+  kindOf,
+  kindsForBusiness,
+  patchForKind,
+  type ItemKind,
+} from "@/lib/item-kinds";
 import type { FormCtx } from "@/components/resource-page";
 import type { useProductVariants } from "@/components/product-variants-section";
 
-type BundleLine = { key: string; productId: string; quantity: number };
-const newLine = (): BundleLine => ({ key: crypto.randomUUID(), productId: "", quantity: 1 });
 export type ItemFormProps = FormCtx & {
   businessId: string | null;
   currency: string;
@@ -32,16 +40,10 @@ export type ItemFormProps = FormCtx & {
   submit: () => void;
   close: () => void;
   saving: boolean;
-  bundleLines: BundleLine[];
-  setBundleLines: (lines: BundleLine[]) => void;
+  bundleLines: MadeFromLine[];
+  setBundleLines: (lines: MadeFromLine[]) => void;
 };
-const TYPES = ["product", "service", "bundle", "non_stock"];
-const SUBTYPES: Record<string, string[]> = {
-  product: ["standard_product", "raw_material", "finished_product", "consumable"],
-  service: ["standard_service", "consultation", "labor"],
-  bundle: ["fixed_bundle", "custom_bundle"],
-  non_stock: ["non_stock_item", "digital"],
-};
+
 export function ItemForm({
   form,
   setForm,
@@ -56,32 +58,39 @@ export function ItemForm({
   bundleLines,
   setBundleLines,
 }: ItemFormProps) {
-  const kind = String(form.item_type || "product");
-  const hasVariants = kind === "product" && !!form.has_variants && variantsEnabled;
+  const { business } = useBusiness();
+  const businessType = String(business?.type ?? "retail");
+  const kind = kindOf(form);
+  const preset = kindsForBusiness(businessType);
+  const [showAll, setShowAll] = useState(!preset.includes(kind));
+  const [advanced, setAdvanced] = useState(false);
+  const madeFrom = MADE_FROM.includes(kind);
+  const isService = kind === "service" || kind === "package";
+  const ownStock = !isService && (!madeFrom || form.consumption_mode === "on_production");
+  const hasVariants = kind === "ready" && !!form.has_variants && variantsEnabled;
   const [skuError, setSkuError] = useState("");
+
   const { data: references } = useQuery({
     queryKey: ["item-form-references", businessId],
     enabled: !!businessId,
-    // Always refresh when the form opens so newly created items can be picked as components.
     refetchOnMount: "always",
     staleTime: 0,
     queryFn: async () => {
-      const [categories, suppliers, employees, locations, products] = await Promise.all([
+      const [categories, suppliers, employees, locations] = await Promise.all([
         db.from("categories").select("id,name").eq("business_id", businessId),
         db.from("suppliers").select("id,name").eq("business_id", businessId),
         db.from("employees").select("id,name").eq("business_id", businessId),
         db.from("warehouses").select("id,name").eq("business_id", businessId),
-        db.from("products").select("id,name,sku").eq("business_id", businessId),
       ]);
       return {
         categories: categories.data ?? [],
         suppliers: suppliers.data ?? [],
         employees: employees.data ?? [],
         locations: locations.data ?? [],
-        products: products.data ?? [],
       } as Record<string, Row[]>;
     },
   });
+
   useEffect(() => {
     const sku = String(form.sku ?? "")
       .trim()
@@ -103,14 +112,24 @@ export function ItemForm({
       setSkuError(
         (products.data ?? []).some((p: Row) => p.id !== editing?.id) ||
           (rows.data ?? []).some((v: Row) => v.product_id !== editing?.id)
-          ? "SKU already used in this business"
+          ? "That code is already used in this business"
           : "",
       );
     }, 250);
     return () => clearTimeout(timer);
   }, [businessId, editing?.id, form.sku]);
+
   const set = (key: string, value: unknown) => setForm({ ...form, [key]: value });
-  const text = (key: string, label: string, type = "text") => (
+  const pickKind = (next: ItemKind) => {
+    if (next === kind) return;
+    const filled = bundleLines.some((l) => l.productId) || (form.has_variants && variants);
+    if (editing || filled) {
+      if (!window.confirm("Changing the item type may hide some fields you filled in. Continue?"))
+        return;
+    }
+    setForm({ ...form, ...patchForKind(next) });
+  };
+  const text = (key: string, label: string, type = "text", hint?: string) => (
     <div className="min-w-0 space-y-1.5">
       <Label htmlFor={`item-${key}`}>{label}</Label>
       <Input
@@ -121,9 +140,10 @@ export function ItemForm({
         value={form[key] ?? ""}
         onChange={(e) => set(key, e.target.value)}
       />
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
-  const choice = (key: string, label: string, options: Row[], placeholder = "Select") => (
+  const choice = (key: string, label: string, options: Row[]) => (
     <div className="min-w-0 space-y-1.5">
       <Label>{label}</Label>
       <Select
@@ -131,7 +151,7 @@ export function ItemForm({
         onValueChange={(v) => set(key, v === "none" ? null : v)}
       >
         <SelectTrigger aria-label={label}>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">None</SelectItem>
@@ -155,20 +175,27 @@ export function ItemForm({
     </label>
   );
   const section = "space-y-4 rounded-md border border-border bg-card p-4 sm:p-5";
-  const cost = Number(form.cost_price ?? 0),
-    price = Number(form.selling_price ?? 0);
+  const cost = Number(form.cost_price ?? 0);
+  const price = Number(form.selling_price ?? 0);
+  const minutes = Number(form.service_duration_minutes ?? 0);
+  const perHour = form.billing_unit === "per_hour";
+  const effectivePrice = perHour ? (price * minutes) / 60 : price;
+  const commission = (effectivePrice * Number(form.commission_rate ?? 0)) / 100;
   const images = Array.isArray(form.image_urls)
     ? (form.image_urls as string[])
     : form.image_url
       ? [String(form.image_url)]
       : [];
+  const cards = showAll ? ALL_KINDS : preset;
+  const fmt = (n: number) => formatCurrency(n, currency);
+
   return (
     <>
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-background px-5 py-4 pr-14">
         <div>
           <h2 className="text-xl font-semibold">{editing ? "Edit item" : "New item"}</h2>
           <p className="text-sm text-muted-foreground">
-            Products, services, bundles and non-stock items all live in one catalog.
+            Pick what you're adding, then fill in the basics.
           </p>
         </div>
         <div className="flex gap-2">
@@ -181,228 +208,148 @@ export function ItemForm({
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
-        <div className={section}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {
-              <div className="space-y-1.5">
-                <Label>Item type</Label>
-                <Select
-                  value={kind}
-                  onValueChange={(v) =>
-                    setForm({
-                      ...form,
-                      item_type: v,
-                      item_subtype: SUBTYPES[v][0],
-                      inventory_model:
-                        v === "service"
-                          ? "service"
-                          : v === "non_stock" || v === "bundle"
-                            ? "non_stocked_item"
-                            : "stocked_item",
-                      track_stock: v === "product",
-                      has_variants: v === "product" ? form.has_variants : false,
-                    })
-                  }
-                >
-                  <SelectTrigger aria-label="Item type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TYPES.map((id) => (
-                      <SelectItem key={id} value={id}>
-                        {titleCase(id)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            }
-            {choice(
-              "item_subtype",
-              "Subtype",
-              SUBTYPES[kind].map((id) => ({ id, name: titleCase(id) })),
-            )}
+        <section className={section}>
+          <h3 className="font-semibold">What are you adding?</h3>
+          <div
+            className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
+            role="radiogroup"
+            aria-label="Item type"
+          >
+            {cards.map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={kind === k}
+                onClick={() => pickKind(k)}
+                className={`rounded-md border p-3 text-left transition-colors ${kind === k ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}
+              >
+                <p className="text-sm font-medium">{KIND_INFO[k].label}</p>
+                <p className="text-xs text-muted-foreground">{KIND_INFO[k].hint}</p>
+              </button>
+            ))}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{titleCase(kind)}</Badge>
-            <Badge variant={form.status === "inactive" ? "secondary" : "default"}>
-              {titleCase(String(form.status || "active"))}
-            </Badge>
-            {form.track_stock && <Badge variant="outline">Stock tracked</Badge>}
-            {hasVariants && <Badge variant="outline">Variants</Badge>}
-          </div>
+          {!showAll && (
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-xs"
+              onClick={() => setShowAll(true)}
+            >
+              More item types
+            </Button>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             {text("name", "Name *")}
-            {text("sku", "SKU")}
-            {skuError && (
-              <p role="alert" className="text-sm text-destructive sm:col-span-2">
-                {skuError}
-              </p>
-            )}
-            {kind !== "service" && text("barcode", "Barcode")}
-            {text("brand", "Brand")}
             {choice("category_id", "Category", references?.categories ?? [])}
-            <div className="space-y-1.5">
-              <Label>{kind === "service" ? "Billing unit" : "Unit"}</Label>
-              <GroupedSelect
-                groups={UNIT_OPTION_GROUPS}
-                searchable
-                value={String(
-                  kind === "service" ? form.billing_unit || form.unit || "pcs" : form.unit || "pcs",
-                )}
-                onChange={(v) =>
-                  setForm({ ...form, unit: v, ...(kind === "service" ? { billing_unit: v } : {}) })
-                }
-              />
-            </div>
-            {kind !== "service" &&
-              choice("supplier_id", "Primary supplier", references?.suppliers ?? [])}
-            {choice(
-              "status",
-              "Status",
-              ["active", "inactive", "discontinued"].map((id) => ({ id, name: titleCase(id) })),
+            {!isService && (
+              <div className="space-y-1.5">
+                <Label>Unit</Label>
+                <GroupedSelect
+                  groups={UNIT_OPTION_GROUPS}
+                  searchable
+                  value={String(form.unit || "pcs")}
+                  onChange={(v) => set("unit", v)}
+                />
+              </div>
             )}
+            {kind !== "ingredient" &&
+              text(
+                "selling_price",
+                hasVariants ? "Usual price" : perHour ? "Rate per hour" : "Selling price",
+                "number",
+                perHour && minutes > 0
+                  ? `= ${fmt(effectivePrice)} for ${minutes} minutes`
+                  : undefined,
+              )}
+            {!madeFrom &&
+              !isService &&
+              text(
+                "cost_price",
+                hasVariants ? "Usual cost" : "Cost",
+                "number",
+                `Cost basis: per ${form.unit || "pcs"}`,
+              )}
+            {ownStock &&
+              !hasVariants &&
+              !editing &&
+              text("opening_quantity", "Starting quantity", "number")}
+            {ownStock && text("reorder_level", "Alert me below", "number")}
           </div>
-        </div>
-        {kind === "service" && (
+          {!madeFrom && !isService && kind !== "ingredient" && (
+            <p className="text-sm text-muted-foreground">
+              Profit {fmt(price - cost)} · Margin{" "}
+              {price > 0 ? `${(((price - cost) / price) * 100).toFixed(1)}%` : "Set a price"}
+              {price > 0 && price < cost && (
+                <span className="text-destructive"> · price is below cost</span>
+              )}
+            </p>
+          )}
+          {kind === "ready" &&
+            variantsEnabled &&
+            toggle("has_variants", "This item comes in options (size, colour…)")}
+        </section>
+
+        {isService && (
           <section className={section}>
             <h3 className="font-semibold">Service details</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {text("service_duration_minutes", "Duration (minutes)", "number")}
-              {text("commission_rate", "Commission rate (%)", "number")}
-              {choice("assigned_employee_id", "Assigned employee", references?.employees ?? [])}
-              {text("income_account", "Income account")}
-              {toggle("requires_booking", "Requires booking")}
-            </div>
-          </section>
-        )}
-        {kind === "bundle" && (
-          <section className={section}>
-            <h3 className="font-semibold">Bundle components</h3>
-            {bundleLines.map((line) => (
-              <div
-                key={line.key}
-                className="grid grid-cols-[minmax(0,1fr)_90px_auto] items-end gap-2"
-              >
-                <div className="space-y-1.5">
-                  <Label>Component</Label>
-                  <Select
-                    value={line.productId || "none"}
-                    onValueChange={(v) =>
-                      setBundleLines(
-                        bundleLines.map((x) =>
-                          x.key === line.key ? { ...x, productId: v === "none" ? "" : v } : x,
-                        ),
-                      )
-                    }
-                  >
-                    <SelectTrigger aria-label="Component">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Select</SelectItem>
-                      {(references?.products ?? [])
-                        .filter((p) => p.id !== editing?.id)
-                        .map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Qty</Label>
-                  <Input
-                    type="number"
-                    aria-label="Qty"
-                    min="0.001"
-                    step="any"
-                    value={line.quantity}
-                    onChange={(e) =>
-                      setBundleLines(
-                        bundleLines.map((x) =>
-                          x.key === line.key ? { ...x, quantity: Number(e.target.value) } : x,
-                        ),
-                      )
-                    }
-                  />
-                </div>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  aria-label="Remove component"
-                  onClick={() => setBundleLines(bundleLines.filter((x) => x.key !== line.key))}
+              <div className="space-y-1.5">
+                <Label>Pricing</Label>
+                <Select
+                  value={perHour ? "per_hour" : "fixed"}
+                  onValueChange={(v) =>
+                    set("billing_unit", v === "per_hour" ? "per_hour" : "fixed")
+                  }
                 >
-                  ×
-                </Button>
+                  <SelectTrigger aria-label="Pricing">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed price</SelectItem>
+                    <SelectItem value="per_hour">Per hour</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setBundleLines([...bundleLines, newLine()])}
-            >
-              Add component
-            </Button>
-            {toggle("bundle_fixed_price", "Fixed bundle price")}
+              {choice("assigned_employee_id", "Who does it", references?.employees ?? [])}
+              {text("commission_rate", "Staff commission (%)", "number")}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Commission {fmt(commission)} · Profit {fmt(effectivePrice - cost - commission)}
+              {minutes > 0 &&
+                ` · Profit per hour ${fmt(((effectivePrice - cost - commission) * 60) / minutes)}`}
+            </p>
           </section>
         )}
-        {kind !== "service" && (
-          <section className={section}>
-            <h3 className="font-semibold">Costing and stock</h3>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {choice("costing_method", "Costing method", [
-                { id: "weighted_average", name: "Automatic (weighted average)" },
-                { id: "fifo", name: "FIFO" },
-                { id: "standard", name: "Standard" },
-              ])}
-              {text("cost_price", hasVariants ? "Default cost price" : "Cost price", "number")}
-              {text(
-                "selling_price",
-                hasVariants ? "Default selling price" : "Selling price",
-                "number",
-              )}
-              {!hasVariants &&
-                !editing &&
-                !!form.track_stock &&
-                text("opening_quantity", "Opening quantity", "number")}
-              {text("reorder_level", "Reorder level", "number")}
-              {text("reorder_quantity", "Reorder quantity", "number")}
-              {text("tax_rate", "Tax rate (%)", "number")}
-              {choice("default_location_id", "Location", references?.locations ?? [])}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-md border border-border p-3">
-                <p className="text-xs text-muted-foreground">Profit per unit</p>
-                <p className="text-lg font-semibold tabular-nums">
-                  {formatCurrency(price - cost, currency)}
-                </p>
-              </div>
-              <div className="rounded-md border border-border p-3">
-                <p className="text-xs text-muted-foreground">Gross margin</p>
-                <p className="text-lg font-semibold tabular-nums">
-                  {price > 0 ? `${(((price - cost) / price) * 100).toFixed(1)}%` : "—"}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-x-5 gap-y-3">
-              {toggle("is_sellable", "Sellable")}
-              {toggle("is_purchasable", "Purchasable")}
-              {toggle("track_stock", "Track stock")}
-              {kind === "product" && toggle("has_variants", "Has variants", !variantsEnabled)}
-            </div>
-            {hasVariants && (
-              <p className="text-xs text-muted-foreground">
-                These prices and reorder values are defaults. Each variant keeps its own values.
-              </p>
-            )}
-          </section>
+
+        {(madeFrom || isService) && (
+          <MadeFromSection
+            businessId={businessId}
+            excludeId={editing?.id}
+            lines={bundleLines}
+            setLines={setBundleLines}
+            currency={currency}
+            form={form}
+            set={set}
+            showWaste={businessType === "manufacturing" || advanced}
+            showLabor={kind === "finished" || advanced}
+            canProduce={!!editing}
+            title={
+              kind === "menu"
+                ? "Ingredients"
+                : isService
+                  ? "Supplies used"
+                  : kind === "combo"
+                    ? "What's in the combo"
+                    : "Made from"
+            }
+          />
         )}
+
         {hasVariants && (
           <section className="space-y-3">
-            <h3 className="font-semibold">Variants</h3>
+            <h3 className="font-semibold">Options and variants</h3>
             {variants.renderOptions({
               cost,
               price,
@@ -413,24 +360,77 @@ export function ItemForm({
             {variants.renderTable()}
           </section>
         )}
+
         <section className={section}>
-          <h3 className="font-semibold">Description</h3>
-          <Textarea
-            aria-label="Description"
-            value={form.description ?? ""}
-            onChange={(e) => set("description", e.target.value)}
-          />
-        </section>
-        <section className={section}>
-          <h3 className="font-semibold">Item images</h3>
+          <h3 className="font-semibold">Photos and description</h3>
           <ItemImages
             businessId={businessId}
             images={images}
             onChange={(next) => setForm({ ...form, image_urls: next, image_url: next[0] ?? null })}
           />
+          <Textarea
+            aria-label="Description"
+            placeholder="Description (optional)"
+            value={form.description ?? ""}
+            onChange={(e) => set("description", e.target.value)}
+          />
+        </section>
+
+        <section className={section}>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between font-semibold"
+            aria-expanded={advanced}
+            onClick={() => setAdvanced(!advanced)}
+          >
+            Advanced
+            <ChevronDown
+              className={`size-4 transition-transform ${advanced ? "rotate-180" : ""}`}
+            />
+          </button>
+          {advanced && (
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {text("sku", "Item code", "text", "Left blank, one is made for you")}
+                {skuError && (
+                  <p role="alert" className="text-sm text-destructive sm:col-span-2">
+                    {skuError}
+                  </p>
+                )}
+                {!isService && text("barcode", "Barcode")}
+                {text("brand", "Brand")}
+                {!isService && choice("supplier_id", "Supplier", references?.suppliers ?? [])}
+                {choice(
+                  "status",
+                  "Status",
+                  ["active", "inactive", "discontinued"].map((id) => ({ id, name: titleCase(id) })),
+                )}
+                {text("tax_rate", "Tax rate (%)", "number")}
+                {ownStock && text("reorder_quantity", "Reorder quantity", "number")}
+                {ownStock && text("max_stock", "Maximum stock", "number")}
+                {ownStock &&
+                  choice("default_location_id", "Stock location", references?.locations ?? [])}
+                {!madeFrom &&
+                  !isService &&
+                  choice("costing_method", "Costing method", [
+                    { id: "weighted_average", name: "Automatic average" },
+                    { id: "fifo", name: "FIFO" },
+                    { id: "standard", name: "Fixed cost" },
+                  ])}
+                {isService && text("income_account", "Income account")}
+              </div>
+              <div className="flex flex-wrap gap-x-5 gap-y-3">
+                {toggle("is_sellable", "Sellable")}
+                {toggle("is_purchasable", "Purchasable")}
+                {!isService && !madeFrom && toggle("track_stock", "Track stock")}
+                {isService && toggle("requires_booking", "Requires booking")}
+                {kind === "combo" && toggle("bundle_fixed_price", "Fixed combo price")}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </>
   );
 }
-export { newLine };
+export { newLine } from "@/components/made-from-section";
