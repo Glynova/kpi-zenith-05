@@ -33,4 +33,4 @@ Constraints: no backend/auth/billing changes; preserve every route and feature; 
 - [x] Restock list (6.6)
 - [x] Registered / last purchase cost, wastage log (6.7)
 - [x] Count reasons + blind count; order discount presets
-- [ ] "Last purchase" costing method; refund dispositions; offline sale queue
+- [x] "Last purchase" costing method; refund dispositions (already via return condition); offline sale queue
