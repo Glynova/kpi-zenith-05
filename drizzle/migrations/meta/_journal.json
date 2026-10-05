@@ -155,6 +155,13 @@
       "when": 1791170514378,
       "tag": "0021_addon_groups",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791170562383,
+      "tag": "0022_post_sale_addons",
+      "breakpoints": true
     }
   ]
 }
