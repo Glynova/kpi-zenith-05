@@ -6815,6 +6815,15 @@ export type Database = {
         }[]
       }
       gen_referral_code: { Args: { _len?: number }; Returns: string }
+      get_plan_entitlements: {
+        Args: never
+        Returns: {
+          enabled: boolean
+          feature_key: string
+          limit_value: number
+          plan_id: string
+        }[]
+      }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
       is_business_member: { Args: { _business_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }

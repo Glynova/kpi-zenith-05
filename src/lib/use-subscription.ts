@@ -22,7 +22,9 @@ export function usePlanCatalog() {
     queryFn: async () => {
       const [{ data: plans, error: pErr }, { data: ents, error: eErr }] = await Promise.all([
         db.from("subscription_plans").select("*").eq("status", "active").order("sort_order"),
-        db.from("plan_entitlements").select("*"),
+        // Direct table reads are platform-admin only; signed-in users get the
+        // shared plan feature list through this function.
+        db.rpc("get_plan_entitlements"),
       ]);
       if (pErr) throw pErr;
       // Feature lists are only readable when signed in; public pages still show plans.
