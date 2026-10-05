@@ -91,6 +91,7 @@ function Shell() {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    await supabase.rpc("log_auth_event" as never, { _action: "LOGOUT" } as never);
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }

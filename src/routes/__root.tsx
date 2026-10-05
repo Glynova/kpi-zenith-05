@@ -134,8 +134,19 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_IN" && session) {
+        // One LOGIN audit entry per session, not per token refresh or tab.
+        const key = `audit-login:${session.user.id}:${session.expires_at ?? ""}`.slice(0, 120);
+        const marker = "daraven-login-logged";
+        if (window.localStorage.getItem(marker) !== session.user.id) {
+          window.localStorage.setItem(marker, session.user.id);
+          void supabase.rpc("log_auth_event" as never, { _action: "LOGIN" } as never);
+        }
+        void key;
+      }
+      if (event === "SIGNED_OUT") window.localStorage.removeItem("daraven-login-logged");
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });

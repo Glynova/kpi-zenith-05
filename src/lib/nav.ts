@@ -142,6 +142,9 @@ export const NAV_GROUPS: NavGroup[] = [
         keywords: "ar debtors owed",
       },
       { title: "Payables", url: "/payables", icon: ArrowUpRight, keywords: "ap creditors bills" },
+      { title: "Receivables Aging", url: "/ar-aging", icon: ArrowDownLeft, keywords: "aging overdue debtors as of" },
+      { title: "Tax Records", url: "/tax", icon: Receipt, keywords: "vat withholding 2307 bir certificate" },
+      { title: "Daily Close", url: "/daily-close", icon: CalendarClock, keywords: "z reading end of day close" },
     ],
   },
   {

@@ -140,6 +140,8 @@ export const ROUTE_CAPABILITY: Record<string, CapabilityKey> = {
   "/invoices": "enable_sales",
   "/customers": "enable_sales",
   "/receivables": "enable_sales",
+  "/ar-aging": "enable_customer_credit",
+  "/daily-close": "enable_sales",
   "/transfers": "enable_stock_transfers",
   "/stock-counts": "enable_stock_counts",
   "/batches": "track_batch",

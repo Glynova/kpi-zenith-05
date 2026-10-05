@@ -54,6 +54,7 @@ import { Route as AuthenticatedShellSerialsRouteImport } from './routes/_authent
 import { Route as AuthenticatedShellSettingsRouteImport } from './routes/_authenticated/_shell/settings'
 import { Route as AuthenticatedShellStockCountsRouteImport } from './routes/_authenticated/_shell/stock-counts'
 import { Route as AuthenticatedShellSuppliersRouteImport } from './routes/_authenticated/_shell/suppliers'
+import { Route as AuthenticatedShellTaxRouteImport } from './routes/_authenticated/_shell/tax'
 import { Route as AuthenticatedShellTransfersRouteImport } from './routes/_authenticated/_shell/transfers'
 import { Route as AuthenticatedShellUnitsRouteImport } from './routes/_authenticated/_shell/units'
 import { Route as AuthenticatedShellUpgradeRouteImport } from './routes/_authenticated/_shell/upgrade'
@@ -333,6 +334,11 @@ const AuthenticatedShellSuppliersRoute =
     path: '/suppliers',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellTaxRoute = AuthenticatedShellTaxRouteImport.update({
+  id: '/tax',
+  path: '/tax',
+  getParentRoute: () => AuthenticatedShellRouteRoute,
+} as any)
 const AuthenticatedShellTransfersRoute =
   AuthenticatedShellTransfersRouteImport.update({
     id: '/transfers',
@@ -525,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/tax': typeof AuthenticatedShellTaxRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/upgrade': typeof AuthenticatedShellUpgradeRoute
@@ -593,6 +600,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedShellSettingsRoute
   '/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/tax': typeof AuthenticatedShellTaxRoute
   '/transfers': typeof AuthenticatedShellTransfersRoute
   '/units': typeof AuthenticatedShellUnitsRoute
   '/upgrade': typeof AuthenticatedShellUpgradeRoute
@@ -666,6 +674,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/settings': typeof AuthenticatedShellSettingsRoute
   '/_authenticated/_shell/stock-counts': typeof AuthenticatedShellStockCountsRoute
   '/_authenticated/_shell/suppliers': typeof AuthenticatedShellSuppliersRoute
+  '/_authenticated/_shell/tax': typeof AuthenticatedShellTaxRoute
   '/_authenticated/_shell/transfers': typeof AuthenticatedShellTransfersRoute
   '/_authenticated/_shell/units': typeof AuthenticatedShellUnitsRoute
   '/_authenticated/_shell/upgrade': typeof AuthenticatedShellUpgradeRoute
@@ -738,6 +747,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stock-counts'
     | '/suppliers'
+    | '/tax'
     | '/transfers'
     | '/units'
     | '/upgrade'
@@ -806,6 +816,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stock-counts'
     | '/suppliers'
+    | '/tax'
     | '/transfers'
     | '/units'
     | '/upgrade'
@@ -878,6 +889,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/settings'
     | '/_authenticated/_shell/stock-counts'
     | '/_authenticated/_shell/suppliers'
+    | '/_authenticated/_shell/tax'
     | '/_authenticated/_shell/transfers'
     | '/_authenticated/_shell/units'
     | '/_authenticated/_shell/upgrade'
@@ -1235,6 +1247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellSuppliersRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/tax': {
+      id: '/_authenticated/_shell/tax'
+      path: '/tax'
+      fullPath: '/tax'
+      preLoaderRoute: typeof AuthenticatedShellTaxRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/transfers': {
       id: '/_authenticated/_shell/transfers'
       path: '/transfers'
@@ -1445,6 +1464,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellSettingsRoute: typeof AuthenticatedShellSettingsRoute
   AuthenticatedShellStockCountsRoute: typeof AuthenticatedShellStockCountsRoute
   AuthenticatedShellSuppliersRoute: typeof AuthenticatedShellSuppliersRoute
+  AuthenticatedShellTaxRoute: typeof AuthenticatedShellTaxRoute
   AuthenticatedShellTransfersRoute: typeof AuthenticatedShellTransfersRoute
   AuthenticatedShellUnitsRoute: typeof AuthenticatedShellUnitsRoute
   AuthenticatedShellUpgradeRoute: typeof AuthenticatedShellUpgradeRoute
@@ -1489,6 +1509,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellSettingsRoute: AuthenticatedShellSettingsRoute,
     AuthenticatedShellStockCountsRoute: AuthenticatedShellStockCountsRoute,
     AuthenticatedShellSuppliersRoute: AuthenticatedShellSuppliersRoute,
+    AuthenticatedShellTaxRoute: AuthenticatedShellTaxRoute,
     AuthenticatedShellTransfersRoute: AuthenticatedShellTransfersRoute,
     AuthenticatedShellUnitsRoute: AuthenticatedShellUnitsRoute,
     AuthenticatedShellUpgradeRoute: AuthenticatedShellUpgradeRoute,
