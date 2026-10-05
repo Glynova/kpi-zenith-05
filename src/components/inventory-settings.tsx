@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Wand2 } from "lucide-react";
 
@@ -55,6 +55,16 @@ export function InventorySettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.business_id, business?.type]);
 
+  const costingLocked = useQuery({
+    queryKey: ["costing-locked", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db.rpc("business_has_costed_stock", { _business_id: businessId });
+      if (error) throw error;
+      return !!data;
+    },
+  }).data;
+
   const flag = (key: FeatureKey) => config[key] ?? settings[key] ?? false;
 
   const health = configurationHealth(config as any);
@@ -72,7 +82,12 @@ export function InventorySettings() {
   }
 
   function applyRecommended() {
-    setConfig({ ...config, ...defaultsForType(type) });
+    const rec = defaultsForType(type);
+    setConfig({
+      ...config,
+      ...rec,
+      costing_method: costingLocked ? settings.costing_method : rec.costing_method,
+    });
     toast.info("Recommended settings loaded — review and save.");
   }
 
@@ -81,6 +96,10 @@ export function InventorySettings() {
     setSaving(true);
     const payload: Record<string, any> = { business_id: businessId };
     FEATURE_GROUPS.flatMap((g) => g.items).forEach((i) => (payload[i.key] = !!flag(i.key)));
+    if (costingLocked && (config.costing_method ?? settings.costing_method) !== settings.costing_method) {
+      setSaving(false);
+      return toast.error("Costing method can't change while items have stock on hand.");
+    }
     payload.costing_method = config.costing_method ?? settings.costing_method;
     payload.low_stock_rule = config.low_stock_rule ?? settings.low_stock_rule;
     payload.expiry_alert_days =
@@ -136,7 +155,7 @@ export function InventorySettings() {
             <Select
               value={config.costing_method ?? settings.costing_method}
               onValueChange={(v) => setConfig({ ...config, costing_method: v })}
-              disabled={!isAdmin}
+              disabled={!isAdmin || !!costingLocked}
             >
               <SelectTrigger className="mt-1.5">
                 <SelectValue />
@@ -156,6 +175,12 @@ export function InventorySettings() {
                 )?.description
               }
             </p>
+            {costingLocked && (
+              <p className="mt-1.5 text-xs text-warning">
+                Locked: items using this method have stock on hand. Changing it would mix costs
+                already recorded under the current method. Bring that stock to zero first.
+              </p>
+            )}
           </div>
           <div className="sm:col-span-2">
             <Button
