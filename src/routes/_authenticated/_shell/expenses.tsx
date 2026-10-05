@@ -46,6 +46,7 @@ const fields: Field[] = [
       "fuel",
       "repairs",
       "supplies",
+      "wastage",
       "miscellaneous",
     ],
     default: "miscellaneous",
