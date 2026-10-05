@@ -6059,6 +6059,10 @@ export type Database = {
         Args: { _batches?: number; _bom_id: string }
         Returns: number
       }
+      produce_made_from: {
+        Args: { _product_id: string; _quantity: number }
+        Returns: number
+      }
       recalc_made_from_cost: {
         Args: { _product_id: string }
         Returns: undefined
