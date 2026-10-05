@@ -8,7 +8,9 @@ describe("restock", () => {
     expect(needsRestock({ onHand: 0, alertLevel: 0 })).toBe(false);
   });
   it("suggests reorder qty, then max − on hand, then 2×alert − on hand", () => {
-    expect(suggestedStockQty({ onHand: 3, alertLevel: 6, reorderQuantity: 10, maxStock: 50 })).toBe(10);
+    expect(suggestedStockQty({ onHand: 3, alertLevel: 6, reorderQuantity: 10, maxStock: 50 })).toBe(
+      10,
+    );
     expect(suggestedStockQty({ onHand: 3, alertLevel: 6, maxStock: 20 })).toBe(17);
     expect(suggestedStockQty({ onHand: 3, alertLevel: 6 })).toBe(9);
   });
