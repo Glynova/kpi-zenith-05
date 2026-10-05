@@ -176,6 +176,48 @@
       "when": 1791176327616,
       "tag": "0024_last_purchase_costing",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791177012930,
+      "tag": "0025_compliance_financial_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791177065501,
+      "tag": "0026_foundation_fixes_transfer_audit_cascade",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791177134426,
+      "tag": "0027_return_documents_tax_sign",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791177308597,
+      "tag": "0028_qa_foundation_test_harness",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791177344660,
+      "tag": "0029_fix_audit_row_change_generic",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791177370813,
+      "tag": "0030_qa_runner_temp",
+      "breakpoints": true
     }
   ]
 }
