@@ -41,12 +41,15 @@ import {
 const description =
   "Physical counts per location. Enter what you counted, review the variance, then confirm — adjustments post to the ledger.";
 
+const COUNT_REASONS = ["Counting error", "Damaged", "Expired", "Lost / theft", "Not recorded sale", "Not recorded delivery", "Other"];
+
 type CountLine = {
   product_id: string;
   name: string;
   sku: string | null;
   expected: number;
   counted: string;
+  reason?: string;
 };
 
 function StockCounts() {
@@ -56,6 +59,7 @@ function StockCounts() {
   const [warehouseId, setWarehouseId] = useState<string>("");
   const [lines, setLines] = useState<CountLine[]>([]);
   const [notes, setNotes] = useState("");
+  const [blind, setBlind] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["stock-counts", businessId],
@@ -119,6 +123,12 @@ function StockCounts() {
     mutationFn: async () => {
       const counted = lines.filter((l) => l.counted !== "" && !Number.isNaN(Number(l.counted)));
       if (!counted.length) throw new Error("Enter at least one physical count");
+      if (blind) {
+        setBlind(false);
+        throw new Error("Counts entered. Now review differences and choose reasons.");
+      }
+      const missing = counted.find((l) => Number(l.counted) !== l.expected && !l.reason);
+      if (missing) throw new Error(`Choose a reason for the difference on ${missing.name}`);
 
       const { data: count, error } = await db
         .from("stock_counts")
@@ -275,9 +285,14 @@ function StockCounts() {
           <DialogHeader>
             <DialogTitle>Physical stock count</DialogTitle>
             <DialogDescription>
-              Enter the quantity you physically counted. Leave a row blank to skip it.
+              Enter the quantity you physically counted. Leave a row blank to skip it. Every
+              difference needs a reason.
             </DialogDescription>
           </DialogHeader>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={blind} onChange={(e) => setBlind(e.target.checked)} />
+            Blind count (hide expected quantities while counting)
+          </label>
 
           {lines.length === 0 ? (
             <p className="text-sm text-muted-foreground">No active products to count.</p>
@@ -288,9 +303,10 @@ function StockCounts() {
                   <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead className="text-right">Expected</TableHead>
+                    {!blind && <TableHead className="text-right">Expected</TableHead>}
                     <TableHead className="w-32 text-right">Counted</TableHead>
-                    <TableHead className="text-right">Variance</TableHead>
+                    {!blind && <TableHead className="text-right">Variance</TableHead>}
+                    {!blind && <TableHead>Reason</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -302,7 +318,11 @@ function StockCounts() {
                         <TableCell className="whitespace-nowrap text-muted-foreground">
                           {l.sku ?? "—"}
                         </TableCell>
-                        <TableCell className="text-right">{formatNumber(l.expected, 2)}</TableCell>
+                        {!blind && (
+                          <TableCell className="text-right">
+                            {formatNumber(l.expected, 2)}
+                          </TableCell>
+                        )}
                         <TableCell>
                           <Input
                             type="number"
@@ -315,13 +335,37 @@ function StockCounts() {
                             }}
                           />
                         </TableCell>
-                        <TableCell
-                          className={`text-right font-medium ${variance && variance < 0 ? "text-destructive" : ""}`}
-                        >
-                          {variance === null
-                            ? "—"
-                            : `${variance > 0 ? "+" : ""}${formatNumber(variance, 2)}`}
-                        </TableCell>
+                        {!blind && (
+                          <TableCell
+                            className={`text-right font-medium ${variance && variance < 0 ? "text-destructive" : ""}`}
+                          >
+                            {variance === null
+                              ? "—"
+                              : `${variance > 0 ? "+" : ""}${formatNumber(variance, 2)}`}
+                          </TableCell>
+                        )}
+                        {!blind && (
+                          <TableCell>
+                            {variance ? (
+                              <select
+                                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                                value={l.reason ?? ""}
+                                onChange={(e) => {
+                                  const next = [...lines];
+                                  next[i] = { ...l, reason: e.target.value };
+                                  setLines(next);
+                                }}
+                              >
+                                <option value="">Choose…</option>
+                                {COUNT_REASONS.map((r) => (
+                                  <option key={r}>{r}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}
