@@ -593,8 +593,12 @@ function POSPage() {
   return (
     <div className="space-y-4">
       {!online && (
-        <div role="status" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm">
-          You're offline. Sales can't be saved until the internet is back — keep this page open and charge again once it reconnects.
+        <div
+          role="status"
+          className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
+        >
+          You're offline. Sales can't be saved until the internet is back — keep this page open and
+          charge again once it reconnects.
         </div>
       )}
       <PageHeader
