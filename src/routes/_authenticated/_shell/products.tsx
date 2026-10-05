@@ -394,7 +394,7 @@ function ProductsPage() {
           : []),
       ]}
       fields={formFields}
-      onImport={(rows) => importProducts(businessId, rows)}
+      onImport={(rows) => importProducts(businessId ?? "", rows)}
       transformPayload={(payload, { form, editing }) => {
         const kind = String(form.item_type || "product");
         const card = kindOf(form);
