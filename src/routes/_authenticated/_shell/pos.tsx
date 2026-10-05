@@ -942,6 +942,27 @@ function POSPage() {
               Discounts above {discountLimit}% need a manager. You are signed in as {role}.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Staff 10%", v: 10 },
+              { label: "Senior / PWD 20%", v: 20 },
+              { label: "Promo 5%", v: 5 },
+              { label: "Clear", v: 0 },
+            ].map((p) => (
+              <Button
+                key={p.label}
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setOrderDiscountType("percent");
+                  setOrderDiscount(p.v);
+                }}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Type</Label>
