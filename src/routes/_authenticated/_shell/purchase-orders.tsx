@@ -314,8 +314,7 @@ function PurchaseOrdersPage() {
       const valid = items.filter((i) => i.product_id && i.quantity > 0);
       if (!valid.length) throw new Error("Add at least one line item");
       for (const i of valid) {
-        if (variantsFor(i.product_id).length && !i.variant_id)
-          throw new Error("Choose a variant");
+        if (variantsFor(i.product_id).length && !i.variant_id) throw new Error("Choose a variant");
       }
       if (!form.supplier_id) throw new Error("Choose a supplier");
 
