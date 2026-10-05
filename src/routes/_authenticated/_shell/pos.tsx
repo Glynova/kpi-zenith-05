@@ -587,7 +587,10 @@ function POSPage() {
         try {
           await postSale({ ...o, offline: true });
           sent++;
-          saveQueue(businessId, loadQueue(businessId).filter((x) => x.id !== o.id));
+          saveQueue(
+            businessId,
+            loadQueue(businessId).filter((x) => x.id !== o.id),
+          );
         } catch (e: any) {
           toast.error(`An offline sale could not be sent: ${e.message ?? "error"}`);
           break;
@@ -681,8 +684,8 @@ function POSPage() {
           role="status"
           className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
         >
-          You're offline. Sales are saved on this device and sent automatically when the internet
-          is back. Stock shown may be out of date.
+          You're offline. Sales are saved on this device and sent automatically when the internet is
+          back. Stock shown may be out of date.
         </div>
       )}
       {online && queued > 0 && (
