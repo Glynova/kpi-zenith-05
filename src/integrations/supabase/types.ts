@@ -4606,6 +4606,7 @@ export type Database = {
           discount_type: string
           fulfilled_quantity: number
           id: string
+          line_cogs: number | null
           notes: string | null
           product_id: string | null
           product_name: string | null
@@ -4633,6 +4634,7 @@ export type Database = {
           discount_type?: string
           fulfilled_quantity?: number
           id?: string
+          line_cogs?: number | null
           notes?: string | null
           product_id?: string | null
           product_name?: string | null
@@ -4660,6 +4662,7 @@ export type Database = {
           discount_type?: string
           fulfilled_quantity?: number
           id?: string
+          line_cogs?: number | null
           notes?: string | null
           product_id?: string | null
           product_name?: string | null
