@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { csvCell } from "@/lib/csv";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Download, Upload } from "lucide-react";
@@ -328,7 +329,7 @@ export function ResourcePage({
     const header = columns.map((c) => c.label).join(",");
     const body = rows
       .map((row) =>
-        columns.map((c) => `"${String(row[c.key] ?? "").replace(/"/g, '""')}"`).join(","),
+        columns.map((c) => csvCell(row[c.key])).join(","),
       )
       .join("\n");
     const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });

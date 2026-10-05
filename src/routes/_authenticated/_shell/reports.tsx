@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { csvCell } from "@/lib/csv";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Search } from "lucide-react";
@@ -374,7 +375,7 @@ function Reports() {
     const keys = Object.keys(rows[0]);
     const csv = [
       keys.join(","),
-      ...rows.map((r) => keys.map((k) => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(",")),
+      ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(",")),
     ].join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");

@@ -25,7 +25,8 @@ export function usePlanCatalog() {
         db.from("plan_entitlements").select("*"),
       ]);
       if (pErr) throw pErr;
-      if (eErr) throw eErr;
+      // Feature lists are only readable when signed in; public pages still show plans.
+      if (eErr && !(plans ?? []).length) throw eErr;
       return { plans: (plans ?? []) as Plan[], entitlements: (ents ?? []) as Entitlement[] };
     },
   });

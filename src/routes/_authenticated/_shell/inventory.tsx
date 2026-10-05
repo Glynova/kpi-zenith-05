@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { csvCell } from "@/lib/csv";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -174,7 +175,7 @@ function StockMovements() {
           m.reason ?? "",
           m.reference ?? "",
         ]
-          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .map((v) => csvCell(v))
           .join(",");
       })
       .join("\n");
