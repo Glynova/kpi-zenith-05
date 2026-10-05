@@ -127,6 +127,13 @@
       "when": 1791086680935,
       "tag": "0017_purchase_line_variant_required",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791167925690,
+      "tag": "0018_fix_purchase_line_variant_guard",
+      "breakpoints": true
     }
   ]
 }
