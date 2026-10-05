@@ -6766,6 +6766,10 @@ export type Database = {
         Args: { _business_id: string }
         Returns: boolean
       }
+      business_has_feature: {
+        Args: { _business_id: string; _key: string }
+        Returns: boolean
+      }
       business_role: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
