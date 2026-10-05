@@ -253,6 +253,13 @@
       "when": 1791178706626,
       "tag": "0035_lock_costing_method_with_stock",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791178733929,
+      "tag": "0036_costing_guard_no_auth_dependency",
+      "breakpoints": true
     }
   ]
 }
