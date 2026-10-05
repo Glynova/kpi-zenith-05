@@ -142,6 +142,154 @@ export type Database = {
           },
         ]
       }
+      addon_groups: {
+        Row: {
+          archived: boolean
+          business_id: string
+          created_at: string
+          id: string
+          name: string
+          rule: string
+        }
+        Insert: {
+          archived?: boolean
+          business_id: string
+          created_at?: string
+          id?: string
+          name: string
+          rule?: string
+        }
+        Update: {
+          archived?: boolean
+          business_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          rule?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_groups_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addon_option_components: {
+        Row: {
+          business_id: string
+          component_product_id: string
+          entered_quantity: number | null
+          entered_unit: string | null
+          id: string
+          option_id: string
+          quantity: number
+          variant_id: string | null
+        }
+        Insert: {
+          business_id: string
+          component_product_id: string
+          entered_quantity?: number | null
+          entered_unit?: string | null
+          id?: string
+          option_id: string
+          quantity: number
+          variant_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          component_product_id?: string
+          entered_quantity?: number | null
+          entered_unit?: string | null
+          id?: string
+          option_id?: string
+          quantity?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_option_components_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_option_components_component_product_id_fkey"
+            columns: ["component_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_option_components_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "addon_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_option_components_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addon_options: {
+        Row: {
+          archived: boolean
+          business_id: string
+          created_at: string
+          extra_price: number
+          group_id: string
+          id: string
+          kitchen_note: string | null
+          name: string
+          sort: number
+        }
+        Insert: {
+          archived?: boolean
+          business_id: string
+          created_at?: string
+          extra_price?: number
+          group_id: string
+          id?: string
+          kitchen_note?: string | null
+          name: string
+          sort?: number
+        }
+        Update: {
+          archived?: boolean
+          business_id?: string
+          created_at?: string
+          extra_price?: number
+          group_id?: string
+          id?: string
+          kitchen_note?: string | null
+          name?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_options_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_options_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_applications: {
         Row: {
           audience: string | null
@@ -3009,6 +3157,52 @@ export type Database = {
           },
         ]
       }
+      product_addon_groups: {
+        Row: {
+          business_id: string
+          group_id: string
+          id: string
+          product_id: string
+          sort: number
+        }
+        Insert: {
+          business_id: string
+          group_id: string
+          id?: string
+          product_id: string
+          sort?: number
+        }
+        Update: {
+          business_id?: string
+          group_id?: string
+          id?: string
+          product_id?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_addon_groups_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addon_groups_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "addon_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_addon_groups_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_variants: {
         Row: {
           attributes: Json
@@ -4211,6 +4405,64 @@ export type Database = {
             columns: ["register_id"]
             isOneToOne: false
             referencedRelation: "cash_registers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_item_addons: {
+        Row: {
+          business_id: string
+          created_at: string
+          extra_cost: number
+          extra_price: number
+          group_name: string
+          id: string
+          option_id: string | null
+          option_name: string
+          sale_item_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          extra_cost?: number
+          extra_price?: number
+          group_name: string
+          id?: string
+          option_id?: string | null
+          option_name: string
+          sale_item_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          extra_cost?: number
+          extra_price?: number
+          group_name?: string
+          id?: string
+          option_id?: string | null
+          option_name?: string
+          sale_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_item_addons_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_addons_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "addon_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_item_addons_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
             referencedColumns: ["id"]
           },
         ]
