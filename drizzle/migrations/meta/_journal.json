@@ -239,6 +239,13 @@
       "when": 1791177996196,
       "tag": "0033_vat_exempt_business_classification",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791178207841,
+      "tag": "0034_drop_qa_test_helpers",
+      "breakpoints": true
     }
   ]
 }
