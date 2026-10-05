@@ -41,7 +41,15 @@ import {
 const description =
   "Physical counts per location. Enter what you counted, review the variance, then confirm — adjustments post to the ledger.";
 
-const COUNT_REASONS = ["Counting error", "Damaged", "Expired", "Lost / theft", "Not recorded sale", "Not recorded delivery", "Other"];
+const COUNT_REASONS = [
+  "Counting error",
+  "Damaged",
+  "Expired",
+  "Lost / theft",
+  "Not recorded sale",
+  "Not recorded delivery",
+  "Other",
+];
 
 type CountLine = {
   product_id: string;
@@ -165,7 +173,7 @@ function StockCounts() {
             type: variance > 0 ? "adjustment_in" : "adjustment_out",
             quantity: Math.abs(variance),
             base_quantity: Math.abs(variance),
-            reason: "Stock count",
+            reason: l.reason ? `Stock count: ${l.reason}` : "Stock count",
             reference: count.reference,
             reference_type: "stock_count",
             reference_id: count.id,
