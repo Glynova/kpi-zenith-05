@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { csvCell } from "@/lib/csv";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -72,7 +73,7 @@ function AgingPage() {
     const head = ["Customer", ...BUCKETS.map((b) => b[1]), "Total"];
     const rows = data.map((r) => [r.customer_name, ...BUCKETS.map((b) => r[b[0]]), r.total]);
     const csv = [head, ...rows]
-      .map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+      .map((r) => r.map((v) => csvCell(v)).join(","))
       .join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));

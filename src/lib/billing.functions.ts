@@ -101,7 +101,8 @@ export const syncPaymongoPlans = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => businessInput.parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId, data.businessId);
+    // Plans are global: only platform admins may create/link provider plans.
+    await assertPlatformAdmin(context.supabase, context.userId);
     const { paymongo, readConfig } = await import("@/lib/paymongo.server");
     if (!readConfig().configured) {
       return { configured: false, synced: [] as string[] };
