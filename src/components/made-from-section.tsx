@@ -92,7 +92,8 @@ export function useComponentOptions(businessId: string | null) {
   });
 }
 
-const optionValue = (l: MadeFromLine) => (l.variantId ? `${l.productId}:${l.variantId}` : l.productId);
+const optionValue = (l: MadeFromLine) =>
+  l.variantId ? `${l.productId}:${l.variantId}` : l.productId;
 
 /** Stock-unit quantity per output batch, or null when the unit cannot convert. */
 export function stockQty(line: MadeFromLine, opt?: ComponentOption) {
@@ -184,7 +185,12 @@ export function MadeFromSection({
     <section className="space-y-4 rounded-md border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{title}</h3>
-        <Button type="button" variant="outline" size="sm" onClick={() => setLines([...lines, newLine()])}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setLines([...lines, newLine()])}
+        >
           Add line
         </Button>
       </div>
@@ -282,40 +288,74 @@ export function MadeFromSection({
                 {q != null && normalizeUnit(unit) !== opt.unit && ` · = ${q} ${opt.unit}`}
                 {need != null && ` · costs ${fmt(need * opt.cost)}`}
                 {q == null && (
-                  <span className="text-destructive"> · {unit} can't convert to {opt.unit}</span>
+                  <span className="text-destructive">
+                    {" "}
+                    · {unit} can't convert to {opt.unit}
+                  </span>
                 )}
-                {Number(line.waste) > 50 && <span className="text-destructive"> · waste over 50%</span>}
+                {Number(line.waste) > 50 && (
+                  <span className="text-destructive"> · waste over 50%</span>
+                )}
               </p>
             )}
           </div>
         );
       })}
-      {!lines.length && <p className="text-sm text-muted-foreground">Add what this item is made from.</p>}
+      {!lines.length && (
+        <p className="text-sm text-muted-foreground">Add what this item is made from.</p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">Makes (output quantity)</Label>
-          <Input type="number" min="0" step="any" value={form.output_quantity ?? 1} onChange={(e) => set("output_quantity", e.target.value)} />
+          <Input
+            type="number"
+            min="0"
+            step="any"
+            value={form.output_quantity ?? 1}
+            onChange={(e) => set("output_quantity", e.target.value)}
+          />
         </div>
         {showLabor && (
           <>
             <div className="space-y-1">
               <Label className="text-xs">Labor hours</Label>
-              <Input type="number" min="0" step="any" value={form.labor_hours ?? 0} onChange={(e) => set("labor_hours", e.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={form.labor_hours ?? 0}
+                onChange={(e) => set("labor_hours", e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Labor rate per hour</Label>
-              <Input type="number" min="0" step="any" value={form.labor_rate ?? 0} onChange={(e) => set("labor_rate", e.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={form.labor_rate ?? 0}
+                onChange={(e) => set("labor_rate", e.target.value)}
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Overhead per unit</Label>
-              <Input type="number" min="0" step="any" value={form.overhead_per_unit ?? 0} onChange={(e) => set("overhead_per_unit", e.target.value)} />
+              <Input
+                type="number"
+                min="0"
+                step="any"
+                value={form.overhead_per_unit ?? 0}
+                onChange={(e) => set("overhead_per_unit", e.target.value)}
+              />
             </div>
           </>
         )}
         <div className="space-y-1">
           <Label className="text-xs">When are components used?</Label>
-          <Select value={String(form.consumption_mode || "on_sale")} onValueChange={(v) => set("consumption_mode", v)}>
+          <Select
+            value={String(form.consumption_mode || "on_sale")}
+            onValueChange={(v) => set("consumption_mode", v)}
+          >
             <SelectTrigger aria-label="Consumption mode">
               <SelectValue />
             </SelectTrigger>
@@ -329,19 +369,45 @@ export function MadeFromSection({
 
       <div className="grid gap-3 rounded-md bg-muted/40 p-3 sm:grid-cols-4">
         <Stat label="Cost per unit" value={fmt(unitCost)} />
-        <Stat label="Profit" value={price > 0 ? fmt(profit) : "Set a price"} danger={price > 0 && profit < 0} />
-        <Stat label="Margin" value={price > 0 ? `${((profit / price) * 100).toFixed(1)}%` : "Set a price"} danger={price > 0 && profit < 0} />
-        <Stat label="Stock covers" value={lines.length ? `${servings * output} units` : "—"} hint={limiting ? `Limited by ${limiting}` : undefined} />
+        <Stat
+          label="Profit"
+          value={price > 0 ? fmt(profit) : "Set a price"}
+          danger={price > 0 && profit < 0}
+        />
+        <Stat
+          label="Margin"
+          value={price > 0 ? `${((profit / price) * 100).toFixed(1)}%` : "Set a price"}
+          danger={price > 0 && profit < 0}
+        />
+        <Stat
+          label="Stock covers"
+          value={lines.length ? `${servings * output} units` : "—"}
+          hint={limiting ? `Limited by ${limiting}` : undefined}
+        />
       </div>
-      {price > 0 && profit < 0 && <p className="text-sm text-destructive">Price is below cost. You can still save.</p>}
+      {price > 0 && profit < 0 && (
+        <p className="text-sm text-destructive">Price is below cost. You can still save.</p>
+      )}
 
       {onProduction && canProduce && (
         <div className="flex flex-wrap items-end gap-2 border-t pt-3">
           <div className="space-y-1">
             <Label className="text-xs">Make a batch of</Label>
-            <Input type="number" min="1" step="any" className="w-28" value={batch} onChange={(e) => setBatch(Number(e.target.value))} />
+            <Input
+              type="number"
+              min="1"
+              step="any"
+              className="w-28"
+              value={batch}
+              onChange={(e) => setBatch(Number(e.target.value))}
+            />
           </div>
-          <Button type="button" variant="secondary" disabled={producing || !(batch > 0)} onClick={() => void produce()}>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={producing || !(batch > 0)}
+            onClick={() => void produce()}
+          >
             {producing ? "Making…" : "Make batch"}
           </Button>
           <BatchCheck lines={lines} options={options} batch={batch} output={output} />
@@ -351,7 +417,17 @@ export function MadeFromSection({
   );
 }
 
-function BatchCheck({ lines, options, batch, output }: { lines: MadeFromLine[]; options: ComponentOption[]; batch: number; output: number }) {
+function BatchCheck({
+  lines,
+  options,
+  batch,
+  output,
+}: {
+  lines: MadeFromLine[];
+  options: ComponentOption[];
+  batch: number;
+  output: number;
+}) {
   const shortages = lines.flatMap((l) => {
     const opt = options.find((o) => o.value === optionValue(l));
     const q = stockQty(l, opt);
@@ -367,11 +443,23 @@ function BatchCheck({ lines, options, batch, output }: { lines: MadeFromLine[]; 
   );
 }
 
-function Stat({ label, value, hint, danger }: { label: string; value: string; hint?: string; danger?: boolean }) {
+function Stat({
+  label,
+  value,
+  hint,
+  danger,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  danger?: boolean;
+}) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-base font-semibold tabular-nums ${danger ? "text-destructive" : ""}`}>{value}</p>
+      <p className={`text-base font-semibold tabular-nums ${danger ? "text-destructive" : ""}`}>
+        {value}
+      </p>
       {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
     </div>
   );

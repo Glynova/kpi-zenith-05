@@ -92,7 +92,9 @@ export function ItemForm({
   });
 
   useEffect(() => {
-    const sku = String(form.sku ?? "").trim().toLowerCase();
+    const sku = String(form.sku ?? "")
+      .trim()
+      .toLowerCase();
     if (!sku || !businessId) {
       setSkuError("");
       return;
@@ -100,7 +102,12 @@ export function ItemForm({
     const timer = setTimeout(async () => {
       const [products, rows] = await Promise.all([
         db.from("products").select("id").eq("business_id", businessId).ilike("sku", sku).limit(5),
-        db.from("product_variants").select("product_id").eq("business_id", businessId).ilike("sku", sku).limit(5),
+        db
+          .from("product_variants")
+          .select("product_id")
+          .eq("business_id", businessId)
+          .ilike("sku", sku)
+          .limit(5),
       ]);
       setSkuError(
         (products.data ?? []).some((p: Row) => p.id !== editing?.id) ||
@@ -117,7 +124,8 @@ export function ItemForm({
     if (next === kind) return;
     const filled = bundleLines.some((l) => l.productId) || (form.has_variants && variants);
     if (editing || filled) {
-      if (!window.confirm("Changing the item type may hide some fields you filled in. Continue?")) return;
+      if (!window.confirm("Changing the item type may hide some fields you filled in. Continue?"))
+        return;
     }
     setForm({ ...form, ...patchForKind(next) });
   };
@@ -138,7 +146,10 @@ export function ItemForm({
   const choice = (key: string, label: string, options: Row[]) => (
     <div className="min-w-0 space-y-1.5">
       <Label>{label}</Label>
-      <Select value={String(form[key] || "none")} onValueChange={(v) => set(key, v === "none" ? null : v)}>
+      <Select
+        value={String(form[key] || "none")}
+        onValueChange={(v) => set(key, v === "none" ? null : v)}
+      >
         <SelectTrigger aria-label={label}>
           <SelectValue placeholder="Select" />
         </SelectTrigger>
@@ -155,7 +166,11 @@ export function ItemForm({
   );
   const toggle = (key: string, label: string, disabled = false) => (
     <label className="flex items-center gap-2 text-sm">
-      <Checkbox checked={!!form[key]} disabled={disabled} onCheckedChange={(v) => set(key, v === true)} />
+      <Checkbox
+        checked={!!form[key]}
+        disabled={disabled}
+        onCheckedChange={(v) => set(key, v === true)}
+      />
       {label}
     </label>
   );
@@ -179,7 +194,9 @@ export function ItemForm({
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b bg-background px-5 py-4 pr-14">
         <div>
           <h2 className="text-xl font-semibold">{editing ? "Edit item" : "New item"}</h2>
-          <p className="text-sm text-muted-foreground">Pick what you're adding, then fill in the basics.</p>
+          <p className="text-sm text-muted-foreground">
+            Pick what you're adding, then fill in the basics.
+          </p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" onClick={close}>
@@ -193,7 +210,11 @@ export function ItemForm({
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
         <section className={section}>
           <h3 className="font-semibold">What are you adding?</h3>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="Item type">
+          <div
+            className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
+            role="radiogroup"
+            aria-label="Item type"
+          >
             {cards.map((k) => (
               <button
                 key={k}
@@ -209,7 +230,12 @@ export function ItemForm({
             ))}
           </div>
           {!showAll && (
-            <Button type="button" variant="link" className="h-auto p-0 text-xs" onClick={() => setShowAll(true)}>
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0 text-xs"
+              onClick={() => setShowAll(true)}
+            >
               More item types
             </Button>
           )}
@@ -219,24 +245,49 @@ export function ItemForm({
             {!isService && (
               <div className="space-y-1.5">
                 <Label>Unit</Label>
-                <GroupedSelect groups={UNIT_OPTION_GROUPS} searchable value={String(form.unit || "pcs")} onChange={(v) => set("unit", v)} />
+                <GroupedSelect
+                  groups={UNIT_OPTION_GROUPS}
+                  searchable
+                  value={String(form.unit || "pcs")}
+                  onChange={(v) => set("unit", v)}
+                />
               </div>
             )}
             {kind !== "ingredient" &&
-              text("selling_price", hasVariants ? "Usual price" : perHour ? "Rate per hour" : "Selling price", "number",
-                perHour && minutes > 0 ? `= ${fmt(effectivePrice)} for ${minutes} minutes` : undefined)}
-            {!madeFrom && !isService &&
-              text("cost_price", hasVariants ? "Usual cost" : "Cost", "number", `Cost basis: per ${form.unit || "pcs"}`)}
-            {ownStock && !hasVariants && !editing && text("opening_quantity", "Starting quantity", "number")}
+              text(
+                "selling_price",
+                hasVariants ? "Usual price" : perHour ? "Rate per hour" : "Selling price",
+                "number",
+                perHour && minutes > 0
+                  ? `= ${fmt(effectivePrice)} for ${minutes} minutes`
+                  : undefined,
+              )}
+            {!madeFrom &&
+              !isService &&
+              text(
+                "cost_price",
+                hasVariants ? "Usual cost" : "Cost",
+                "number",
+                `Cost basis: per ${form.unit || "pcs"}`,
+              )}
+            {ownStock &&
+              !hasVariants &&
+              !editing &&
+              text("opening_quantity", "Starting quantity", "number")}
             {ownStock && text("reorder_level", "Alert me below", "number")}
           </div>
           {!madeFrom && !isService && kind !== "ingredient" && (
             <p className="text-sm text-muted-foreground">
-              Profit {fmt(price - cost)} · Margin {price > 0 ? `${(((price - cost) / price) * 100).toFixed(1)}%` : "Set a price"}
-              {price > 0 && price < cost && <span className="text-destructive"> · price is below cost</span>}
+              Profit {fmt(price - cost)} · Margin{" "}
+              {price > 0 ? `${(((price - cost) / price) * 100).toFixed(1)}%` : "Set a price"}
+              {price > 0 && price < cost && (
+                <span className="text-destructive"> · price is below cost</span>
+              )}
             </p>
           )}
-          {kind === "ready" && variantsEnabled && toggle("has_variants", "This item comes in options (size, colour…)")}
+          {kind === "ready" &&
+            variantsEnabled &&
+            toggle("has_variants", "This item comes in options (size, colour…)")}
         </section>
 
         {isService && (
@@ -246,7 +297,12 @@ export function ItemForm({
               {text("service_duration_minutes", "Duration (minutes)", "number")}
               <div className="space-y-1.5">
                 <Label>Pricing</Label>
-                <Select value={perHour ? "per_hour" : "fixed"} onValueChange={(v) => set("billing_unit", v === "per_hour" ? "per_hour" : "fixed")}>
+                <Select
+                  value={perHour ? "per_hour" : "fixed"}
+                  onValueChange={(v) =>
+                    set("billing_unit", v === "per_hour" ? "per_hour" : "fixed")
+                  }
+                >
                   <SelectTrigger aria-label="Pricing">
                     <SelectValue />
                   </SelectTrigger>
@@ -261,7 +317,8 @@ export function ItemForm({
             </div>
             <p className="text-sm text-muted-foreground">
               Commission {fmt(commission)} · Profit {fmt(effectivePrice - cost - commission)}
-              {minutes > 0 && ` · Profit per hour ${fmt(((effectivePrice - cost - commission) * 60) / minutes)}`}
+              {minutes > 0 &&
+                ` · Profit per hour ${fmt(((effectivePrice - cost - commission) * 60) / minutes)}`}
             </p>
           </section>
         )}
@@ -278,7 +335,15 @@ export function ItemForm({
             showWaste={businessType === "manufacturing" || advanced}
             showLabor={kind === "finished" || advanced}
             canProduce={!!editing}
-            title={kind === "menu" ? "Ingredients" : isService ? "Supplies used" : kind === "combo" ? "What's in the combo" : "Made from"}
+            title={
+              kind === "menu"
+                ? "Ingredients"
+                : isService
+                  ? "Supplies used"
+                  : kind === "combo"
+                    ? "What's in the combo"
+                    : "Made from"
+            }
           />
         )}
 
@@ -298,29 +363,55 @@ export function ItemForm({
 
         <section className={section}>
           <h3 className="font-semibold">Photos and description</h3>
-          <ItemImages businessId={businessId} images={images} onChange={(next) => setForm({ ...form, image_urls: next, image_url: next[0] ?? null })} />
-          <Textarea aria-label="Description" placeholder="Description (optional)" value={form.description ?? ""} onChange={(e) => set("description", e.target.value)} />
+          <ItemImages
+            businessId={businessId}
+            images={images}
+            onChange={(next) => setForm({ ...form, image_urls: next, image_url: next[0] ?? null })}
+          />
+          <Textarea
+            aria-label="Description"
+            placeholder="Description (optional)"
+            value={form.description ?? ""}
+            onChange={(e) => set("description", e.target.value)}
+          />
         </section>
 
         <section className={section}>
-          <button type="button" className="flex w-full items-center justify-between font-semibold" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)}>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between font-semibold"
+            aria-expanded={advanced}
+            onClick={() => setAdvanced(!advanced)}
+          >
             Advanced
-            <ChevronDown className={`size-4 transition-transform ${advanced ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`size-4 transition-transform ${advanced ? "rotate-180" : ""}`}
+            />
           </button>
           {advanced && (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {text("sku", "Item code", "text", "Left blank, one is made for you")}
-                {skuError && <p role="alert" className="text-sm text-destructive sm:col-span-2">{skuError}</p>}
+                {skuError && (
+                  <p role="alert" className="text-sm text-destructive sm:col-span-2">
+                    {skuError}
+                  </p>
+                )}
                 {!isService && text("barcode", "Barcode")}
                 {text("brand", "Brand")}
                 {!isService && choice("supplier_id", "Supplier", references?.suppliers ?? [])}
-                {choice("status", "Status", ["active", "inactive", "discontinued"].map((id) => ({ id, name: titleCase(id) })))}
+                {choice(
+                  "status",
+                  "Status",
+                  ["active", "inactive", "discontinued"].map((id) => ({ id, name: titleCase(id) })),
+                )}
                 {text("tax_rate", "Tax rate (%)", "number")}
                 {ownStock && text("reorder_quantity", "Reorder quantity", "number")}
                 {ownStock && text("max_stock", "Maximum stock", "number")}
-                {ownStock && choice("default_location_id", "Stock location", references?.locations ?? [])}
-                {!madeFrom && !isService &&
+                {ownStock &&
+                  choice("default_location_id", "Stock location", references?.locations ?? [])}
+                {!madeFrom &&
+                  !isService &&
                   choice("costing_method", "Costing method", [
                     { id: "weighted_average", name: "Automatic average" },
                     { id: "fifo", name: "FIFO" },

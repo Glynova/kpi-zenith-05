@@ -1,5 +1,6 @@
 /** Item type cards: presets only change which cards show first; every card stays reachable. */
-export type ItemKind = "ready" | "ingredient" | "menu" | "finished" | "combo" | "service" | "package";
+export type ItemKind =
+  "ready" | "ingredient" | "menu" | "finished" | "combo" | "service" | "package";
 
 export const KIND_INFO: Record<ItemKind, { label: string; hint: string }> = {
   ready: { label: "Ready-to-sell item", hint: "Bought and sold as is" },
@@ -41,18 +42,69 @@ export function patchForKind(kind: ItemKind, industryLabel?: string): Record<str
   void industryLabel;
   switch (kind) {
     case "ingredient":
-      return { item_type: "product", item_subtype: "raw_material", track_stock: true, is_sellable: false, is_purchasable: true, consumption_mode: "on_sale" };
+      return {
+        item_type: "product",
+        item_subtype: "raw_material",
+        track_stock: true,
+        is_sellable: false,
+        is_purchasable: true,
+        consumption_mode: "on_sale",
+      };
     case "menu":
-      return { item_type: "product", item_subtype: "menu_item", track_stock: false, has_variants: false, is_sellable: true, is_purchasable: false, consumption_mode: "on_sale" };
+      return {
+        item_type: "product",
+        item_subtype: "menu_item",
+        track_stock: false,
+        has_variants: false,
+        is_sellable: true,
+        is_purchasable: false,
+        consumption_mode: "on_sale",
+      };
     case "finished":
-      return { item_type: "product", item_subtype: "finished_product", track_stock: true, has_variants: false, is_sellable: true, is_purchasable: false, consumption_mode: "on_production" };
+      return {
+        item_type: "product",
+        item_subtype: "finished_product",
+        track_stock: true,
+        has_variants: false,
+        is_sellable: true,
+        is_purchasable: false,
+        consumption_mode: "on_production",
+      };
     case "combo":
-      return { item_type: "bundle", item_subtype: "fixed_bundle", track_stock: false, has_variants: false, is_sellable: true, consumption_mode: "on_sale" };
+      return {
+        item_type: "bundle",
+        item_subtype: "fixed_bundle",
+        track_stock: false,
+        has_variants: false,
+        is_sellable: true,
+        consumption_mode: "on_sale",
+      };
     case "service":
-      return { item_type: "service", item_subtype: "standard_service", track_stock: false, has_variants: false, is_sellable: true, consumption_mode: "on_sale" };
+      return {
+        item_type: "service",
+        item_subtype: "standard_service",
+        track_stock: false,
+        has_variants: false,
+        is_sellable: true,
+        consumption_mode: "on_sale",
+      };
     case "package":
-      return { item_type: "service", item_subtype: "package", track_stock: false, has_variants: false, is_sellable: true, consumption_mode: "on_sale" };
+      return {
+        item_type: "service",
+        item_subtype: "package",
+        track_stock: false,
+        has_variants: false,
+        is_sellable: true,
+        consumption_mode: "on_sale",
+      };
     default:
-      return { item_type: "product", item_subtype: "standard_product", track_stock: true, is_sellable: true, is_purchasable: true, consumption_mode: "on_sale" };
+      return {
+        item_type: "product",
+        item_subtype: "standard_product",
+        track_stock: true,
+        is_sellable: true,
+        is_purchasable: true,
+        consumption_mode: "on_sale",
+      };
   }
 }
