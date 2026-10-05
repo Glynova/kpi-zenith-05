@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { GroupedSelect } from "@/components/grouped-select";
 import { ItemImages } from "@/components/item-images";
+import { AddonGroupsSection } from "@/components/addon-groups-section";
 import { MadeFromSection, type MadeFromLine } from "@/components/made-from-section";
 import { db, type Row } from "@/lib/db";
 import { formatCurrency, titleCase } from "@/lib/format";
@@ -359,6 +360,15 @@ export function ItemForm({
             })}
             {variants.renderTable()}
           </section>
+        )}
+
+        {kind !== "ingredient" && kind !== "finished" && (
+          <AddonGroupsSection
+            businessId={businessId}
+            currency={currency}
+            selected={(form.addon_group_ids as string[] | undefined) ?? []}
+            setSelected={(ids) => set("addon_group_ids", ids)}
+          />
         )}
 
         <section className={section}>
