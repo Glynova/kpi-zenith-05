@@ -110,6 +110,10 @@ type Props = {
   toolbar?: ReactNode;
   /** Disable CSV import (enabled by default for writable tables). */
   enableImport?: boolean;
+  /** Custom CSV import; receives parsed rows (header first) and returns a per-row report. */
+  onImport?: (
+    rows: string[][],
+  ) => Promise<{ ok: number; failed: number; messages: string[]; created: string[] }>;
   /** Extra content rendered under the form fields. */
   formExtras?: (ctx: FormCtx) => ReactNode;
   /** Render formExtras directly after this field key instead of at the end. */
@@ -143,6 +147,7 @@ export function ResourcePage({
   rowActions,
   toolbar,
   enableImport = true,
+  onImport,
   formExtras,
   formExtrasAfter,
   validate,
@@ -168,6 +173,12 @@ export function ResourcePage({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<Row>({});
+  const [importReport, setImportReport] = useState<{
+    ok: number;
+    failed: number;
+    messages: string[];
+    created: string[];
+  } | null>(null);
   const [deleteRow, setDeleteRow] = useState<Row | null>(null);
   const [step, setStep] = useState(0);
 
@@ -364,6 +375,11 @@ export function ResourcePage({
     mutationFn: async (file: File) => {
       const parsed = parseCsv(await file.text());
       if (parsed.length < 2) throw new Error("The file has no data rows");
+      if (onImport) {
+        const report = await onImport(parsed);
+        setImportReport(report);
+        return report.ok;
+      }
       const header = parsed[0].map((h) => h.trim().toLowerCase());
       const map = header.map((h) => {
         const field = fields.find((f) => f.key.toLowerCase() === h || f.label.toLowerCase() === h);
@@ -392,6 +408,10 @@ export function ResourcePage({
       return payload.length;
     },
     onSuccess: (count) => {
+      if (onImport) {
+        queryClient.invalidateQueries({ queryKey: ["resource", table, businessId] });
+        return;
+      }
       toast.success(`Imported ${count} record${count === 1 ? "" : "s"}`);
       queryClient.invalidateQueries({ queryKey: ["resource", table, businessId] });
     },
