@@ -355,7 +355,10 @@ export function ReceiveDialog({
                         {formatNumber(accepted(l), 0)}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        {formatCurrency(round2(accepted(l) * l.unit_cost), order.currency ?? currency)}
+                        {formatCurrency(
+                          round2(accepted(l) * l.unit_cost),
+                          order.currency ?? currency,
+                        )}
                       </td>
                     </tr>
                   ))}
