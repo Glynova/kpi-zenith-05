@@ -24,6 +24,7 @@ import { Route as AffiliateLoginRouteImport } from './routes/affiliate.login'
 import { Route as AffiliateSignupRouteImport } from './routes/affiliate.signup'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
+import { Route as AuthenticatedShellArAgingRouteImport } from './routes/_authenticated/_shell/ar-aging'
 import { Route as AuthenticatedShellAttendanceRouteImport } from './routes/_authenticated/_shell/attendance'
 import { Route as AuthenticatedShellAuditLogsRouteImport } from './routes/_authenticated/_shell/audit-logs'
 import { Route as AuthenticatedShellBatchesRouteImport } from './routes/_authenticated/_shell/batches'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedShellBillingRouteImport } from './routes/_authent
 import { Route as AuthenticatedShellCashFlowRouteImport } from './routes/_authenticated/_shell/cash-flow'
 import { Route as AuthenticatedShellCategoriesRouteImport } from './routes/_authenticated/_shell/categories'
 import { Route as AuthenticatedShellCustomersRouteImport } from './routes/_authenticated/_shell/customers'
+import { Route as AuthenticatedShellDailyCloseRouteImport } from './routes/_authenticated/_shell/daily-close'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellEmployeesRouteImport } from './routes/_authenticated/_shell/employees'
 import { Route as AuthenticatedShellExpensesRouteImport } from './routes/_authenticated/_shell/expenses'
@@ -153,6 +155,12 @@ const AuthenticatedShellAnalyticsRoute =
     path: '/analytics',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
+const AuthenticatedShellArAgingRoute =
+  AuthenticatedShellArAgingRouteImport.update({
+    id: '/ar-aging',
+    path: '/ar-aging',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
 const AuthenticatedShellAttendanceRoute =
   AuthenticatedShellAttendanceRouteImport.update({
     id: '/attendance',
@@ -193,6 +201,12 @@ const AuthenticatedShellCustomersRoute =
   AuthenticatedShellCustomersRouteImport.update({
     id: '/customers',
     path: '/customers',
+    getParentRoute: () => AuthenticatedShellRouteRoute,
+  } as any)
+const AuthenticatedShellDailyCloseRoute =
+  AuthenticatedShellDailyCloseRouteImport.update({
+    id: '/daily-close',
+    path: '/daily-close',
     getParentRoute: () => AuthenticatedShellRouteRoute,
   } as any)
 const AuthenticatedShellDashboardRoute =
@@ -481,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/ar-aging': typeof AuthenticatedShellArAgingRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
@@ -488,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
+  '/daily-close': typeof AuthenticatedShellDailyCloseRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/employees': typeof AuthenticatedShellEmployeesRoute
   '/expenses': typeof AuthenticatedShellExpensesRoute
@@ -547,6 +563,7 @@ export interface FileRoutesByTo {
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/ar-aging': typeof AuthenticatedShellArAgingRoute
   '/attendance': typeof AuthenticatedShellAttendanceRoute
   '/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/batches': typeof AuthenticatedShellBatchesRoute
@@ -554,6 +571,7 @@ export interface FileRoutesByTo {
   '/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/categories': typeof AuthenticatedShellCategoriesRoute
   '/customers': typeof AuthenticatedShellCustomersRoute
+  '/daily-close': typeof AuthenticatedShellDailyCloseRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/employees': typeof AuthenticatedShellEmployeesRoute
   '/expenses': typeof AuthenticatedShellExpensesRoute
@@ -618,6 +636,7 @@ export interface FileRoutesById {
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
+  '/_authenticated/_shell/ar-aging': typeof AuthenticatedShellArAgingRoute
   '/_authenticated/_shell/attendance': typeof AuthenticatedShellAttendanceRoute
   '/_authenticated/_shell/audit-logs': typeof AuthenticatedShellAuditLogsRoute
   '/_authenticated/_shell/batches': typeof AuthenticatedShellBatchesRoute
@@ -625,6 +644,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/cash-flow': typeof AuthenticatedShellCashFlowRoute
   '/_authenticated/_shell/categories': typeof AuthenticatedShellCategoriesRoute
   '/_authenticated/_shell/customers': typeof AuthenticatedShellCustomersRoute
+  '/_authenticated/_shell/daily-close': typeof AuthenticatedShellDailyCloseRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/employees': typeof AuthenticatedShellEmployeesRoute
   '/_authenticated/_shell/expenses': typeof AuthenticatedShellExpensesRoute
@@ -688,6 +708,7 @@ export interface FileRouteTypes {
     | '/affiliate/signup'
     | '/r/$code'
     | '/analytics'
+    | '/ar-aging'
     | '/attendance'
     | '/audit-logs'
     | '/batches'
@@ -695,6 +716,7 @@ export interface FileRouteTypes {
     | '/cash-flow'
     | '/categories'
     | '/customers'
+    | '/daily-close'
     | '/dashboard'
     | '/employees'
     | '/expenses'
@@ -754,6 +776,7 @@ export interface FileRouteTypes {
     | '/affiliate/signup'
     | '/r/$code'
     | '/analytics'
+    | '/ar-aging'
     | '/attendance'
     | '/audit-logs'
     | '/batches'
@@ -761,6 +784,7 @@ export interface FileRouteTypes {
     | '/cash-flow'
     | '/categories'
     | '/customers'
+    | '/daily-close'
     | '/dashboard'
     | '/employees'
     | '/expenses'
@@ -824,6 +848,7 @@ export interface FileRouteTypes {
     | '/affiliate/signup'
     | '/r/$code'
     | '/_authenticated/_shell/analytics'
+    | '/_authenticated/_shell/ar-aging'
     | '/_authenticated/_shell/attendance'
     | '/_authenticated/_shell/audit-logs'
     | '/_authenticated/_shell/batches'
@@ -831,6 +856,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/cash-flow'
     | '/_authenticated/_shell/categories'
     | '/_authenticated/_shell/customers'
+    | '/_authenticated/_shell/daily-close'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/employees'
     | '/_authenticated/_shell/expenses'
@@ -999,6 +1025,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellAnalyticsRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
+    '/_authenticated/_shell/ar-aging': {
+      id: '/_authenticated/_shell/ar-aging'
+      path: '/ar-aging'
+      fullPath: '/ar-aging'
+      preLoaderRoute: typeof AuthenticatedShellArAgingRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
     '/_authenticated/_shell/attendance': {
       id: '/_authenticated/_shell/attendance'
       path: '/attendance'
@@ -1046,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof AuthenticatedShellCustomersRouteImport
+      parentRoute: typeof AuthenticatedShellRouteRoute
+    }
+    '/_authenticated/_shell/daily-close': {
+      id: '/_authenticated/_shell/daily-close'
+      path: '/daily-close'
+      fullPath: '/daily-close'
+      preLoaderRoute: typeof AuthenticatedShellDailyCloseRouteImport
       parentRoute: typeof AuthenticatedShellRouteRoute
     }
     '/_authenticated/_shell/dashboard': {
@@ -1375,6 +1415,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellAnalyticsRoute: typeof AuthenticatedShellAnalyticsRoute
+  AuthenticatedShellArAgingRoute: typeof AuthenticatedShellArAgingRoute
   AuthenticatedShellAttendanceRoute: typeof AuthenticatedShellAttendanceRoute
   AuthenticatedShellAuditLogsRoute: typeof AuthenticatedShellAuditLogsRoute
   AuthenticatedShellBatchesRoute: typeof AuthenticatedShellBatchesRoute
@@ -1382,6 +1423,7 @@ interface AuthenticatedShellRouteRouteChildren {
   AuthenticatedShellCashFlowRoute: typeof AuthenticatedShellCashFlowRoute
   AuthenticatedShellCategoriesRoute: typeof AuthenticatedShellCategoriesRoute
   AuthenticatedShellCustomersRoute: typeof AuthenticatedShellCustomersRoute
+  AuthenticatedShellDailyCloseRoute: typeof AuthenticatedShellDailyCloseRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellEmployeesRoute: typeof AuthenticatedShellEmployeesRoute
   AuthenticatedShellExpensesRoute: typeof AuthenticatedShellExpensesRoute
@@ -1415,6 +1457,7 @@ interface AuthenticatedShellRouteRouteChildren {
 const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren =
   {
     AuthenticatedShellAnalyticsRoute: AuthenticatedShellAnalyticsRoute,
+    AuthenticatedShellArAgingRoute: AuthenticatedShellArAgingRoute,
     AuthenticatedShellAttendanceRoute: AuthenticatedShellAttendanceRoute,
     AuthenticatedShellAuditLogsRoute: AuthenticatedShellAuditLogsRoute,
     AuthenticatedShellBatchesRoute: AuthenticatedShellBatchesRoute,
@@ -1422,6 +1465,7 @@ const AuthenticatedShellRouteRouteChildren: AuthenticatedShellRouteRouteChildren
     AuthenticatedShellCashFlowRoute: AuthenticatedShellCashFlowRoute,
     AuthenticatedShellCategoriesRoute: AuthenticatedShellCategoriesRoute,
     AuthenticatedShellCustomersRoute: AuthenticatedShellCustomersRoute,
+    AuthenticatedShellDailyCloseRoute: AuthenticatedShellDailyCloseRoute,
     AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
     AuthenticatedShellEmployeesRoute: AuthenticatedShellEmployeesRoute,
     AuthenticatedShellExpensesRoute: AuthenticatedShellExpensesRoute,
