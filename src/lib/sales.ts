@@ -1,3 +1,4 @@
+import type { ChosenAddon } from "@/lib/addons";
 /**
  * Universal sales engine.
  *
@@ -169,6 +170,7 @@ export type CartLine = {
   notes?: string | null;
   condition?: string | null;
   available?: number;
+  addons?: ChosenAddon[];
 };
 
 export type LineTotals = {
@@ -430,7 +432,7 @@ export async function createSale(draft: SaleDraft) {
   if (error) throw error;
 
   const inclusive = !!draft.taxInclusive;
-  const { error: itemsError } = await db.from("sale_items").insert(
+  const { data: insertedItems, error: itemsError } = await db.from("sale_items").insert(
     lines.map((l) => {
       const t = lineTotals(l, inclusive);
       return {
@@ -453,10 +455,29 @@ export async function createSale(draft: SaleDraft) {
         notes: l.notes ?? null,
       };
     }),
-  );
+  ).select("id");
   if (itemsError) {
     await db.from("sales").delete().eq("id", sale.id);
     throw itemsError;
+  }
+  // Selected add-ons keep their price and cost at the time of sale.
+  const addonRows = lines.flatMap((l, i) =>
+    (l.addons ?? []).map((a) => ({
+      business_id: draft.businessId,
+      sale_item_id: (insertedItems as Row[])[i].id,
+      option_id: a.option_id,
+      group_name: a.group_name,
+      option_name: a.option_name,
+      extra_price: a.extra_price,
+      extra_cost: a.extra_cost,
+    })),
+  );
+  if (addonRows.length) {
+    const { error } = await db.from("sale_item_addons").insert(addonRows);
+    if (error) {
+      await db.from("sales").delete().eq("id", sale.id);
+      throw error;
+    }
   }
   return sale as Row;
 }
