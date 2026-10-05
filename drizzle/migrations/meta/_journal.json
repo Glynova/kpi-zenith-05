@@ -246,6 +246,41 @@
       "when": 1791178207841,
       "tag": "0034_drop_qa_test_helpers",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791178706626,
+      "tag": "0035_lock_costing_method_with_stock",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791178733929,
+      "tag": "0036_costing_guard_no_auth_dependency",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791178772723,
+      "tag": "0037_qa_runner_temp_2",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791178856776,
+      "tag": "0038_cost_layers_honor_item_costing_method",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791178912274,
+      "tag": "0039_withholding_void_cannot_change_amounts_drop_qa",
+      "breakpoints": true
     }
   ]
 }
