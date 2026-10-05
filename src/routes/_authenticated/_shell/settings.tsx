@@ -16,6 +16,7 @@ import { useTheme } from "@/lib/theme";
 import { Switch } from "@/components/ui/switch";
 import { TeamAccess } from "@/components/team-access";
 import { InventorySettings } from "@/components/inventory-settings";
+import { ComplianceSettings } from "@/components/compliance-settings";
 
 export const Route = createFileRoute("/_authenticated/_shell/settings")({
   head: () => ({
@@ -109,6 +110,8 @@ function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ComplianceSettings />
 
       <InventorySettings />
 
