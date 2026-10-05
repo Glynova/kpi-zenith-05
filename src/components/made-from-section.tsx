@@ -128,7 +128,7 @@ type Props = {
   lines: MadeFromLine[];
   setLines: (lines: MadeFromLine[]) => void;
   currency: string;
-  form: Record<string, any>;
+  form: Record<string, unknown>;
   set: (key: string, value: unknown) => void;
   showWaste: boolean;
   showLabor: boolean;
@@ -174,8 +174,8 @@ export function MadeFromSection({
       if (error) throw error;
       toast.success(`Made ${batch} ${form.unit || "units"} of ${form.name || "this item"}`);
       void queryClient.invalidateQueries();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not make the batch");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Could not make the batch");
     } finally {
       setProducing(false);
     }
