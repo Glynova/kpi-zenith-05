@@ -6747,6 +6747,8 @@ export type Database = {
         Args: { _business_id: string; _prefix: string }
         Returns: string
       }
+      _qa_as_user: { Args: { u: string }; Returns: undefined }
+      _qa_run: { Args: { _sql: string }; Returns: undefined }
       ar_aging: {
         Args: { _as_of: string; _business_id: string }
         Returns: {
