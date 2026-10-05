@@ -432,30 +432,33 @@ export async function createSale(draft: SaleDraft) {
   if (error) throw error;
 
   const inclusive = !!draft.taxInclusive;
-  const { data: insertedItems, error: itemsError } = await db.from("sale_items").insert(
-    lines.map((l) => {
-      const t = lineTotals(l, inclusive);
-      return {
-        business_id: draft.businessId,
-        sale_id: sale.id,
-        product_id: l.product_id,
-        variant_id: l.variant_id || null,
-        product_name: l.product_name,
-        sku: l.sku ?? null,
-        unit: l.unit ?? null,
-        quantity: l.quantity,
-        unit_price: l.unit_price,
-        unit_cost: l.unit_cost ?? 0,
-        discount: t.discount,
-        discount_type: l.discount_type ?? "amount",
-        tax_rate: l.tax_rate ?? 0,
-        tax: t.tax,
-        total: t.total,
-        condition: l.condition ?? null,
-        notes: l.notes ?? null,
-      };
-    }),
-  ).select("id");
+  const { data: insertedItems, error: itemsError } = await db
+    .from("sale_items")
+    .insert(
+      lines.map((l) => {
+        const t = lineTotals(l, inclusive);
+        return {
+          business_id: draft.businessId,
+          sale_id: sale.id,
+          product_id: l.product_id,
+          variant_id: l.variant_id || null,
+          product_name: l.product_name,
+          sku: l.sku ?? null,
+          unit: l.unit ?? null,
+          quantity: l.quantity,
+          unit_price: l.unit_price,
+          unit_cost: l.unit_cost ?? 0,
+          discount: t.discount,
+          discount_type: l.discount_type ?? "amount",
+          tax_rate: l.tax_rate ?? 0,
+          tax: t.tax,
+          total: t.total,
+          condition: l.condition ?? null,
+          notes: l.notes ?? null,
+        };
+      }),
+    )
+    .select("id");
   if (itemsError) {
     await db.from("sales").delete().eq("id", sale.id);
     throw itemsError;

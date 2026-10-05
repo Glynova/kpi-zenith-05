@@ -20,6 +20,15 @@ import {
   round2,
   type CartLine,
 } from "@/lib/sales";
+import {
+  fetchAddonGroups,
+  fetchAddonLinks,
+  RULE_LABEL,
+  type AddonGroup,
+  type ChosenAddon,
+} from "@/lib/addons";
+import { useComponentOptions } from "@/components/made-from-section";
+import { optionCost } from "@/components/addon-groups-section";
 import { PageHeader } from "@/components/page-header";
 import { ImageThumb } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
@@ -47,6 +56,13 @@ import {
 
 type PayLine = { method: string; amount: number; tendered?: number };
 
+/** Items that hold their own stock; made-when-sold items, services and non-stock items do not. */
+function isStocked(p: Row) {
+  if (["service", "non_stock", "digital", "non_stocked_item"].includes(p.inventory_model ?? ""))
+    return false;
+  return p.track_stock !== false;
+}
+
 function POSPage() {
   const { businessId, business, currency, canWrite, userId, settings, role } = useBusiness();
   const queryClient = useQueryClient();
@@ -62,6 +78,8 @@ function POSPage() {
   const [heldOpen, setHeldOpen] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [variantFor, setVariantFor] = useState<Row | null>(null);
+  const [addonFor, setAddonFor] = useState<{ product: Row; variant: Row | null } | null>(null);
+  const [addonPick, setAddonPick] = useState<Record<string, string[]>>({});
   const [payments, setPayments] = useState<PayLine[]>([{ method: "cash", amount: 0, tendered: 0 }]);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [openingCash, setOpeningCash] = useState(0);
@@ -117,7 +135,7 @@ function POSPage() {
       const { data, error } = await db
         .from("products")
         .select(
-          "id,name,sku,barcode,selling_price,cost_price,tax_rate,image_url,category_id,reorder_level,has_variants,inventory_model,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
+          "id,name,sku,barcode,selling_price,cost_price,tax_rate,image_url,category_id,reorder_level,has_variants,inventory_model,track_stock,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
         )
         .eq("business_id", businessId)
         .neq("status", "discontinued")
@@ -127,6 +145,22 @@ function POSPage() {
       return (data ?? []) as Row[];
     },
   });
+
+  const { data: addonGroups = [] } = useQuery({
+    queryKey: ["addon-groups", businessId],
+    enabled: !!businessId,
+    queryFn: () => fetchAddonGroups(businessId!),
+  });
+  const { data: addonLinks = {} } = useQuery({
+    queryKey: ["addon-links", businessId],
+    enabled: !!businessId,
+    queryFn: () => fetchAddonLinks(businessId!),
+  });
+  const { data: componentCatalog = [] } = useComponentOptions(businessId);
+  const groupsFor = (productId: string) =>
+    (addonLinks[productId] ?? [])
+      .map((id) => addonGroups.find((g) => g.id === id))
+      .filter((g): g is AddonGroup => !!g && g.options.length > 0);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["pos-categories", businessId],
@@ -262,14 +296,32 @@ function POSPage() {
     orderDiscountType,
   });
 
-  function addToCart(product: Row, variant?: Row | null) {
+  function openAddons(product: Row, variant: Row | null) {
+    // Single-choice groups preselect their first option.
+    const pick: Record<string, string[]> = {};
+    for (const g of groupsFor(product.id))
+      pick[g.id] = g.rule === "pick_any" ? [] : [g.options[0].id!];
+    setAddonPick(pick);
+    setAddonFor({ product, variant });
+  }
+
+  function addToCart(product: Row, variant?: Row | null, addons?: ChosenAddon[]) {
     if (product.has_variants && !variant) {
       setVariantFor(product);
       return;
     }
-    const key = `${product.id}::${variant?.id ?? ""}`;
+    if (!addons && groupsFor(product.id).length) {
+      setVariantFor(null);
+      openAddons(product, variant ?? null);
+      return;
+    }
+    const chosen = addons ?? [];
+    const key = `${product.id}::${variant?.id ?? ""}::${chosen
+      .map((a) => a.option_id)
+      .sort()
+      .join(",")}`;
     const stock = avail(product.id, variant?.id ?? null);
-    const stocked = !["service", "non_stock", "digital"].includes(product.inventory_model ?? "");
+    const stocked = isStocked(product);
     const existing = cart.find((c) => c.key === key);
     const nextQty = (existing?.quantity ?? 0) + 1;
     if (stocked && settings.track_quantity && !allowNegative && nextQty > stock) {
@@ -288,12 +340,17 @@ function POSPage() {
           key,
           product_id: product.id,
           variant_id: variant?.id ?? null,
-          product_name: variant ? `${product.name} — ${variant.name}` : product.name,
+          product_name:
+            (variant ? `${product.name} — ${variant.name}` : product.name) +
+            (chosen.length ? ` (${chosen.map((a) => a.option_name).join(", ")})` : ""),
           sku: variant?.sku ?? product.sku,
           unit: product.unit,
           quantity: 1,
-          unit_price: price,
-          unit_cost: Number(variant?.cost_price ?? product.cost_price ?? 0),
+          unit_price: round2(price + chosen.reduce((t, a) => t + a.extra_price, 0)),
+          unit_cost:
+            Number(variant?.cost_price ?? product.cost_price ?? 0) +
+            chosen.reduce((t, a) => t + a.extra_cost, 0),
+          addons: chosen,
           discount: 0,
           discount_type: "amount",
           tax_rate: Number(product.tax_rate ?? defaultTaxRate),
@@ -302,6 +359,31 @@ function POSPage() {
       ]);
     }
     setVariantFor(null);
+    setAddonFor(null);
+  }
+
+  function confirmAddons() {
+    if (!addonFor) return;
+    const chosen: ChosenAddon[] = [];
+    for (const g of groupsFor(addonFor.product.id)) {
+      const ids = addonPick[g.id] ?? [];
+      if (g.rule === "pick1_required" && !ids.length) {
+        toast.error(`Choose a ${g.name}`);
+        return;
+      }
+      for (const id of ids) {
+        const o = g.options.find((x) => x.id === id);
+        if (o)
+          chosen.push({
+            option_id: id,
+            group_name: g.name,
+            option_name: o.name,
+            extra_price: Number(o.extra_price || 0),
+            extra_cost: round2(optionCost(o, componentCatalog)),
+          });
+      }
+    }
+    addToCart(addonFor.product, addonFor.variant, chosen);
   }
 
   function setQty(key: string, qty: number) {
@@ -310,7 +392,14 @@ function POSPage() {
       return;
     }
     const line = cart.find((l) => l.key === key);
-    if (line && settings.track_quantity && !allowNegative) {
+    const lineProduct = line ? products.find((p) => p.id === line.product_id) : null;
+    if (
+      line &&
+      lineProduct &&
+      isStocked(lineProduct) &&
+      settings.track_quantity &&
+      !allowNegative
+    ) {
       const stock = avail(line.product_id, line.variant_id);
       if (qty > stock) {
         toast.error("Insufficient stock", { description: `Only ${stock} available.` });
@@ -573,9 +662,7 @@ function POSPage() {
                 {filtered.map((p) => {
                   const stock = avail(p.id);
                   const tone = stockLabel(stock, Number(p.reorder_level ?? 0));
-                  const stocked = !["service", "non_stock", "digital"].includes(
-                    p.inventory_model ?? "",
-                  );
+                  const stocked = isStocked(p);
                   return (
                     <button
                       key={p.id}
@@ -764,6 +851,65 @@ function POSPage() {
               </p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* -------------------------------------------------- add-on chooser */}
+      <Dialog open={!!addonFor} onOpenChange={(o) => !o && setAddonFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{addonFor?.product.name}</DialogTitle>
+            <DialogDescription>Choose options for this item.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {addonFor &&
+              groupsFor(addonFor.product.id).map((g) => (
+                <div key={g.id} className="space-y-2">
+                  <p className="text-sm font-medium">
+                    {g.name}{" "}
+                    <span className="text-xs text-muted-foreground">{RULE_LABEL[g.rule]}</span>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {g.options.map((o) => {
+                      const on = (addonPick[g.id] ?? []).includes(o.id!);
+                      return (
+                        <Button
+                          key={o.id}
+                          type="button"
+                          size="sm"
+                          variant={on ? "default" : "outline"}
+                          aria-pressed={on}
+                          onClick={() =>
+                            setAddonPick((cur) => {
+                              const ids = cur[g.id] ?? [];
+                              const next =
+                                g.rule === "pick_any"
+                                  ? on
+                                    ? ids.filter((x) => x !== o.id)
+                                    : [...ids, o.id!]
+                                  : on && g.rule === "pick1_optional"
+                                    ? []
+                                    : [o.id!];
+                              return { ...cur, [g.id]: next };
+                            })
+                          }
+                        >
+                          {o.name}
+                          {Number(o.extra_price) > 0 &&
+                            ` +${formatCurrency(Number(o.extra_price), currency)}`}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddonFor(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAddons}>Add to order</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -27,7 +27,9 @@ import { normalizeUnit, toStockUnit, unitsFor } from "@/lib/units";
 export function optionCost(option: Pick<AddonOption, "ingredients">, catalog: ComponentOption[]) {
   let total = 0;
   for (const i of option.ingredients) {
-    const c = catalog.find((x) => x.productId === i.productId && x.variantId === (i.variantId ?? null));
+    const c = catalog.find(
+      (x) => x.productId === i.productId && x.variantId === (i.variantId ?? null),
+    );
     if (!c) continue;
     const q = toStockUnit(Number(i.quantity), i.unit || c.unit, c.unit);
     if (q != null) total += q * c.cost;
@@ -72,16 +74,24 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
       for (const i of o.ingredients) {
         const c = catalog.find((x) => x.productId === i.productId && x.variantId === i.variantId);
         if (!i.productId || !c) return toast.error(`Choose an ingredient for ${o.name}`);
-        if (!(Number(i.quantity) > 0)) return toast.error(`Quantity for ${o.name} must be above zero`);
+        if (!(Number(i.quantity) > 0))
+          return toast.error(`Quantity for ${o.name} must be above zero`);
         if (toStockUnit(1, i.unit || c.unit, c.unit) == null)
           return toast.error(`${i.unit} can't convert to ${c.unit} for ${c.label}`);
       }
-    if (g.id && g.usage > 1 && !window.confirm(`This group is used by ${g.usage} items. Apply changes to all of them?`))
+    if (
+      g.id &&
+      g.usage > 1 &&
+      !window.confirm(`This group is used by ${g.usage} items. Apply changes to all of them?`)
+    )
       return;
     try {
       let groupId = g.id;
       if (groupId) {
-        const { error } = await db.from("addon_groups").update({ name: g.name.trim(), rule: g.rule }).eq("id", groupId);
+        const { error } = await db
+          .from("addon_groups")
+          .update({ name: g.name.trim(), rule: g.rule })
+          .eq("id", groupId);
         if (error) throw error;
       } else {
         const { data, error } = await db
@@ -101,7 +111,12 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
       }
       for (const [sort, o] of opts.entries()) {
         let optionId = o.id;
-        const row = { name: o.name.trim(), extra_price: Number(o.extra_price || 0), kitchen_note: o.kitchen_note || null, sort };
+        const row = {
+          name: o.name.trim(),
+          extra_price: Number(o.extra_price || 0),
+          kitchen_note: o.kitchen_note || null,
+          sort,
+        };
         if (optionId) {
           const { error } = await db.from("addon_options").update(row).eq("id", optionId);
           if (error) throw error;
@@ -118,7 +133,9 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
         if (o.ingredients.length) {
           const { error } = await db.from("addon_option_components").insert(
             o.ingredients.map((i) => {
-              const c = catalog.find((x) => x.productId === i.productId && x.variantId === i.variantId)!;
+              const c = catalog.find(
+                (x) => x.productId === i.productId && x.variantId === i.variantId,
+              )!;
               const unit = i.unit || c.unit;
               return {
                 business_id: businessId,
@@ -145,37 +162,71 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
 
   return (
     <section className="space-y-4 rounded-md border border-border bg-card p-4 sm:p-5">
-      <button type="button" className="flex w-full items-center justify-between font-semibold" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button
+        type="button"
+        className="flex w-full items-center justify-between font-semibold"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
         Add-ons and extras {selected.length ? `(${selected.length})` : ""}
         <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div className="space-y-3">
           {groups.map((g) => (
-            <div key={g.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 p-3">
+            <div
+              key={g.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/60 p-3"
+            >
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
                   checked={selected.includes(g.id)}
-                  onCheckedChange={(v) => setSelected(v === true ? [...selected, g.id] : selected.filter((x) => x !== g.id))}
+                  onCheckedChange={(v) =>
+                    setSelected(
+                      v === true ? [...selected, g.id] : selected.filter((x) => x !== g.id),
+                    )
+                  }
                 />
                 <span className="font-medium">{g.name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {RULE_LABEL[g.rule]} · {g.options.map((o) => o.name).join(", ")} · used by {g.usage}
+                  {RULE_LABEL[g.rule]} · {g.options.map((o) => o.name).join(", ")} · used by{" "}
+                  {g.usage}
                 </span>
               </label>
-              <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(structuredClone(g))}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditing(structuredClone(g))}
+              >
                 Edit
               </Button>
             </div>
           ))}
-          {!groups.length && <p className="text-sm text-muted-foreground">No add-on groups yet. Make one, like "Size" or "Extras".</p>}
+          {!groups.length && (
+            <p className="text-sm text-muted-foreground">
+              No add-on groups yet. Make one, like "Size" or "Extras".
+            </p>
+          )}
           {!editing && (
-            <Button type="button" variant="outline" size="sm" onClick={() => setEditing(blankGroup())}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(blankGroup())}
+            >
               New add-on group
             </Button>
           )}
           {editing && (
-            <GroupEditor group={editing} setGroup={setEditing} catalog={catalog} fmt={fmt} onSave={() => void save(editing)} onCancel={() => setEditing(null)} />
+            <GroupEditor
+              group={editing}
+              setGroup={setEditing}
+              catalog={catalog}
+              fmt={fmt}
+              onSave={() => void save(editing)}
+              onCancel={() => setEditing(null)}
+            />
           )}
         </div>
       )}
@@ -199,12 +250,23 @@ function GroupEditor({
   onCancel: () => void;
 }) {
   const setOption = (key: string, patch: Partial<AddonOption>) =>
-    setGroup({ ...group, options: group.options.map((o) => (o.key === key ? { ...o, ...patch } : o)) });
+    setGroup({
+      ...group,
+      options: group.options.map((o) => (o.key === key ? { ...o, ...patch } : o)),
+    });
   return (
     <div className="space-y-3 rounded-md border border-primary/40 p-3">
       <div className="grid gap-2 sm:grid-cols-2">
-        <Input aria-label="Group name" placeholder="Group name (e.g. Size)" value={group.name} onChange={(e) => setGroup({ ...group, name: e.target.value })} />
-        <Select value={group.rule} onValueChange={(v) => setGroup({ ...group, rule: v as AddonRule })}>
+        <Input
+          aria-label="Group name"
+          placeholder="Group name (e.g. Size)"
+          value={group.name}
+          onChange={(e) => setGroup({ ...group, name: e.target.value })}
+        />
+        <Select
+          value={group.rule}
+          onValueChange={(v) => setGroup({ ...group, rule: v as AddonRule })}
+        >
           <SelectTrigger aria-label="Group rule">
             <SelectValue />
           </SelectTrigger>
@@ -217,7 +279,11 @@ function GroupEditor({
           </SelectContent>
         </Select>
       </div>
-      {group.id && group.usage > 1 && <p className="text-xs text-muted-foreground">Shared by {group.usage} items. Changes apply to all of them.</p>}
+      {group.id && group.usage > 1 && (
+        <p className="text-xs text-muted-foreground">
+          Shared by {group.usage} items. Changes apply to all of them.
+        </p>
+      )}
       {group.options.map((o) => {
         const cost = optionCost(o, catalog);
         const price = Number(o.extra_price || 0);
@@ -225,24 +291,55 @@ function GroupEditor({
         return (
           <div key={o.key} className="space-y-2 rounded-md bg-muted/40 p-2">
             <div className="grid grid-cols-[minmax(0,1fr)_100px_auto] gap-2">
-              <Input aria-label="Option name" placeholder="Option (e.g. Large)" value={o.name} onChange={(e) => setOption(o.key, { name: e.target.value })} />
-              <Input aria-label="Extra price" type="number" min="0" step="any" value={o.extra_price} onChange={(e) => setOption(o.key, { extra_price: Number(e.target.value) })} />
-              <Button type="button" size="icon" variant="ghost" aria-label="Remove option" onClick={() => setGroup({ ...group, options: group.options.filter((x) => x.key !== o.key) })}>
+              <Input
+                aria-label="Option name"
+                placeholder="Option (e.g. Large)"
+                value={o.name}
+                onChange={(e) => setOption(o.key, { name: e.target.value })}
+              />
+              <Input
+                aria-label="Extra price"
+                type="number"
+                min="0"
+                step="any"
+                value={o.extra_price}
+                onChange={(e) => setOption(o.key, { extra_price: Number(e.target.value) })}
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                aria-label="Remove option"
+                onClick={() =>
+                  setGroup({ ...group, options: group.options.filter((x) => x.key !== o.key) })
+                }
+              >
                 ×
               </Button>
             </div>
             {o.ingredients.map((i) => {
-              const c = catalog.find((x) => x.productId === i.productId && x.variantId === i.variantId);
+              const c = catalog.find(
+                (x) => x.productId === i.productId && x.variantId === i.variantId,
+              );
               const unit = i.unit || c?.unit || "pcs";
               const setIng = (patch: Partial<typeof i>) =>
-                setOption(o.key, { ingredients: o.ingredients.map((x) => (x.key === i.key ? { ...x, ...patch } : x)) });
+                setOption(o.key, {
+                  ingredients: o.ingredients.map((x) => (x.key === i.key ? { ...x, ...patch } : x)),
+                });
               return (
-                <div key={i.key} className="grid grid-cols-[minmax(0,1fr)_80px_80px_auto] gap-2 pl-3">
+                <div
+                  key={i.key}
+                  className="grid grid-cols-[minmax(0,1fr)_80px_80px_auto] gap-2 pl-3"
+                >
                   <Select
                     value={c?.value ?? "none"}
                     onValueChange={(v) => {
                       const n = catalog.find((x) => x.value === v);
-                      setIng({ productId: n?.productId ?? "", variantId: n?.variantId ?? null, unit: n?.unit ?? "" });
+                      setIng({
+                        productId: n?.productId ?? "",
+                        variantId: n?.variantId ?? null,
+                        unit: n?.unit ?? "",
+                      });
                     }}
                   >
                     <SelectTrigger aria-label="Option ingredient">
@@ -256,7 +353,14 @@ function GroupEditor({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input aria-label="Ingredient quantity" type="number" min="0" step="any" value={i.quantity} onChange={(e) => setIng({ quantity: Number(e.target.value) })} />
+                  <Input
+                    aria-label="Ingredient quantity"
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={i.quantity}
+                    onChange={(e) => setIng({ quantity: Number(e.target.value) })}
+                  />
                   <Select value={normalizeUnit(unit)} onValueChange={(v) => setIng({ unit: v })}>
                     <SelectTrigger aria-label="Ingredient unit">
                       <SelectValue />
@@ -269,7 +373,17 @@ function GroupEditor({
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" size="icon" variant="ghost" aria-label="Remove ingredient" onClick={() => setOption(o.key, { ingredients: o.ingredients.filter((x) => x.key !== i.key) })}>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label="Remove ingredient"
+                    onClick={() =>
+                      setOption(o.key, {
+                        ingredients: o.ingredients.filter((x) => x.key !== i.key),
+                      })
+                    }
+                  >
                     ×
                   </Button>
                 </div>
@@ -280,19 +394,46 @@ function GroupEditor({
                 type="button"
                 variant="link"
                 className="h-auto p-0 text-xs"
-                onClick={() => setOption(o.key, { ingredients: [...o.ingredients, { key: crypto.randomUUID(), productId: "", variantId: null, quantity: 1, unit: "" }] })}
+                onClick={() =>
+                  setOption(o.key, {
+                    ingredients: [
+                      ...o.ingredients,
+                      {
+                        key: crypto.randomUUID(),
+                        productId: "",
+                        variantId: null,
+                        quantity: 1,
+                        unit: "",
+                      },
+                    ],
+                  })
+                }
               >
                 + Ingredient used
               </Button>
               <span className={`text-xs ${below ? "text-destructive" : "text-muted-foreground"}`}>
-                Cost {fmt(cost)} · {price > 0 ? `Margin ${(((price - cost) / price) * 100).toFixed(0)}%` : "No charge"}
+                Cost {fmt(cost)} ·{" "}
+                {price > 0 ? `Margin ${(((price - cost) / price) * 100).toFixed(0)}%` : "No charge"}
               </span>
             </div>
           </div>
         );
       })}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => setGroup({ ...group, options: [...group.options, { key: crypto.randomUUID(), name: "", extra_price: 0, ingredients: [] }] })}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            setGroup({
+              ...group,
+              options: [
+                ...group.options,
+                { key: crypto.randomUUID(), name: "", extra_price: 0, ingredients: [] },
+              ],
+            })
+          }
+        >
           Add option
         </Button>
         <Button type="button" size="sm" onClick={onSave}>

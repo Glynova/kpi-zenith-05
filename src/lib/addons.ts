@@ -33,7 +33,12 @@ export type AddonGroup = {
 /** Loads every shared add-on group with its options, ingredients and how many items use it. */
 export async function fetchAddonGroups(businessId: string): Promise<AddonGroup[]> {
   const [groups, options, comps, links] = await Promise.all([
-    db.from("addon_groups").select("*").eq("business_id", businessId).eq("archived", false).order("created_at"),
+    db
+      .from("addon_groups")
+      .select("*")
+      .eq("business_id", businessId)
+      .eq("archived", false)
+      .order("created_at"),
     db.from("addon_options").select("*").eq("business_id", businessId).order("sort"),
     db.from("addon_option_components").select("*").eq("business_id", businessId),
     db.from("product_addon_groups").select("group_id,product_id").eq("business_id", businessId),

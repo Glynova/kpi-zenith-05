@@ -593,7 +593,12 @@ function ProductsPage() {
         await db.from("product_addon_groups").delete().eq("product_id", id);
         if (groupIds.length) {
           const { error } = await db.from("product_addon_groups").insert(
-            groupIds.map((group_id, sort) => ({ business_id: businessId, product_id: id, group_id, sort })),
+            groupIds.map((group_id, sort) => ({
+              business_id: businessId,
+              product_id: id,
+              group_id,
+              sort,
+            })),
           );
           if (error) throw error;
         }
