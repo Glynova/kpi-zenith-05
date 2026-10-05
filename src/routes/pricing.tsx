@@ -25,7 +25,9 @@ export const Route = createFileRoute("/pricing")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://daraven.com/pricing" },
     ],
+    links: [{ rel: "canonical", href: "https://daraven.com/pricing" }],
   }),
   component: Pricing,
 });

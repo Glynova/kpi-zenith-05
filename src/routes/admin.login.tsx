@@ -36,7 +36,9 @@ export const Route = createFileRoute("/admin/login")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://daraven.com/admin/login" },
     ],
+    links: [{ rel: "canonical", href: "https://daraven.com/admin/login" }],
   }),
   component: AdminLoginPage,
 });

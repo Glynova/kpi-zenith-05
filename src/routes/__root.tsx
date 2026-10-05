@@ -90,6 +90,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Daraven" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Daraven ERP" },
+      { property: "og:title", content: "Daraven ERP — Business Performance Platform" },
+      {
+        property: "og:description",
+        content:
+          "Daraven ERP unifies inventory, finance, KPIs and business performance management for every type of business.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [

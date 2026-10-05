@@ -15,10 +15,12 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Daraven ERP" },
-      { name: "description", content: "Access your Daraven ERP business workspace." },
+      { name: "description", content: "Sign in to your Daraven ERP workspace to manage inventory, sales, finance and KPIs for your business." },
       { property: "og:title", content: "Sign in — Daraven ERP" },
-      { property: "og:description", content: "Access your Daraven ERP business workspace." },
+      { property: "og:description", content: "Sign in to your Daraven ERP workspace to manage inventory, sales, finance and KPIs for your business." },
+      { property: "og:url", content: "https://daraven.com/auth" },
     ],
+    links: [{ rel: "canonical", href: "https://daraven.com/auth" }],
   }),
   component: AuthPage,
 });
