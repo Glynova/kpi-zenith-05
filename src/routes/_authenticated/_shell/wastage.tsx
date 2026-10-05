@@ -9,17 +9,36 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export const WASTE_REASONS = ["Spoiled", "Broken or spilled", "Expired", "Dropped", "Staff meal", "Returned by customer"];
+export const WASTE_REASONS = [
+  "Spoiled",
+  "Broken or spilled",
+  "Expired",
+  "Dropped",
+  "Staff meal",
+  "Returned by customer",
+];
 
 export const Route = createFileRoute("/_authenticated/_shell/wastage")({
   head: () => ({
     meta: [
       { title: "Wastage — Daraven ERP" },
-      { name: "description", content: "Record spoiled, dropped or expired stock and see what it costs." },
+      {
+        name: "description",
+        content: "Record spoiled, dropped or expired stock and see what it costs.",
+      },
       { property: "og:title", content: "Wastage — Daraven ERP" },
-      { property: "og:description", content: "Record spoiled, dropped or expired stock and see what it costs." },
+      {
+        property: "og:description",
+        content: "Record spoiled, dropped or expired stock and see what it costs.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -50,7 +69,10 @@ function WastagePage() {
           .select("id,name,unit,cost_price,average_cost,item_type,status")
           .eq("business_id", businessId)
           .order("name"),
-        db.from("product_variants").select("id,product_id,name,cost_price").eq("business_id", businessId),
+        db
+          .from("product_variants")
+          .select("id,product_id,name,cost_price")
+          .eq("business_id", businessId),
         db
           .from("wastage_entries")
           .select("id,product_id,variant_id,quantity,total_cost,reason,note,created_at")
@@ -81,7 +103,8 @@ function WastagePage() {
   const total = (data?.today ?? []).reduce((s, w) => s + Number(w.total_cost), 0);
   const byReason = useMemo(() => {
     const m = new Map<string, number>();
-    for (const w of data?.today ?? []) m.set(String(w.reason), (m.get(String(w.reason)) ?? 0) + Number(w.total_cost));
+    for (const w of data?.today ?? [])
+      m.set(String(w.reason), (m.get(String(w.reason)) ?? 0) + Number(w.total_cost));
     return [...m.entries()];
   }, [data]);
 
@@ -112,15 +135,28 @@ function WastagePage() {
   const fmt = (n: number) => formatCurrency(n, currency);
   return (
     <div className="space-y-5">
-      <PageHeader title="Wastage" description="Record spoiled, dropped or expired stock. Its cost goes to your expenses." />
+      <PageHeader
+        title="Wastage"
+        description="Record spoiled, dropped or expired stock. Its cost goes to your expenses."
+      />
       <section className="grid gap-4 rounded-md border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
           <Label>Item</Label>
-          <Select value={productId} onValueChange={(v) => { setProductId(v); setVariantId(""); }}>
-            <SelectTrigger aria-label="Item"><SelectValue placeholder="Choose an item" /></SelectTrigger>
+          <Select
+            value={productId}
+            onValueChange={(v) => {
+              setProductId(v);
+              setVariantId("");
+            }}
+          >
+            <SelectTrigger aria-label="Item">
+              <SelectValue placeholder="Choose an item" />
+            </SelectTrigger>
             <SelectContent>
               {(data?.products ?? []).map((p) => (
-                <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name)}</SelectItem>
+                <SelectItem key={String(p.id)} value={String(p.id)}>
+                  {String(p.name)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -129,10 +165,14 @@ function WastagePage() {
           <div className="space-y-1.5">
             <Label>Variant</Label>
             <Select value={variantId} onValueChange={setVariantId}>
-              <SelectTrigger aria-label="Variant"><SelectValue placeholder="Choose a variant" /></SelectTrigger>
+              <SelectTrigger aria-label="Variant">
+                <SelectValue placeholder="Choose a variant" />
+              </SelectTrigger>
               <SelectContent>
                 {variants.map((v) => (
-                  <SelectItem key={String(v.id)} value={String(v.id)}>{String(v.name)}</SelectItem>
+                  <SelectItem key={String(v.id)} value={String(v.id)}>
+                    {String(v.name)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -140,14 +180,27 @@ function WastagePage() {
         )}
         <div className="space-y-1.5">
           <Label htmlFor="w-qty">Quantity {product ? `(${product.unit ?? "pcs"})` : ""}</Label>
-          <Input id="w-qty" type="number" min={0} step="any" value={qty} onChange={(e) => setQty(e.target.value)} />
+          <Input
+            id="w-qty"
+            type="number"
+            min={0}
+            step="any"
+            value={qty}
+            onChange={(e) => setQty(e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Reason</Label>
           <Select value={reason} onValueChange={setReason}>
-            <SelectTrigger aria-label="Reason"><SelectValue placeholder="Choose a reason" /></SelectTrigger>
+            <SelectTrigger aria-label="Reason">
+              <SelectValue placeholder="Choose a reason" />
+            </SelectTrigger>
             <SelectContent>
-              {WASTE_REASONS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              {WASTE_REASONS.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -156,31 +209,44 @@ function WastagePage() {
           <Input id="w-note" value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         <div className="flex items-end justify-between gap-3 sm:col-span-2">
-          <p className="text-sm text-muted-foreground">Cost of this waste: <strong>{fmt(preview)}</strong></p>
-          <Button disabled={save.isPending} onClick={() => save.mutate()}>{save.isPending ? "Saving…" : "Record wastage"}</Button>
+          <p className="text-sm text-muted-foreground">
+            Cost of this waste: <strong>{fmt(preview)}</strong>
+          </p>
+          <Button disabled={save.isPending} onClick={() => save.mutate()}>
+            {save.isPending ? "Saving…" : "Record wastage"}
+          </Button>
         </div>
       </section>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-semibold">Today</h3>
-          <p className="text-sm">Total <strong>{fmt(total)}</strong></p>
+          <p className="text-sm">
+            Total <strong>{fmt(total)}</strong>
+          </p>
         </div>
         {byReason.length > 0 && (
           <div className="flex flex-wrap gap-2 text-xs">
             {byReason.map(([r, v]) => (
-              <span key={r} className="rounded-full border border-border px-2 py-1">{r}: {fmt(v)}</span>
+              <span key={r} className="rounded-full border border-border px-2 py-1">
+                {r}: {fmt(v)}
+              </span>
             ))}
           </div>
         )}
         <div className="divide-y divide-border rounded-md border border-border">
-          {(data?.today ?? []).length === 0 && <p className="p-4 text-sm text-muted-foreground">Nothing wasted today.</p>}
+          {(data?.today ?? []).length === 0 && (
+            <p className="p-4 text-sm text-muted-foreground">Nothing wasted today.</p>
+          )}
           {(data?.today ?? []).map((w) => (
             <div key={String(w.id)} className="flex items-center justify-between gap-3 p-3 text-sm">
               <div>
-                <p className="font-medium">{name(String(w.product_id), w.variant_id as string | null)}</p>
+                <p className="font-medium">
+                  {name(String(w.product_id), w.variant_id as string | null)}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {formatNumber(Number(w.quantity))} · {String(w.reason)}{w.note ? ` · ${w.note}` : ""}
+                  {formatNumber(Number(w.quantity))} · {String(w.reason)}
+                  {w.note ? ` · ${w.note}` : ""}
                 </p>
               </div>
               <span>{fmt(Number(w.total_cost))}</span>

@@ -338,7 +338,9 @@ function ProductsPage() {
                         <span className="tabular-nums">
                           {fmt(v)}
                           {c.key === "cost_price" && last > 0 && Math.abs(last - v) > 0.005 && (
-                            <span className="block text-xs text-muted-foreground">Last paid {fmt(last)}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              Last paid {fmt(last)}
+                            </span>
                           )}
                         </span>
                       );

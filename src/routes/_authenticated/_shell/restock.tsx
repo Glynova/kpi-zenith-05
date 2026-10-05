@@ -15,9 +15,15 @@ export const Route = createFileRoute("/_authenticated/_shell/restock")({
   head: () => ({
     meta: [
       { title: "Restock list — Daraven ERP" },
-      { name: "description", content: "Items at or below their alert level, with suggested orders." },
+      {
+        name: "description",
+        content: "Items at or below their alert level, with suggested orders.",
+      },
       { property: "og:title", content: "Restock list — Daraven ERP" },
-      { property: "og:description", content: "Items at or below their alert level, with suggested orders." },
+      {
+        property: "og:description",
+        content: "Items at or below their alert level, with suggested orders.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -63,7 +69,10 @@ function RestockPage() {
           .from("product_variants")
           .select("id,product_id,name,reorder_level,reorder_quantity,max_stock,cost_price,status")
           .eq("business_id", businessId),
-        db.from("inventory_balances").select("product_id,variant_id,quantity").eq("business_id", businessId),
+        db
+          .from("inventory_balances")
+          .select("product_id,variant_id,quantity")
+          .eq("business_id", businessId),
         db.from("suppliers").select("id,name").eq("business_id", businessId),
         db
           .from("purchase_order_items")
@@ -100,10 +109,12 @@ function RestockPage() {
     for (const p of data.products) {
       if (p.status && p.status !== "active") continue;
       if (p.track_stock === false) continue;
-      if (p.consumption_mode === "on_sale" || ["service", "package"].includes(String(p.item_type))) continue;
+      if (p.consumption_mode === "on_sale" || ["service", "package"].includes(String(p.item_type)))
+        continue;
       const conv = Number(p.purchase_conversion ?? 1) || 1;
       const vs = data.variants.filter((v) => v.product_id === p.id && v.status !== "inactive");
-      const rows = p.has_variants && vs.length ? vs.map((v) => ({ v })) : [{ v: null as Row | null }];
+      const rows =
+        p.has_variants && vs.length ? vs.map((v) => ({ v })) : [{ v: null as Row | null }];
       for (const { v } of rows) {
         const alert = Number(v?.reorder_level ?? p.reorder_level ?? 0);
         const key = `${p.id}:${v?.id ?? ""}`;
@@ -222,7 +233,9 @@ function RestockPage() {
                     <Checkbox
                       aria-label="Select all"
                       checked={picked.size === lines.length}
-                      onCheckedChange={(v) => setPicked(v ? new Set(lines.map((l) => l.key)) : new Set())}
+                      onCheckedChange={(v) =>
+                        setPicked(v ? new Set(lines.map((l) => l.key)) : new Set())
+                      }
                     />
                   </th>
                   <th className="p-3">Item</th>
@@ -235,7 +248,11 @@ function RestockPage() {
                 {lines.map((l) => (
                   <tr key={l.key} className="border-t border-border">
                     <td className="p-3">
-                      <Checkbox aria-label={`Select ${l.name}`} checked={picked.has(l.key)} onCheckedChange={() => toggle(l.key)} />
+                      <Checkbox
+                        aria-label={`Select ${l.name}`}
+                        checked={picked.has(l.key)}
+                        onCheckedChange={() => toggle(l.key)}
+                      />
                     </td>
                     <td className="p-3">
                       <p className="font-medium">{l.name}</p>
@@ -254,7 +271,11 @@ function RestockPage() {
                       {l.qty} {l.purchaseUnit}
                     </td>
                     <td className="p-3 text-right">
-                      {l.price > 0 ? fmt(l.qty * l.price) : <span className="text-xs text-destructive">Set a purchase price</span>}
+                      {l.price > 0 ? (
+                        fmt(l.qty * l.price)
+                      ) : (
+                        <span className="text-xs text-destructive">Set a purchase price</span>
+                      )}
                       {l.conv !== 1 && (
                         <p className="text-xs text-muted-foreground">
                           = {formatNumber(l.qty * l.conv)} {l.unit}
@@ -281,7 +302,9 @@ function RestockPage() {
               )}
             </div>
             <Button disabled={!bySupplier.size || create.isPending} onClick={() => create.mutate()}>
-              {create.isPending ? "Creating…" : `Create ${bySupplier.size} order${bySupplier.size === 1 ? "" : "s"}`}
+              {create.isPending
+                ? "Creating…"
+                : `Create ${bySupplier.size} order${bySupplier.size === 1 ? "" : "s"}`}
             </Button>
           </div>
         </>
