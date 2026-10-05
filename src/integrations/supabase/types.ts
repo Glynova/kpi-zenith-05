@@ -6762,6 +6762,10 @@ export type Database = {
           total: number
         }[]
       }
+      business_has_costed_stock: {
+        Args: { _business_id: string }
+        Returns: boolean
+      }
       business_role: {
         Args: { _business_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

@@ -246,6 +246,13 @@
       "when": 1791178207841,
       "tag": "0034_drop_qa_test_helpers",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791178706626,
+      "tag": "0035_lock_costing_method_with_stock",
+      "breakpoints": true
     }
   ]
 }
