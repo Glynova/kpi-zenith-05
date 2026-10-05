@@ -428,6 +428,7 @@ export function ItemForm({
                     { id: "weighted_average", name: "Automatic average" },
                     { id: "fifo", name: "FIFO" },
                     { id: "standard", name: "Fixed cost" },
+                    { id: "last_purchase", name: "Last purchase price" },
                   ])}
                 {isService && text("income_account", "Income account")}
               </div>
