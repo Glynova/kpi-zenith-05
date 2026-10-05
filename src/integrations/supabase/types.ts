@@ -3212,10 +3212,13 @@ export type Database = {
           cost_price: number
           created_at: string
           id: string
+          last_purchase_cost: number | null
+          last_purchase_date: string | null
           max_stock: number | null
           min_stock: number | null
           name: string
           product_id: string
+          registered_cost: number | null
           reorder_level: number
           reorder_quantity: number | null
           selling_price: number
@@ -3235,10 +3238,13 @@ export type Database = {
           cost_price?: number
           created_at?: string
           id?: string
+          last_purchase_cost?: number | null
+          last_purchase_date?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name: string
           product_id: string
+          registered_cost?: number | null
           reorder_level?: number
           reorder_quantity?: number | null
           selling_price?: number
@@ -3258,10 +3264,13 @@ export type Database = {
           cost_price?: number
           created_at?: string
           id?: string
+          last_purchase_cost?: number | null
+          last_purchase_date?: string | null
           max_stock?: number | null
           min_stock?: number | null
           name?: string
           product_id?: string
+          registered_cost?: number | null
           reorder_level?: number
           reorder_quantity?: number | null
           selling_price?: number
@@ -3425,6 +3434,8 @@ export type Database = {
           item_type: string
           labor_hours: number
           labor_rate: number
+          last_purchase_cost: number | null
+          last_purchase_date: string | null
           max_stock: number | null
           min_stock: number
           name: string
@@ -3434,6 +3445,7 @@ export type Database = {
           product_type: string
           purchase_conversion: number
           purchase_unit: string | null
+          registered_cost: number | null
           reorder_level: number
           reorder_quantity: number | null
           requires_booking: boolean
@@ -3497,6 +3509,8 @@ export type Database = {
           item_type?: string
           labor_hours?: number
           labor_rate?: number
+          last_purchase_cost?: number | null
+          last_purchase_date?: string | null
           max_stock?: number | null
           min_stock?: number
           name: string
@@ -3506,6 +3520,7 @@ export type Database = {
           product_type?: string
           purchase_conversion?: number
           purchase_unit?: string | null
+          registered_cost?: number | null
           reorder_level?: number
           reorder_quantity?: number | null
           requires_booking?: boolean
@@ -3569,6 +3584,8 @@ export type Database = {
           item_type?: string
           labor_hours?: number
           labor_rate?: number
+          last_purchase_cost?: number | null
+          last_purchase_date?: string | null
           max_stock?: number | null
           min_stock?: number
           name?: string
@@ -3578,6 +3595,7 @@ export type Database = {
           product_type?: string
           purchase_conversion?: number
           purchase_unit?: string | null
+          registered_cost?: number | null
           reorder_level?: number
           reorder_quantity?: number | null
           requires_booking?: boolean
@@ -6225,6 +6243,80 @@ export type Database = {
           },
         ]
       }
+      wastage_entries: {
+        Row: {
+          business_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          product_id: string
+          quantity: number
+          reason: string
+          total_cost: number
+          unit_cost: number
+          variant_id: string | null
+          warehouse_id: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          product_id: string
+          quantity: number
+          reason: string
+          total_cost?: number
+          unit_cost?: number
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          product_id?: string
+          quantity?: number
+          reason?: string
+          total_cost?: number
+          unit_cost?: number
+          variant_id?: string | null
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wastage_entries_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wastage_entries_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wastage_entries_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wastage_entries_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -6325,6 +6417,17 @@ export type Database = {
       }
       receive_stock_transfer: {
         Args: { _lines?: Json; _transfer_id: string }
+        Returns: string
+      }
+      record_wastage: {
+        Args: {
+          _note?: string
+          _product_id: string
+          _quantity: number
+          _reason: string
+          _variant_id: string
+          _warehouse_id?: string
+        }
         Returns: string
       }
       reject_stock_transfer: {
