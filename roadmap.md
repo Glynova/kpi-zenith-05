@@ -30,4 +30,5 @@ Constraints: no backend/auth/billing changes; preserve every route and feature; 
 ## Simplified items spec — remaining phases
 - [x] Phase 1: type cards + presets, short form + Advanced, unified made-from engine (units, waste, labor/overhead, cost roll-up, circular block, variant components, on_sale/on_production, batch check + Make batch)
 - [x] Add-on groups (6.5): shared groups, option ingredients, POS chooser, price/cost snapshot, deduction at sale
-- [ ] Restock list (6.6), cost fields registered/last purchase, counts/wastage (6.7), POS refunds/discounts (6.8–6.9), offline (6.10)
+- [x] Restock list (6.6)
+- [ ] cost fields registered/last purchase, counts/wastage (6.7), POS refunds/discounts (6.8–6.9), offline (6.10)
