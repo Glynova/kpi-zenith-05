@@ -1068,27 +1068,39 @@ export type Database = {
           business_id: string
           component_product_id: string
           created_at: string
+          entered_quantity: number | null
+          entered_unit: string | null
           id: string
           quantity: number
           unit_cost: number
+          variant_id: string | null
+          waste_percent: number
         }
         Insert: {
           bundle_product_id: string
           business_id: string
           component_product_id: string
           created_at?: string
+          entered_quantity?: number | null
+          entered_unit?: string | null
           id?: string
           quantity?: number
           unit_cost?: number
+          variant_id?: string | null
+          waste_percent?: number
         }
         Update: {
           bundle_product_id?: string
           business_id?: string
           component_product_id?: string
           created_at?: string
+          entered_quantity?: number | null
+          entered_unit?: string | null
           id?: string
           quantity?: number
           unit_cost?: number
+          variant_id?: string | null
+          waste_percent?: number
         }
         Relationships: [
           {
@@ -1110,6 +1122,13 @@ export type Database = {
             columns: ["component_product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bundle_components_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -3189,6 +3208,7 @@ export type Database = {
           category_attributes: Json
           category_id: string | null
           commission_rate: number | null
+          consumption_mode: string
           cost_price: number
           costing_method: string | null
           created_at: string
@@ -3209,9 +3229,13 @@ export type Database = {
           is_sellable: boolean
           item_subtype: string | null
           item_type: string
+          labor_hours: number
+          labor_rate: number
           max_stock: number | null
           min_stock: number
           name: string
+          output_quantity: number
+          overhead_per_unit: number
           price_includes_tax: boolean
           product_type: string
           purchase_conversion: number
@@ -3256,6 +3280,7 @@ export type Database = {
           category_attributes?: Json
           category_id?: string | null
           commission_rate?: number | null
+          consumption_mode?: string
           cost_price?: number
           costing_method?: string | null
           created_at?: string
@@ -3276,9 +3301,13 @@ export type Database = {
           is_sellable?: boolean
           item_subtype?: string | null
           item_type?: string
+          labor_hours?: number
+          labor_rate?: number
           max_stock?: number | null
           min_stock?: number
           name: string
+          output_quantity?: number
+          overhead_per_unit?: number
           price_includes_tax?: boolean
           product_type?: string
           purchase_conversion?: number
@@ -3323,6 +3352,7 @@ export type Database = {
           category_attributes?: Json
           category_id?: string | null
           commission_rate?: number | null
+          consumption_mode?: string
           cost_price?: number
           costing_method?: string | null
           created_at?: string
@@ -3343,9 +3373,13 @@ export type Database = {
           is_sellable?: boolean
           item_subtype?: string | null
           item_type?: string
+          labor_hours?: number
+          labor_rate?: number
           max_stock?: number | null
           min_stock?: number
           name?: string
+          output_quantity?: number
+          overhead_per_unit?: number
           price_includes_tax?: boolean
           product_type?: string
           purchase_conversion?: number
@@ -6024,6 +6058,10 @@ export type Database = {
       produce_from_bom: {
         Args: { _batches?: number; _bom_id: string }
         Returns: number
+      }
+      recalc_made_from_cost: {
+        Args: { _product_id: string }
+        Returns: undefined
       }
       recalc_product_cost_from_bom: {
         Args: { _product_id: string }
