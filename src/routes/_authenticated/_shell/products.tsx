@@ -223,6 +223,7 @@ function ProductsPage() {
   const { capability, feature, settings, businessId, currency } = useBusiness();
   const [bundleLines, setBundleLines] = useState<MadeFromLine[]>([newLine()]);
   const variants = useProductVariants(businessId);
+  const [addonIds, setAddonIds] = useState<string[]>([]);
   const variantsEnabled = feature("track_variants");
 
   /** Variant count + aggregate stock per parent product for the listing. */
@@ -303,6 +304,7 @@ function ProductsPage() {
     { key: "billing_unit", label: "Billing unit", type: "text" },
     { key: "default_location_id", label: "Location", type: "text" },
     { key: "image_urls", label: "Images", type: "text" },
+    { key: "addon_group_ids", label: "Add-ons", type: "text", transient: true },
     {
       key: "opening_quantity",
       label: "Opening quantity",
@@ -449,6 +451,7 @@ function ProductsPage() {
           variants={variants}
           bundleLines={bundleLines}
           setBundleLines={setBundleLines}
+          defaultAddonIds={addonIds}
         />
       )}
       onOpenForm={(row) => {
@@ -475,6 +478,16 @@ function ProductsPage() {
                 );
             });
         } else setBundleLines([newLine()]);
+        if (row?.id)
+          void db
+            .from("product_addon_groups")
+            .select("group_id")
+            .eq("product_id", row.id)
+            .order("sort")
+            .then(({ data }: { data: Row[] | null }) =>
+              setAddonIds((data ?? []).map((x) => String(x.group_id))),
+            );
+        else setAddonIds([]);
       }}
       validate={({ form }) => {
         const kind = kindOf(form);
@@ -573,6 +586,19 @@ function ProductsPage() {
                 waste_percent: Number(line.waste || 0),
               };
             }),
+          );
+          if (error) throw error;
+        }
+        const groupIds = (form.addon_group_ids as string[] | undefined) ?? addonIds;
+        await db.from("product_addon_groups").delete().eq("product_id", id);
+        if (groupIds.length) {
+          const { error } = await db.from("product_addon_groups").insert(
+            groupIds.map((group_id, sort) => ({
+              business_id: businessId,
+              product_id: id,
+              group_id,
+              sort,
+            })),
           );
           if (error) throw error;
         }
