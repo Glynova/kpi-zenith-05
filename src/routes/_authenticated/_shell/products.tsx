@@ -331,7 +331,20 @@ function ProductsPage() {
                   render: (row) => {
                     const s = variantSummary[row.id];
                     const fmt = (n: number) => formatCurrency(n, currency);
-                    if (!s?.count) return fmt(Number(row[c.key] ?? 0));
+                    if (!s?.count) {
+                      const v = Number(row[c.key] ?? 0);
+                      const last = Number(row.last_purchase_cost ?? 0);
+                      return (
+                        <span className="tabular-nums">
+                          {fmt(v)}
+                          {c.key === "cost_price" && last > 0 && Math.abs(last - v) > 0.005 && (
+                            <span className="block text-xs text-muted-foreground">
+                              Last paid {fmt(last)}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    }
                     const list = c.key === "cost_price" ? s.cost : s.price;
                     const lo = Math.min(...list);
                     const hi = Math.max(...list);

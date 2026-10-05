@@ -116,6 +116,7 @@ export const NAV_GROUPS: NavGroup[] = [
         keywords: "po purchasing receive",
       },
       { title: "Restock List", url: "/restock", icon: ClipboardList, keywords: "reorder low stock" },
+      { title: "Wastage", url: "/wastage", icon: Boxes, keywords: "waste spoiled dropped expired" },
       { title: "Units", url: "/units", icon: Ruler, keywords: "uom measure" },
       {
         title: "Batches",
