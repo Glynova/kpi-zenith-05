@@ -232,6 +232,13 @@
       "when": 1791177594268,
       "tag": "0032_business_id_indexes_drop_qa_runner",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791177996196,
+      "tag": "0033_vat_exempt_business_classification",
+      "breakpoints": true
     }
   ]
 }
