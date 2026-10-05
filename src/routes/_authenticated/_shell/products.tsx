@@ -395,7 +395,8 @@ function ProductsPage() {
               : kind === "non_stock"
                 ? "non_stock_item"
                 : "standard_product");
-        payload.consumption_mode = form.consumption_mode === "on_production" ? "on_production" : "on_sale";
+        payload.consumption_mode =
+          form.consumption_mode === "on_production" ? "on_production" : "on_sale";
         payload.track_stock =
           kind === "service" || kind === "non_stock"
             ? false
@@ -403,7 +404,11 @@ function ProductsPage() {
               ? payload.consumption_mode === "on_production"
               : !!form.track_stock;
         payload.inventory_model =
-          kind === "service" ? "service" : payload.track_stock ? "stocked_item" : "non_stocked_item";
+          kind === "service"
+            ? "service"
+            : payload.track_stock
+              ? "stocked_item"
+              : "non_stocked_item";
         payload.product_type =
           kind === "service"
             ? "service"
@@ -418,7 +423,8 @@ function ProductsPage() {
         // One alert level: "alert me below" feeds both legacy low-stock fields.
         if (form.reorder_level != null && form.reorder_level !== "")
           payload.min_stock = Number(form.reorder_level);
-        payload.output_quantity = Number(form.output_quantity) > 0 ? Number(form.output_quantity) : 1;
+        payload.output_quantity =
+          Number(form.output_quantity) > 0 ? Number(form.output_quantity) : 1;
         payload.labor_hours = Number(form.labor_hours || 0);
         payload.labor_rate = Number(form.labor_rate || 0);
         payload.overhead_per_unit = Number(form.overhead_per_unit || 0);
@@ -451,7 +457,9 @@ function ProductsPage() {
         if (row?.id) {
           void db
             .from("bundle_components")
-            .select("component_product_id,variant_id,quantity,entered_quantity,entered_unit,waste_percent")
+            .select(
+              "component_product_id,variant_id,quantity,entered_quantity,entered_unit,waste_percent",
+            )
             .eq("bundle_product_id", row.id)
             .then(({ data }: { data: Row[] | null }) => {
               if (data?.length)
@@ -493,7 +501,11 @@ function ProductsPage() {
           )
         )
           return "Numbers cannot be negative";
-        if (form.output_quantity != null && form.output_quantity !== "" && !(Number(form.output_quantity) > 0))
+        if (
+          form.output_quantity != null &&
+          form.output_quantity !== "" &&
+          !(Number(form.output_quantity) > 0)
+        )
           return "Output quantity must be more than zero";
         if (Number(form.commission_rate || 0) > 100) return "Commission cannot be over 100%";
         if (Number(form.max_stock) > 0 && Number(form.reorder_level) > Number(form.max_stock))
@@ -538,8 +550,13 @@ function ProductsPage() {
           const { data: comps } = await db
             .from("products")
             .select("id,unit")
-            .in("id", filled.map((l) => l.productId));
-          const unitOf = new Map(((comps ?? []) as Row[]).map((c) => [c.id, normalizeUnit(c.unit)]));
+            .in(
+              "id",
+              filled.map((l) => l.productId),
+            );
+          const unitOf = new Map(
+            ((comps ?? []) as Row[]).map((c) => [c.id, normalizeUnit(c.unit)]),
+          );
           const { error } = await db.from("bundle_components").insert(
             filled.map((line) => {
               const stockUnit = unitOf.get(line.productId) ?? "pcs";
@@ -549,7 +566,8 @@ function ProductsPage() {
                 bundle_product_id: id,
                 component_product_id: line.productId,
                 variant_id: line.variantId,
-                quantity: toStockUnit(Number(line.quantity), entered, stockUnit) ?? Number(line.quantity),
+                quantity:
+                  toStockUnit(Number(line.quantity), entered, stockUnit) ?? Number(line.quantity),
                 entered_quantity: Number(line.quantity),
                 entered_unit: entered,
                 waste_percent: Number(line.waste || 0),

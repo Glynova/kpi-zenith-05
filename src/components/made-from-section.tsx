@@ -175,7 +175,11 @@ export function MadeFromSection({
       toast.success(`Made ${batch} ${form.unit || "units"} of ${form.name || "this item"}`);
       void queryClient.invalidateQueries();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Could not make the batch");
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : ((e as { message?: string })?.message ?? "Could not make the batch"),
+      );
     } finally {
       setProducing(false);
     }
@@ -312,7 +316,7 @@ export function MadeFromSection({
             type="number"
             min="0"
             step="any"
-            value={form.output_quantity ?? 1}
+            value={String(form.output_quantity ?? 1)}
             onChange={(e) => set("output_quantity", e.target.value)}
           />
         </div>
@@ -324,7 +328,7 @@ export function MadeFromSection({
                 type="number"
                 min="0"
                 step="any"
-                value={form.labor_hours ?? 0}
+                value={String(form.labor_hours ?? 0)}
                 onChange={(e) => set("labor_hours", e.target.value)}
               />
             </div>
@@ -334,7 +338,7 @@ export function MadeFromSection({
                 type="number"
                 min="0"
                 step="any"
-                value={form.labor_rate ?? 0}
+                value={String(form.labor_rate ?? 0)}
                 onChange={(e) => set("labor_rate", e.target.value)}
               />
             </div>
@@ -344,7 +348,7 @@ export function MadeFromSection({
                 type="number"
                 min="0"
                 step="any"
-                value={form.overhead_per_unit ?? 0}
+                value={String(form.overhead_per_unit ?? 0)}
                 onChange={(e) => set("overhead_per_unit", e.target.value)}
               />
             </div>
