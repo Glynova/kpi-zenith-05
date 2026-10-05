@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBusiness } from "@/lib/business-context";
 import { db, type Row } from "@/lib/db";
+import { importProducts } from "@/lib/product-import";
 import { formatCurrency } from "@/lib/format";
 import { INVENTORY_MODELS, UNIT_OPTION_GROUPS } from "@/lib/business-config";
 
@@ -393,6 +394,7 @@ function ProductsPage() {
           : []),
       ]}
       fields={formFields}
+      onImport={(rows) => importProducts(businessId ?? "", rows)}
       transformPayload={(payload, { form, editing }) => {
         const kind = String(form.item_type || "product");
         const card = kindOf(form);
