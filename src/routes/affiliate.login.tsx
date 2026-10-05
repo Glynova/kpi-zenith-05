@@ -31,7 +31,9 @@ export const Route = createFileRoute("/affiliate/login")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: "https://daraven.com/affiliate/login" },
     ],
+    links: [{ rel: "canonical", href: "https://daraven.com/affiliate/login" }],
   }),
   component: AffiliateLoginPage,
 });
