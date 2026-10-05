@@ -1,0 +1,24 @@
+
+CREATE INDEX IF NOT EXISTS stock_counts_business_idx ON public.stock_counts (business_id);
+CREATE INDEX IF NOT EXISTS stock_count_items_business_idx ON public.stock_count_items (business_id);
+CREATE INDEX IF NOT EXISTS cash_registers_business_idx ON public.cash_registers (business_id);
+CREATE INDEX IF NOT EXISTS register_movements_business_idx ON public.register_movements (business_id);
+CREATE INDEX IF NOT EXISTS sale_payments_business_idx ON public.sale_payments (business_id, sale_id);
+CREATE INDEX IF NOT EXISTS held_orders_business_idx ON public.held_orders (business_id);
+CREATE INDEX IF NOT EXISTS bundle_components_business_idx ON public.bundle_components (business_id);
+CREATE INDEX IF NOT EXISTS price_history_business_idx ON public.price_history (business_id);
+CREATE INDEX IF NOT EXISTS addon_groups_business_idx ON public.addon_groups (business_id);
+CREATE INDEX IF NOT EXISTS addon_options_business_idx ON public.addon_options (business_id);
+CREATE INDEX IF NOT EXISTS addon_option_components_business_idx ON public.addon_option_components (business_id);
+CREATE INDEX IF NOT EXISTS product_addon_groups_business_idx ON public.product_addon_groups (business_id);
+CREATE INDEX IF NOT EXISTS sale_item_addons_business_idx ON public.sale_item_addons (business_id);
+CREATE INDEX IF NOT EXISTS wastage_entries_business_idx ON public.wastage_entries (business_id);
+CREATE INDEX IF NOT EXISTS production_orders_business_idx ON public.production_orders (business_id);
+CREATE INDEX IF NOT EXISTS cost_history_business_idx ON public.cost_history (business_id);
+CREATE INDEX IF NOT EXISTS batches_business_idx ON public.batches (business_id);
+CREATE INDEX IF NOT EXISTS unit_conversions_business_idx ON public.unit_conversions (business_id);
+CREATE INDEX IF NOT EXISTS billing_invoices_business_idx ON public.billing_invoices (business_id);
+CREATE INDEX IF NOT EXISTS subscription_events_business_idx ON public.subscription_events (business_id);
+CREATE INDEX IF NOT EXISTS affiliate_commissions_business_idx ON public.affiliate_commissions (business_id);
+CREATE INDEX IF NOT EXISTS subscription_payments_business_idx ON public.subscription_payments (business_id);
+CREATE INDEX IF NOT EXISTS z_readings_business_idx ON public.z_readings (business_id, reading_date DESC);
