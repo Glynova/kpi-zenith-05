@@ -43,6 +43,7 @@ export type ItemFormProps = FormCtx & {
   saving: boolean;
   bundleLines: MadeFromLine[];
   setBundleLines: (lines: MadeFromLine[]) => void;
+  defaultAddonIds?: string[];
 };
 
 export function ItemForm({
@@ -58,6 +59,7 @@ export function ItemForm({
   saving,
   bundleLines,
   setBundleLines,
+  defaultAddonIds = [],
 }: ItemFormProps) {
   const { business } = useBusiness();
   const businessType = String(business?.type ?? "retail");
@@ -366,7 +368,7 @@ export function ItemForm({
           <AddonGroupsSection
             businessId={businessId}
             currency={currency}
-            selected={(form.addon_group_ids as string[] | undefined) ?? []}
+            selected={(form.addon_group_ids as string[] | undefined) ?? defaultAddonIds}
             setSelected={(ids) => set("addon_group_ids", ids)}
           />
         )}

@@ -451,6 +451,7 @@ function ProductsPage() {
           variants={variants}
           bundleLines={bundleLines}
           setBundleLines={setBundleLines}
+          defaultAddonIds={addonIds}
         />
       )}
       onOpenForm={(row) => {
