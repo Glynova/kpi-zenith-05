@@ -480,6 +480,36 @@ export function ResourcePage({
 
   return (
     <div className="space-y-6">
+      <Dialog open={!!importReport} onOpenChange={(o) => !o && setImportReport(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import results</DialogTitle>
+            <DialogDescription>
+              {importReport?.ok ?? 0} imported, {importReport?.failed ?? 0} failed
+            </DialogDescription>
+          </DialogHeader>
+          {!!importReport?.created.length && (
+            <div className="text-sm">
+              <p className="font-medium">Created automatically</p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                {importReport.created.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {!!importReport?.messages.length && (
+            <ul className="space-y-1 text-sm text-destructive">
+              {importReport.messages.map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+            </ul>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setImportReport(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <PageHeader
         title={title}
         description={description}
