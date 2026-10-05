@@ -59,7 +59,9 @@ export function InventorySettings() {
     queryKey: ["costing-locked", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data, error } = await db.rpc("business_has_costed_stock", { _business_id: businessId });
+      const { data, error } = await db.rpc("business_has_costed_stock", {
+        _business_id: businessId,
+      });
       if (error) throw error;
       return !!data;
     },
@@ -96,7 +98,10 @@ export function InventorySettings() {
     setSaving(true);
     const payload: Record<string, any> = { business_id: businessId };
     FEATURE_GROUPS.flatMap((g) => g.items).forEach((i) => (payload[i.key] = !!flag(i.key)));
-    if (costingLocked && (config.costing_method ?? settings.costing_method) !== settings.costing_method) {
+    if (
+      costingLocked &&
+      (config.costing_method ?? settings.costing_method) !== settings.costing_method
+    ) {
       setSaving(false);
       return toast.error("Costing method can't change while items have stock on hand.");
     }

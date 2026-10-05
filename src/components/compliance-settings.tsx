@@ -108,7 +108,7 @@ export function ComplianceSettings() {
           <Label className="text-xs">Country rules</Label>
           <Select
             disabled={!isAdmin}
-            value={form.jurisdiction ?? "PH"}
+            value={(form.jurisdiction ?? "PH") === "PH" ? "PH" : "OTHER"}
             onValueChange={(v) => setForm({ ...form, jurisdiction: v })}
           >
             <SelectTrigger className="mt-1.5">
