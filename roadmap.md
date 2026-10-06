@@ -7,3 +7,8 @@
   - Costing selector locked when business_has_costed_stock (DB guard stays authoritative)
   - Save: businesses update, business_compliance upsert, business_settings upsert (incl. tax/sales rules), warehouses dedupe, units/conversions dedupe with same-family validation
   - QA: fresh, resume, completed business, PH VAT/non-VAT, non-PH, multi-location, units on/off, variants/BOM/production, POS/register, costing guard, no duplicates
+
+- [x] Bulk import: variants (Parent SKU + Variant Options) and made-from components (Components column)
+- [ ] Remove import test items TV-*/TV2-* in beef n buns (needs privileged cleanup)
+- [ ] Offline POS hardening (IndexedDB queue, per-till idempotent sync, sync status panel)
+- [ ] Parallel multi-client document numbering stress test
