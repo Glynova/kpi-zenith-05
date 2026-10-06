@@ -105,7 +105,7 @@ export async function importProducts(businessId: string, rows: string[][]): Prom
       res.failed++;
       res.messages.push(`Row ${n}${rec.sku ? ` (${rec.sku})` : ""}: ${why}`);
     };
-    if (!rec.name) {
+    if (!rec.name && !rec.parent_sku) {
       fail("missing product name, skipped");
       continue;
     }
