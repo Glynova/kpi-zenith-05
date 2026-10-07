@@ -1,6 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { QrCode } from "lucide-react";
+import { useState } from "react";
 
+import { QrPhPaymentDialog } from "@/components/qrph-payment-dialog";
 import { ResourcePage, type Column, type Field } from "@/components/resource-page";
+import { Button } from "@/components/ui/button";
 
 const columns: Column[] = [
   {
@@ -123,16 +128,46 @@ export const Route = createFileRoute("/_authenticated/_shell/invoices")({
       },
     ],
   }),
-  component: () => (
-    <ResourcePage
-      illustration="sales"
-      table="invoices"
-      title="Invoices"
-      description={"Issue professional invoices with due dates, tax and terms."}
-      columns={columns}
-      fields={fields}
-      searchKeys={["invoice_number", "status"]}
-      orderBy="issue_date"
-    />
-  ),
+  component: InvoicesPage,
 });
+
+function InvoicesPage() {
+  const [qrFor, setQrFor] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  return (
+    <>
+      <ResourcePage
+        illustration="sales"
+        table="invoices"
+        title="Invoices"
+        description={"Issue professional invoices with due dates, tax and terms."}
+        columns={columns}
+        fields={fields}
+        searchKeys={["invoice_number", "status"]}
+        orderBy="issue_date"
+        rowActions={(row) =>
+          !["paid", "cancelled", "voided", "draft"].includes(String(row.status)) &&
+          row.document_status !== "void" &&
+          Number(row.total ?? 0) - Number(row.paid ?? 0) >= 1 ? (
+            <Button
+              size="sm"
+              variant="outline"
+              aria-label="Collect payment with QR Ph"
+              onClick={() => setQrFor(String(row.id))}
+            >
+              <QrCode className="size-4" /> QR Ph
+            </Button>
+          ) : null
+        }
+      />
+      {qrFor && (
+        <QrPhPaymentDialog
+          invoiceId={qrFor}
+          open={!!qrFor}
+          onOpenChange={(o) => !o && setQrFor(null)}
+          onPaid={() => queryClient.invalidateQueries({ queryKey: ["resource", "invoices"] })}
+        />
+      )}
+    </>
+  );
+}
