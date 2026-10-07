@@ -4487,6 +4487,72 @@ export type Database = {
           },
         ]
       }
+      qrph_payments: {
+        Row: {
+          amount_centavos: number
+          business_id: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          invoice_id: string
+          mode: string
+          paid_at: string | null
+          payment_intent_id: string
+          paymongo_payment_id: string | null
+          qr_image: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_centavos: number
+          business_id: string
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          invoice_id: string
+          mode?: string
+          paid_at?: string | null
+          payment_intent_id: string
+          paymongo_payment_id?: string | null
+          qr_image: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_centavos?: number
+          business_id?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          invoice_id?: string
+          mode?: string
+          paid_at?: string | null
+          payment_intent_id?: string
+          paymongo_payment_id?: string | null
+          qr_image?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qrph_payments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qrph_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       register_movements: {
         Row: {
           amount: number
@@ -6745,6 +6811,14 @@ export type Database = {
       }
       _next_doc: {
         Args: { _business_id: string; _prefix: string }
+        Returns: string
+      }
+      apply_qrph_payment: {
+        Args: {
+          _amount_centavos: number
+          _intent_id: string
+          _payment_id: string
+        }
         Returns: string
       }
       ar_aging: {
