@@ -71,6 +71,43 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const admin = supabaseAdmin as any;
 
+        // QR Ph invoice payments (separate from subscriptions). Settlement is
+        // idempotent and only applies when the paid amount matches the QR.
+        const intentId =
+          (attrs["payment_intent_id"] as string | undefined) ??
+          (type.startsWith("qrph") ? resource?.id : undefined);
+        if (intentId) {
+          const { data: qrRow } = await admin
+            .from("qrph_payments")
+            .select("id")
+            .eq("payment_intent_id", intentId)
+            .maybeSingle();
+          if (qrRow) {
+            if (type === "payment.paid") {
+              const { error } = await admin.rpc("apply_qrph_payment", {
+                _intent_id: intentId,
+                _amount_centavos: Number(attrs["amount"] ?? 0),
+                _payment_id: resource?.id ?? null,
+              });
+              if (error) {
+                console.error("QR Ph settle failed", error);
+                return new Response("error", { status: 500 });
+              }
+            } else if (type === "payment.failed" || type === "qrph.expired") {
+              await admin
+                .from("qrph_payments")
+                .update({
+                  status: type === "payment.failed" ? "failed" : "expired",
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", qrRow.id)
+                .eq("status", "pending");
+            }
+            return new Response("ok");
+          }
+        }
+
+
         // 2. Idempotency: a repeated delivery hits the unique external_event_id.
         if (eventId) {
           const { data: seen } = await admin
