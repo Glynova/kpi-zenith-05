@@ -170,12 +170,22 @@ function BillingPage() {
     setPending("sync");
     try {
       const res: any = await syncPlans({ data: { businessId } });
-      if (!res.configured) toast.error("Add PAYMONGO_SECRET_KEY before syncing plans.");
-      else if (res.error) toast.error(res.error);
-      else
-        toast.success(
-          res.synced.length ? `Synced: ${res.synced.join(", ")}` : "Plans already synced",
+      if (!res.configured) toast.error("Add the PayMongo secret key before syncing plans.");
+      else {
+        const label: Record<string, string> = {
+          synced: "synced",
+          already_synced: "already synced",
+          free: "free (no sync needed)",
+          error: "failed",
+        };
+        const lines = (res.results ?? []).map(
+          (r: any) =>
+            `${r.name}: ${label[r.status]}${r.providerPlanId ? ` (${r.providerPlanId})` : ""}${r.error ? ` — ${r.error}` : ""}`,
         );
+        const opts = { description: lines.join("\n"), duration: 12000 };
+        if (res.error) toast.error(`Some plans failed to sync (${res.mode} mode)`, opts);
+        else toast.success(`Plans synced to PayMongo (${res.mode} mode)`, opts);
+      }
       refreshAll();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sync failed");
