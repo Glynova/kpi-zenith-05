@@ -103,38 +103,22 @@ export const syncPaymongoPlans = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // Plans are global: only platform admins may create/link provider plans.
     await assertPlatformAdmin(context.supabase, context.userId);
-    const { paymongo, readConfig } = await import("@/lib/paymongo.server");
-    if (!readConfig().configured) {
-      return { configured: false, synced: [] as string[] };
+    const { readConfig } = await import("@/lib/paymongo.server");
+    const cfg = readConfig();
+    if (!cfg.configured) {
+      return { configured: false, mode: cfg.mode, synced: [] as string[], results: [] as any[] };
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: plans } = await (supabaseAdmin as any)
-      .from("subscription_plans")
-      .select("id, slug, name, price, paymongo_plan_id")
-      .gt("price", 0);
-
-    const synced: string[] = [];
-    for (const plan of plans ?? []) {
-      if (plan.paymongo_plan_id) continue;
-      try {
-        const created = await paymongo.createPlan({
-          name: `Daraven ${plan.name}`,
-          amount: Number(plan.price),
-        });
-        await (supabaseAdmin as any)
-          .from("subscription_plans")
-          .update({ paymongo_plan_id: created.data.id })
-          .eq("id", plan.id);
-        synced.push(plan.slug);
-      } catch (err) {
-        return {
-          configured: true,
-          synced,
-          error: err instanceof Error ? err.message : "PayMongo plan sync failed",
-        };
-      }
-    }
-    return { configured: true, synced };
+    const { syncPlans } = await import("@/lib/billing.server");
+    const results = await syncPlans(supabaseAdmin as any, cfg.mode);
+    const failed = results.filter((r) => r.status === "error");
+    return {
+      configured: true,
+      mode: cfg.mode,
+      results,
+      synced: results.filter((r) => r.providerPlanId && r.status !== "error").map((r) => r.slug),
+      error: failed.length ? failed.map((r) => `${r.name}: ${r.error}`).join("; ") : undefined,
+    };
   });
 
 /**
@@ -223,13 +207,24 @@ export const startSubscription = createServerFn({ method: "POST" })
 
     const { paymongo, readConfig } = await import("@/lib/paymongo.server");
     const cfg = readConfig();
-    if (!cfg.configured || !plan.paymongo_plan_id) {
+    if (!cfg.configured) {
       return {
         ok: false,
         configured: false,
-        reason: !cfg.configured
-          ? "PayMongo secret key is not configured."
-          : "This plan has not been synced to PayMongo yet.",
+        reason: "PayMongo secret key is not configured.",
+        checkoutUrl: null,
+      };
+    }
+    // Auto-sync once (creates the plan at PayMongo, or re-creates it if the price changed).
+    try {
+      const { ensureProviderPlan } = await import("@/lib/billing.server");
+      plan.paymongo_plan_id = await ensureProviderPlan(admin, plan, cfg.mode);
+    } catch (err) {
+      console.error("PayMongo plan auto-sync failed", err);
+      return {
+        ok: false,
+        configured: false,
+        reason: "This plan could not be synced to PayMongo. Please try again or contact support.",
         checkoutUrl: null,
       };
     }
