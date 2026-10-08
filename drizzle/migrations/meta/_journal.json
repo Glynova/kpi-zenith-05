@@ -309,6 +309,13 @@
       "when": 1791417683647,
       "tag": "0043_plan_sync_price_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1791418042170,
+      "tag": "0044_platform_admin_allowlist_autoprovision",
+      "breakpoints": true
     }
   ]
 }
