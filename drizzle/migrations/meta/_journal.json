@@ -302,6 +302,13 @@
       "when": 1791335504908,
       "tag": "0042_qrph_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791417683647,
+      "tag": "0043_plan_sync_price_tracking",
+      "breakpoints": true
     }
   ]
 }

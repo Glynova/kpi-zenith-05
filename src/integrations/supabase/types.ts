@@ -5724,7 +5724,9 @@ export type Database = {
           name: string
           paymongo_plan_id: string | null
           paymongo_synced_at: string | null
+          paymongo_synced_price: number | null
           paymongo_test_plan_id: string | null
+          paymongo_test_synced_price: number | null
           price: number
           slug: string
           sort_order: number
@@ -5741,7 +5743,9 @@ export type Database = {
           name: string
           paymongo_plan_id?: string | null
           paymongo_synced_at?: string | null
+          paymongo_synced_price?: number | null
           paymongo_test_plan_id?: string | null
+          paymongo_test_synced_price?: number | null
           price?: number
           slug: string
           sort_order?: number
@@ -5758,7 +5762,9 @@ export type Database = {
           name?: string
           paymongo_plan_id?: string | null
           paymongo_synced_at?: string | null
+          paymongo_synced_price?: number | null
           paymongo_test_plan_id?: string | null
+          paymongo_test_synced_price?: number | null
           price?: number
           slug?: string
           sort_order?: number

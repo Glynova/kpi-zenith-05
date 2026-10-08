@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_plans ADD COLUMN IF NOT EXISTS paymongo_synced_price numeric, ADD COLUMN IF NOT EXISTS paymongo_test_synced_price numeric;
