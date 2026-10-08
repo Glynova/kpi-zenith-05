@@ -22,15 +22,10 @@ async function assertAdmin(supabase: any, userId: string, businessId: string) {
   return data.role as string;
 }
 
-async function assertPlatformAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from("platform_admins")
-    .select("user_id")
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
+async function assertPlatformAdmin(supabase: any, _userId: string) {
+  const { data, error } = await supabase.rpc("is_platform_admin");
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden");
+  if (data !== true) throw new Error("Forbidden");
 }
 
 /** Billing history for the current business (payments + invoices + events). */
