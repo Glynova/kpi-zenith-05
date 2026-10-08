@@ -166,8 +166,12 @@ export async function ensureProviderPlan(
   mode: PayMongoMode,
 ): Promise<string> {
   const col = providerPlanColumn(mode);
+  const priceCol = mode === "test" ? "paymongo_test_synced_price" : "paymongo_synced_price";
   const existing = (plan as any)[col] as string | null | undefined;
-  if (existing) return existing;
+  const syncedPrice = (plan as any)[priceCol];
+  const priceUnchanged =
+    syncedPrice === null || syncedPrice === undefined || Number(syncedPrice) === Number(plan.price);
+  if (existing && priceUnchanged) return existing;
   const client = paymongoClient(mode);
   const created = await client.createPlan({
     name: `Daraven ${plan.name}`,
@@ -177,27 +181,52 @@ export async function ensureProviderPlan(
   });
   await admin
     .from("subscription_plans")
-    .update({ [col]: created.data.id, paymongo_synced_at: nowIso() })
+    .update({ [col]: created.data.id, [priceCol]: Number(plan.price), paymongo_synced_at: nowIso() })
     .eq("id", plan.id);
   return created.data.id;
 }
 
-/** Make sure every paid plan exists at PayMongo for the given mode. */
-export async function syncPlans(admin: Admin, mode: PayMongoMode) {
+export type PlanSyncResult = {
+  slug: string;
+  name: string;
+  status: "synced" | "already_synced" | "free" | "error";
+  providerPlanId: string | null;
+  error?: string;
+};
+
+/** Make sure every paid plan exists at PayMongo for the given mode. Never throws per plan. */
+export async function syncPlans(admin: Admin, mode: PayMongoMode): Promise<PlanSyncResult[]> {
   const { data: plans, error } = await admin
     .from("subscription_plans")
     .select("*")
     .eq("status", "active")
     .order("sort_order");
   if (error) throw error;
-  const results: { slug: string; providerPlanId: string | null }[] = [];
+  const col = providerPlanColumn(mode);
+  const results: PlanSyncResult[] = [];
   for (const plan of plans ?? []) {
     if (Number(plan.price) <= 0) {
-      results.push({ slug: plan.slug, providerPlanId: null });
+      results.push({ slug: plan.slug, name: plan.name, status: "free", providerPlanId: null });
       continue;
     }
-    const id = await ensureProviderPlan(admin, plan, mode);
-    results.push({ slug: plan.slug, providerPlanId: id });
+    const before = (plan as any)[col] ?? null;
+    try {
+      const id = await ensureProviderPlan(admin, plan, mode);
+      results.push({
+        slug: plan.slug,
+        name: plan.name,
+        status: id === before ? "already_synced" : "synced",
+        providerPlanId: id,
+      });
+    } catch (err) {
+      results.push({
+        slug: plan.slug,
+        name: plan.name,
+        status: "error",
+        providerPlanId: before,
+        error: err instanceof Error ? err.message : "PayMongo plan sync failed",
+      });
+    }
   }
   return results;
 }
