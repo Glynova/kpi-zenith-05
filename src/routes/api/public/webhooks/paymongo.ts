@@ -117,6 +117,94 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           if (seen) return new Response("ok (duplicate)");
         }
 
+        // 2b. One-time plan checkout paid -> activate / extend by one month.
+        if (type === "checkout_session.payment.paid" && resource?.id) {
+          const meta = (attrs["metadata"] ?? {}) as Record<string, string>;
+          const { data: co } = await admin
+            .from("billing_checkouts")
+            .select("*")
+            .eq("paymongo_payment_intent_id", resource.id)
+            .maybeSingle();
+          if (!co || co.status === "completed" || meta["checkout_id"] !== co.id) {
+            return new Response("ok");
+          }
+          const payments = (attrs["payments"] ?? []) as { id: string; attributes?: any }[];
+          const paidCentavos = payments.reduce(
+            (t, p) => t + Number(p.attributes?.amount ?? 0),
+            0,
+          );
+          if (paidCentavos < Math.round(Number(co.amount) * 100)) {
+            return new Response("ok (amount mismatch)");
+          }
+          const { data: existing } = await admin
+            .from("subscriptions")
+            .select("id, plan_id, current_period_end, status")
+            .eq("business_id", co.business_id)
+            .maybeSingle();
+          const now = new Date();
+          const prevEnd = existing?.current_period_end ? new Date(existing.current_period_end) : null;
+          const base =
+            existing?.plan_id === co.plan_id && prevEnd && prevEnd > now ? prevEnd : now;
+          const end = new Date(base);
+          end.setMonth(end.getMonth() + 1);
+          await admin.from("subscriptions").upsert(
+            {
+              business_id: co.business_id,
+              plan_id: co.plan_id,
+              status: "active",
+              test_mode: co.test_mode,
+              trial_ends_at: null,
+              cancelled_at: null,
+              pending_plan_id: null,
+              pending_plan_effective_at: null,
+              current_period_start: now.toISOString(),
+              current_period_end: end.toISOString(),
+            },
+            { onConflict: "business_id" },
+          );
+          const { data: s2 } = await admin
+            .from("subscriptions")
+            .select("id, business_id, plan_id, status, current_period_start")
+            .eq("business_id", co.business_id)
+            .maybeSingle();
+          await admin
+            .from("billing_checkouts")
+            .update({ status: "completed", completed_at: now.toISOString() })
+            .eq("id", co.id);
+          await admin.from("subscription_events").insert({
+            subscription_id: s2?.id ?? null,
+            business_id: co.business_id,
+            event_type: type,
+            external_event_id: eventId ?? null,
+            payload: { checkout_id: co.id, amount: Number(co.amount) },
+          });
+          await admin.from("billing_invoices").upsert(
+            {
+              business_id: co.business_id,
+              subscription_id: s2?.id ?? null,
+              external_invoice_id: `cs:${resource.id}`,
+              amount: paidCentavos / 100,
+              currency: "PHP",
+              status: "paid",
+              paid_at: now.toISOString(),
+            },
+            { onConflict: "external_invoice_id" },
+          );
+          if (s2) {
+            const { recordCommissionForPayment } = await import("@/lib/affiliate.server");
+            await recordCommissionForPayment(admin, {
+              businessId: co.business_id,
+              subscriptionId: s2.id,
+              collectedAmount: paidCentavos / 100,
+              currency: "PHP",
+              externalReference: `checkout:${resource.id}`,
+              cycleKey: `checkout:${co.id}`,
+              sourceType: "payment",
+            });
+          }
+          return new Response("ok");
+        }
+
         // 3. Locate the Daraven subscription this event belongs to.
         const subscriptionExternalId: string | undefined = type.startsWith("subscription.invoice")
           ? (attrs["subscription_id"] as string | undefined)
