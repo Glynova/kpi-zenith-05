@@ -399,6 +399,44 @@ export function paymongoClient(mode?: PayMongoMode) {
       return request<Resource<PayMongoPaymentAttrs>>(m, `/payments/${id}`);
     },
 
+    // ---- Checkout sessions (one-time hosted payment page) --------------------
+    createCheckoutSession(input: {
+      amount: number; // PHP
+      name: string;
+      description: string;
+      email?: string;
+      successUrl: string;
+      cancelUrl: string;
+      reference: string;
+      metadata: Record<string, string>;
+    }) {
+      return request<Resource<{ checkout_url: string; status: string }>>(m, "/checkout_sessions", {
+        method: "POST",
+        body: {
+          line_items: [
+            {
+              name: input.name,
+              description: input.description,
+              amount: Math.round(input.amount * 100),
+              currency: "PHP",
+              quantity: 1,
+            },
+          ],
+          payment_method_types: ["gcash", "paymaya", "card", "qrph", "grab_pay"],
+          description: input.description,
+          success_url: input.successUrl,
+          cancel_url: input.cancelUrl,
+          reference_number: input.reference,
+          send_email_receipt: true,
+          show_description: true,
+          show_line_items: true,
+          ...(input.email ? { billing: { email: input.email } } : {}),
+          metadata: input.metadata,
+        },
+        idempotencyKey: `cs-${input.reference}`,
+      });
+    },
+
     // ---- Webhooks (diagnostics only) ----------------------------------------
     listWebhooks() {
       return request<
