@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -310,11 +311,17 @@ export const startSubscription = createServerFn({ method: "POST" })
       customerId = customer.data.id;
     }
 
-    const created = await paymongo.createSubscription({
-      customerId,
-      planId: plan.paymongo_plan_id,
-      idempotencyKey: `sub-${data.businessId}-${plan.slug}`,
-    });
+    let created: Awaited<ReturnType<typeof paymongo.createSubscription>>;
+    try {
+      created = await paymongo.createSubscription({
+        customerId,
+        planId: plan.paymongo_plan_id,
+        idempotencyKey: `sub-${data.businessId}-${plan.slug}`,
+      });
+    } catch (err) {
+      console.error("PayMongo subscription failed; using one-time checkout", err);
+      return await oneTimeCheckout();
+    }
     const attrs = created.data.attributes as Record<string, any>;
 
     await admin.from("subscriptions").upsert(
