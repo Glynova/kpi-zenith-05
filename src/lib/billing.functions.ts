@@ -210,18 +210,77 @@ export const startSubscription = createServerFn({ method: "POST" })
         checkoutUrl: null,
       };
     }
+    // One-time hosted checkout: used when PayMongo recurring billing isn't
+    // enabled on the merchant account. Pays for one month; the webhook
+    // `checkout_session.payment.paid` activates/extends the subscription.
+    const oneTimeCheckout = async () => {
+      const { data: business } = await admin
+        .from("businesses")
+        .select("name, email")
+        .eq("id", data.businessId)
+        .maybeSingle();
+      const amount = promoCheck?.ok ? Number(promoCheck.finalAmount) : Number(plan.price);
+      const { data: row, error } = await admin
+        .from("billing_checkouts")
+        .insert({
+          business_id: data.businessId,
+          plan_id: plan.id,
+          created_by: context.userId,
+          amount,
+          test_mode: cfg.mode !== "live",
+          payment_method_type: "checkout_session",
+          promo_code: promoCheck?.ok ? promoCheck.promo.code : null,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      const origin = new URL(getRequest().url).origin;
+      const session = await paymongo.client().createCheckoutSession({
+        amount,
+        name: `Daraven ${plan.name} plan`,
+        description: `Daraven ${plan.name} — 1 month`,
+        email: business?.email || (context.claims as any)?.email || undefined,
+        successUrl: `${origin}/billing?checkout=success`,
+        cancelUrl: `${origin}/upgrade?checkout=cancelled`,
+        reference: row.id,
+        metadata: {
+          checkout_id: row.id,
+          business_id: data.businessId,
+          plan_id: plan.id,
+          app: "daraven",
+        },
+      });
+      const url = session.data.attributes.checkout_url;
+      await admin
+        .from("billing_checkouts")
+        .update({ paymongo_payment_intent_id: session.data.id, next_action_url: url })
+        .eq("id", row.id);
+      return {
+        ok: true,
+        configured: true,
+        checkoutUrl: url,
+        effectiveAt: new Date().toISOString(),
+        discountApplied: null,
+      };
+    };
+
     // Auto-sync once (creates the plan at PayMongo, or re-creates it if the price changed).
     try {
       const { ensureProviderPlan } = await import("@/lib/billing.server");
       plan.paymongo_plan_id = await ensureProviderPlan(admin, plan, cfg.mode);
     } catch (err) {
-      console.error("PayMongo plan auto-sync failed", err);
-      return {
-        ok: false,
-        configured: false,
-        reason: "This plan could not be synced to PayMongo. Please try again or contact support.",
-        checkoutUrl: null,
-      };
+      console.error("PayMongo plan sync failed; using one-time checkout", err);
+      try {
+        return await oneTimeCheckout();
+      } catch (e) {
+        console.error("Checkout session failed", e);
+        return {
+          ok: false,
+          configured: true,
+          reason: "Checkout could not be started. Please try again or contact support.",
+          checkoutUrl: null,
+        };
+      }
     }
 
     // Ensure a PayMongo customer exists for the business owner.
