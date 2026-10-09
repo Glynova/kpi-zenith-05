@@ -17,7 +17,7 @@
  *   PAYMONGO_LIVE_WEBHOOK_SECRET      whsk_... for the live-mode webhook
  *   PAYMONGO_SECRET_KEY / Secret_key  generic key, bucketed by its sk_test_/sk_live_ prefix
  *   PAYMONGO_PUBLIC_KEY / Public_key  generic key, bucketed by its pk_test_/pk_live_ prefix
- *   PAYMONGO_WEBHOOK_SECRET / Webhook_Secret / WEBHOOK_SECRET  generic webhook secret
+ *   PAYMONGO_WEBHOOK_SECRET / Paymongo_Webhook_Secret / Webhook_Secret / WEBHOOK_SECRET  generic webhook secret
  *   PAYMONGO_API_BASE                 override for the local simulator used by tests
  */
 
@@ -62,8 +62,13 @@ export function readConfig(): PayMongoConfig {
     "Public_key",
     "PUBLIC_KEY",
   );
+  // Env names are case-sensitive; accept the project's existing secret name too.
   const genericWebhook =
-    env("PAYMONGO_WEBHOOK_SECRET") || env("Webhook_Secret") || env("WEBHOOK_SECRET");
+    env("PAYMONGO_WEBHOOK_SECRET") ||
+    env("Paymongo_Webhook_Secret") ||
+    env("PayMongo_Webhook_Secret") ||
+    env("Webhook_Secret") ||
+    env("WEBHOOK_SECRET");
 
   const test = {
     secretKey: env("PAYMONGO_TEST_SECRET_KEY") || generic.test,
