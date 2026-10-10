@@ -990,6 +990,7 @@ export type Database = {
       billing_checkouts: {
         Row: {
           amount: number
+          amount_centavos: number | null
           attempts: number
           business_id: string
           completed_at: string | null
@@ -1004,18 +1005,21 @@ export type Database = {
           payment_method_type: string | null
           paymongo_customer_id: string | null
           paymongo_invoice_id: string | null
+          paymongo_payment_id: string | null
           paymongo_payment_intent_id: string | null
           paymongo_payment_method_id: string | null
           paymongo_subscription_id: string | null
           plan_id: string
           promo_code: string | null
           promo_snapshot: Json | null
+          qr_image: string | null
           status: string
           test_mode: boolean
           updated_at: string
         }
         Insert: {
           amount: number
+          amount_centavos?: number | null
           attempts?: number
           business_id: string
           completed_at?: string | null
@@ -1030,18 +1034,21 @@ export type Database = {
           payment_method_type?: string | null
           paymongo_customer_id?: string | null
           paymongo_invoice_id?: string | null
+          paymongo_payment_id?: string | null
           paymongo_payment_intent_id?: string | null
           paymongo_payment_method_id?: string | null
           paymongo_subscription_id?: string | null
           plan_id: string
           promo_code?: string | null
           promo_snapshot?: Json | null
+          qr_image?: string | null
           status?: string
           test_mode?: boolean
           updated_at?: string
         }
         Update: {
           amount?: number
+          amount_centavos?: number | null
           attempts?: number
           business_id?: string
           completed_at?: string | null
@@ -1056,12 +1063,14 @@ export type Database = {
           payment_method_type?: string | null
           paymongo_customer_id?: string | null
           paymongo_invoice_id?: string | null
+          paymongo_payment_id?: string | null
           paymongo_payment_intent_id?: string | null
           paymongo_payment_method_id?: string | null
           paymongo_subscription_id?: string | null
           plan_id?: string
           promo_code?: string | null
           promo_snapshot?: Json | null
+          qr_image?: string | null
           status?: string
           test_mode?: boolean
           updated_at?: string
