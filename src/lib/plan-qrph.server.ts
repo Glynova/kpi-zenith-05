@@ -103,10 +103,10 @@ export async function startPlanQrPh(
 ): Promise<PlanQrPh> {
   const { data: plan } = await admin
     .from("subscription_plans")
-    .select("id, name, slug, price, currency, is_active")
+    .select("id, name, slug, price, currency")
     .eq("slug", input.planSlug)
     .maybeSingle();
-  if (!plan || plan.is_active === false) throw new Error("Plan not found");
+  if (!plan) throw new Error("Plan not found");
   const amountCentavos = toCentavos(plan.price); // trusted DB price only
   if (amountCentavos < QRPH_MIN_CENTAVOS) throw new Error("This plan does not need payment");
   const testMode = input.mode !== "live";
