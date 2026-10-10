@@ -10,7 +10,10 @@ import {
   SUBSCRIPTION_STATUS_MAP,
   toIso,
 } from "@/lib/paymongo-events";
-import { readWebhookSecret, verifyWebhookSignature } from "@/lib/paymongo.server";
+import {
+  resolveWebhookSecrets,
+  verifyWebhookSignatureDetailed,
+} from "@/lib/paymongo.server";
 
 /**
  * PayMongo webhook receiver.
@@ -43,18 +46,19 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           endpoint: "/api/public/webhooks/paymongo",
           method: "POST",
           signatureVerification: "hmac-sha256 (te/li)",
-          webhookSecretConfigured: !!readWebhookSecret(),
+          webhookSecretConfigured: (() => { const w = resolveWebhookSecrets(); return !!(w.test || w.live); })(),
         }),
       POST: async ({ request }) => {
         // 1. Raw body, untouched, for HMAC verification.
         const raw = await request.text();
-        const secret = readWebhookSecret();
-        const ok = await verifyWebhookSignature(
+        const secrets = resolveWebhookSecrets();
+        const sig = await verifyWebhookSignatureDetailed(
           raw,
           request.headers.get("paymongo-signature"),
-          secret,
+          { test: secrets.test, live: secrets.live },
+          { toleranceSeconds: 600 },
         );
-        if (!ok) return new Response("Invalid signature", { status: 401 });
+        if (!sig.valid || !sig.mode) return new Response("Invalid signature", { status: 401 });
 
         let event: PayMongoEvent;
         try {
@@ -70,6 +74,20 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const admin = supabaseAdmin as any;
+
+        // Plan QR Ph checkouts (one-time, tenant-matched, idempotent).
+        {
+          const { processPlanQrPhEvent } = await import("@/lib/plan-qrph.server");
+          const r = await processPlanQrPhEvent(admin, {
+            signatureMode: sig.mode,
+            eventId: eventId ?? null,
+            type,
+            resourceId: resource?.id ?? null,
+            attrs,
+            livemode: (event.data?.attributes as any)?.livemode,
+          });
+          if (r.handled) return new Response(`ok (${r.outcome})`);
+        }
 
         // QR Ph invoice payments (separate from subscriptions). Settlement is
         // idempotent and only applies when the paid amount matches the QR.

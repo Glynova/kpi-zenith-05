@@ -468,15 +468,22 @@ function BillingPage() {
               <Skeleton className="h-24 w-full" />
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
-                <Flag ok={!!diagQuery.data?.secretKeyConfigured} label="PAYMONGO_SECRET_KEY" />
+                <Flag
+                  ok={!!diagQuery.data?.secretKeyMatchesMode}
+                  label={`Secret key present for ${diagQuery.data?.mode ?? "?"} mode`}
+                />
                 <Flag ok={!!diagQuery.data?.publicKeyConfigured} label="PAYMONGO_PUBLIC_KEY" />
                 <Flag
                   ok={!!diagQuery.data?.webhookSecretConfigured}
-                  label="PAYMONGO_WEBHOOK_SECRET"
+                  label={`Webhook signing secret present${diagQuery.data?.webhookSecretSource ? ` (${diagQuery.data.webhookSecretSource})` : ""}`}
+                />
+                <Flag
+                  ok={!!diagQuery.data?.lastVerifiedWebhookAt}
+                  label={diagQuery.data?.lastVerifiedWebhookAt ? `Last verified webhook: ${new Date(diagQuery.data.lastVerifiedWebhookAt).toLocaleString()}` : "No verified webhook received yet"}
                 />
                 <Flag
                   ok={!!diagQuery.data?.recurringBillingReady}
-                  label="Recurring plans synced to PayMongo"
+                  label="Automatic monthly billing (not enabled — QR Ph is one-time)"
                 />
                 <Flag ok={!!diagQuery.data?.customerLinked} label="PayMongo customer linked" />
                 <Flag

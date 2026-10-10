@@ -68,8 +68,10 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => businessInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
-    const { readConfig, readWebhookSecret } = await import("@/lib/paymongo.server");
+    const { readConfig, resolveWebhookSecrets } = await import("@/lib/paymongo.server");
     const cfg = readConfig();
+    const wh = resolveWebhookSecrets();
+    const activeSecret = cfg.mode === "test" ? wh.test : wh.live;
     const { data: sub } = await context.supabase
       .from("subscriptions")
       .select("paymongo_subscription_id, paymongo_customer_id, test_mode, status")
@@ -78,12 +80,26 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
     const { data: plans } = await context.supabase
       .from("subscription_plans")
       .select("slug, paymongo_plan_id");
+    const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
+    const { data: lastEvent } = await (sa as any)
+      .from("subscription_events")
+      .select("created_at")
+      .not("external_event_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     return {
       secretKeyConfigured: cfg.configured,
       publicKeyConfigured: !!cfg.publicKey,
-      webhookSecretConfigured: !!readWebhookSecret(),
+      // "Configured" = a secret is present for the active mode. Whether it matches
+      // PayMongo can only be proven by a verified delivery (see lastVerifiedWebhookAt).
+      webhookSecretConfigured: !!activeSecret,
+      webhookSecretSource: cfg.mode === "test" ? wh.sources.test : wh.sources.live,
+      lastVerifiedWebhookAt: lastEvent?.created_at ?? null,
+      secretKeyMatchesMode: !!cfg.secretKey && cfg.secretKey.startsWith(`sk_${cfg.mode}_`),
       mode: cfg.mode,
-      recurringBillingReady: cfg.configured && !!(plans ?? []).some((p: any) => p.paymongo_plan_id),
+      qrphOneTimeReady: cfg.configured && !!activeSecret,
+      recurringBillingReady: false,
       plansSynced: (plans ?? []).filter((p: any) => p.paymongo_plan_id).map((p: any) => p.slug),
       subscriptionLinked: !!(sub as any)?.paymongo_subscription_id,
       customerLinked: !!(sub as any)?.paymongo_customer_id,
@@ -492,4 +508,44 @@ export const amIPlatformAdmin = createServerFn({ method: "GET" })
       .eq("status", "active")
       .maybeSingle();
     return { isPlatformAdmin: !!data };
+  });
+
+/** Start a one-time QR Ph payment for one month of a plan (amount from the DB). */
+export const startPlanQrPh = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    businessInput.extend({ planSlug: z.enum(["pro", "business"]) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId, data.businessId);
+    const { readConfig } = await import("@/lib/paymongo.server");
+    const cfg = readConfig();
+    if (!cfg.secretKey) throw new Error("Online payments are not configured yet.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { startPlanQrPh: start } = await import("@/lib/plan-qrph.server");
+    return start(supabaseAdmin as any, {
+      businessId: data.businessId,
+      planSlug: data.planSlug,
+      userId: context.userId,
+      mode: cfg.mode,
+      secret: cfg.secretKey,
+      base: cfg.apiBase,
+    });
+  });
+
+/** Read-only status of a plan QR Ph checkout (never activates anything). */
+export const getPlanQrPhStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => businessInput.extend({ checkoutId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId, data.businessId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("billing_checkouts")
+      .select("status, failure_reason, expires_at")
+      .eq("id", data.checkoutId)
+      .eq("business_id", data.businessId)
+      .maybeSingle();
+    if (!row) throw new Error("Checkout not found");
+    return row as { status: string; failure_reason: string | null; expires_at: string };
   });

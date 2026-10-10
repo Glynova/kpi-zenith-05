@@ -53,6 +53,49 @@ function bucket(prefixTest: string, prefixLive: string, ...names: string[]) {
   return { test, live };
 }
 
+/** Generic webhook secret names, in priority order (env names are case-sensitive). */
+export const GENERIC_WEBHOOK_SECRET_NAMES = [
+  "PAYMONGO_WEBHOOK_SECRET",
+  "Paymongo_Webhook_Secret",
+  "PayMongo_Webhook_Secret",
+  "Webhook_Secret",
+  "WEBHOOK_SECRET",
+] as const;
+
+export type WebhookSecrets = {
+  test: string | null;
+  live: string | null;
+  /** Env variable NAMES the secrets came from (never the values). */
+  sources: { test: string | null; live: string | null };
+};
+
+/**
+ * The single resolver used by webhook validation AND diagnostics.
+ * Mode-specific names win; otherwise the generic secret serves both modes.
+ */
+export function resolveWebhookSecrets(): WebhookSecrets {
+  let genericName: string | null = null;
+  let generic: string | null = null;
+  for (const n of GENERIC_WEBHOOK_SECRET_NAMES) {
+    const v = env(n);
+    if (v) {
+      generic = v;
+      genericName = n;
+      break;
+    }
+  }
+  const t = env("PAYMONGO_TEST_WEBHOOK_SECRET");
+  const l = env("PAYMONGO_LIVE_WEBHOOK_SECRET");
+  return {
+    test: t ?? generic,
+    live: l ?? generic,
+    sources: {
+      test: t ? "PAYMONGO_TEST_WEBHOOK_SECRET" : genericName,
+      live: l ? "PAYMONGO_LIVE_WEBHOOK_SECRET" : genericName,
+    },
+  };
+}
+
 export function readConfig(): PayMongoConfig {
   const generic = bucket("sk_test_", "sk_live_", "PAYMONGO_SECRET_KEY", "Secret_key", "SECRET_KEY");
   const genericPub = bucket(
@@ -62,23 +105,16 @@ export function readConfig(): PayMongoConfig {
     "Public_key",
     "PUBLIC_KEY",
   );
-  // Env names are case-sensitive; accept the project's existing secret name too.
-  const genericWebhook =
-    env("PAYMONGO_WEBHOOK_SECRET") ||
-    env("Paymongo_Webhook_Secret") ||
-    env("PayMongo_Webhook_Secret") ||
-    env("Webhook_Secret") ||
-    env("WEBHOOK_SECRET");
-
+  const wh = resolveWebhookSecrets();
   const test = {
     secretKey: env("PAYMONGO_TEST_SECRET_KEY") || generic.test,
     publicKey: env("PAYMONGO_TEST_PUBLIC_KEY") || genericPub.test,
-    webhookSecret: env("PAYMONGO_TEST_WEBHOOK_SECRET") || genericWebhook,
+    webhookSecret: wh.test,
   };
   const live = {
     secretKey: env("PAYMONGO_LIVE_SECRET_KEY") || generic.live,
     publicKey: env("PAYMONGO_LIVE_PUBLIC_KEY") || genericPub.live,
-    webhookSecret: env("PAYMONGO_LIVE_WEBHOOK_SECRET") || genericWebhook,
+    webhookSecret: wh.live,
   };
 
   const explicit = env("PAYMONGO_MODE")?.toLowerCase();
