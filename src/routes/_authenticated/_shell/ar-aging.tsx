@@ -72,9 +72,7 @@ function AgingPage() {
   function exportCsv() {
     const head = ["Customer", ...BUCKETS.map((b) => b[1]), "Total"];
     const rows = data.map((r) => [r.customer_name, ...BUCKETS.map((b) => r[b[0]]), r.total]);
-    const csv = [head, ...rows]
-      .map((r) => r.map((v) => csvCell(v)).join(","))
-      .join("\n");
+    const csv = [head, ...rows].map((r) => r.map((v) => csvCell(v)).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     a.download = `ar-aging-${asOf}.csv`;

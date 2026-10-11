@@ -3,9 +3,10 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, Info, Loader2, Sparkles, TicketPercent } from "lucide-react";
+import { Check, Info, Loader2, QrCode, Sparkles, TicketPercent } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PlanQrPhDialog } from "@/components/plan-qrph-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ function UpgradePage() {
   const [promo, setPromo] = useState<any>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const plans = sub.plans
     .slice()
@@ -239,11 +241,31 @@ function UpgradePage() {
               {promo?.ok && !promo.providerApplied ? " (promo settled as a credit)" : ""}
             </p>
           </div>
-          <Button size="lg" onClick={checkout} disabled={pending || !isAdmin || !plan}>
-            {pending && <Loader2 className="size-4 animate-spin" />} Continue to checkout
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setQrOpen(true)}
+              disabled={!isAdmin || !plan || !businessId}
+            >
+              <QrCode className="size-4" /> Pay with QR Ph
+            </Button>
+            <Button size="lg" onClick={checkout} disabled={pending || !isAdmin || !plan}>
+              {pending && <Loader2 className="size-4 animate-spin" />} Continue to checkout
+            </Button>
+          </div>
         </CardContent>
       </Card>
+      {plan && businessId && (plan.slug === "pro" || plan.slug === "business") && (
+        <PlanQrPhDialog
+          businessId={businessId}
+          planSlug={plan.slug}
+          planName={plan.name}
+          open={qrOpen}
+          onOpenChange={setQrOpen}
+          onPaid={() => sub.refetch()}
+        />
+      )}
       {!isAdmin && (
         <p className="text-xs text-muted-foreground">
           Only owners and admins can change the workspace plan.

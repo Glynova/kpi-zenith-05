@@ -274,9 +274,7 @@ async function activateCheckout(
   return "activated";
 }
 
-export type PlanEventResult =
-  | { handled: false }
-  | { handled: true; outcome: string };
+export type PlanEventResult = { handled: false } | { handled: true; outcome: string };
 
 /**
  * Handle a signature-verified PayMongo event for a plan QR Ph checkout.

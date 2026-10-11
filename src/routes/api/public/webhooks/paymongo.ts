@@ -10,10 +10,7 @@ import {
   SUBSCRIPTION_STATUS_MAP,
   toIso,
 } from "@/lib/paymongo-events";
-import {
-  resolveWebhookSecrets,
-  verifyWebhookSignatureDetailed,
-} from "@/lib/paymongo.server";
+import { resolveWebhookSecrets, verifyWebhookSignatureDetailed } from "@/lib/paymongo.server";
 
 /**
  * PayMongo webhook receiver.
@@ -46,7 +43,10 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
           endpoint: "/api/public/webhooks/paymongo",
           method: "POST",
           signatureVerification: "hmac-sha256 (te/li)",
-          webhookSecretConfigured: (() => { const w = resolveWebhookSecrets(); return !!(w.test || w.live); })(),
+          webhookSecretConfigured: (() => {
+            const w = resolveWebhookSecrets();
+            return !!(w.test || w.live);
+          })(),
         }),
       POST: async ({ request }) => {
         // 1. Raw body, untouched, for HMAC verification.
@@ -147,10 +147,7 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
             return new Response("ok");
           }
           const payments = (attrs["payments"] ?? []) as { id: string; attributes?: any }[];
-          const paidCentavos = payments.reduce(
-            (t, p) => t + Number(p.attributes?.amount ?? 0),
-            0,
-          );
+          const paidCentavos = payments.reduce((t, p) => t + Number(p.attributes?.amount ?? 0), 0);
           if (paidCentavos < Math.round(Number(co.amount) * 100)) {
             return new Response("ok (amount mismatch)");
           }
@@ -160,9 +157,10 @@ export const Route = createFileRoute("/api/public/webhooks/paymongo")({
             .eq("business_id", co.business_id)
             .maybeSingle();
           const now = new Date();
-          const prevEnd = existing?.current_period_end ? new Date(existing.current_period_end) : null;
-          const base =
-            existing?.plan_id === co.plan_id && prevEnd && prevEnd > now ? prevEnd : now;
+          const prevEnd = existing?.current_period_end
+            ? new Date(existing.current_period_end)
+            : null;
+          const base = existing?.plan_id === co.plan_id && prevEnd && prevEnd > now ? prevEnd : now;
           const end = new Date(base);
           end.setMonth(end.getMonth() + 1);
           await admin.from("subscriptions").upsert(

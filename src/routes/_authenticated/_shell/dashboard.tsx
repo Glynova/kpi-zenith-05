@@ -59,9 +59,17 @@ export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Daraven ERP" },
-      { name: "description", content: "View your real-time business performance, inventory levels and financial KPIs in one unified dashboard." },
+      {
+        name: "description",
+        content:
+          "View your real-time business performance, inventory levels and financial KPIs in one unified dashboard.",
+      },
       { property: "og:title", content: "Dashboard — Daraven ERP" },
-      { property: "og:description", content: "View your real-time business performance, inventory levels and financial KPIs in one unified dashboard." },
+      {
+        property: "og:description",
+        content:
+          "View your real-time business performance, inventory levels and financial KPIs in one unified dashboard.",
+      },
       { property: "og:url", content: "https://daraven.com/dashboard" },
     ],
     links: [{ rel: "canonical", href: "https://daraven.com/dashboard" }],

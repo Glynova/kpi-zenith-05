@@ -181,7 +181,11 @@ export async function ensureProviderPlan(
   });
   await admin
     .from("subscription_plans")
-    .update({ [col]: created.data.id, [priceCol]: Number(plan.price), paymongo_synced_at: nowIso() })
+    .update({
+      [col]: created.data.id,
+      [priceCol]: Number(plan.price),
+      paymongo_synced_at: nowIso(),
+    })
     .eq("id", plan.id);
   return created.data.id;
 }
