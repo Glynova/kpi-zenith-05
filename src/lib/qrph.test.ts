@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- test doubles for untyped fetch payloads */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {

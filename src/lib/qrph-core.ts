@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- PayMongo responses are untyped JSON; narrowed before use. */
 /**
  * Pure QR Ph helpers (no I/O) shared by the plan checkout, webhook and tests.
  * QR Ph is a one-time payment: every renewal creates a new checkout + QR.
