@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  GENERIC_WEBHOOK_SECRET_NAMES,
   resolveWebhookSecrets,
   verifyWebhookSignatureDetailed,
 } from "./paymongo.server";
@@ -14,9 +15,20 @@ import {
   type CheckoutForEvent,
 } from "./qrph-core";
 
-const NAMES = ["PAYMONGO_WEBHOOK_SECRET", "Paymongo_Webhook_Secret", "PAYMONGO_TEST_WEBHOOK_SECRET", "PAYMONGO_LIVE_WEBHOOK_SECRET"];
+// Isolate from any real secrets present in the environment (values are never printed).
+const NAMES = [...GENERIC_WEBHOOK_SECRET_NAMES, "PAYMONGO_TEST_WEBHOOK_SECRET", "PAYMONGO_LIVE_WEBHOOK_SECRET"];
+const saved: Record<string, string | undefined> = {};
+beforeEach(() => {
+  for (const n of NAMES) {
+    saved[n] = process.env[n];
+    delete process.env[n];
+  }
+});
 afterEach(() => {
-  for (const n of NAMES) delete process.env[n];
+  for (const n of NAMES) {
+    if (saved[n] === undefined) delete process.env[n];
+    else process.env[n] = saved[n];
+  }
   vi.unstubAllGlobals();
 });
 
