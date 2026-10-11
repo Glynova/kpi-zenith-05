@@ -21,13 +21,26 @@ type Props = {
   onPaid?: () => void;
 };
 
-type Qr = { checkoutId: string; qrImage: string; amountCentavos: number; expiresAt: string; mode: string };
+type Qr = {
+  checkoutId: string;
+  qrImage: string;
+  amountCentavos: number;
+  expiresAt: string;
+  mode: string;
+};
 
 /**
  * Shows the PayMongo QR Ph code for one month of a plan. It only READS status;
  * the plan is switched on by the verified PayMongo webhook on the server.
  */
-export function PlanQrPhDialog({ businessId, planSlug, planName, open, onOpenChange, onPaid }: Props) {
+export function PlanQrPhDialog({
+  businessId,
+  planSlug,
+  planName,
+  open,
+  onOpenChange,
+  onPaid,
+}: Props) {
   const start = useServerFn(startPlanQrPh);
   const status = useServerFn(getPlanQrPhStatus);
   const [qr, setQr] = useState<Qr | null>(null);
@@ -131,7 +144,9 @@ export function PlanQrPhDialog({ businessId, planSlug, planName, open, onOpenCha
               />
               <p className="text-2xl font-semibold">{amount}</p>
               {qr.mode !== "live" && (
-                <p className="text-xs text-muted-foreground">Test mode — no real money is charged.</p>
+                <p className="text-xs text-muted-foreground">
+                  Test mode — no real money is charged.
+                </p>
               )}
               <p className="text-sm text-muted-foreground">
                 Expires in {mm}:{ss} · Waiting for payment…

@@ -12,9 +12,17 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Reset password — Daraven ERP" },
-      { name: "description", content: "Set a new password for your Daraven ERP account and get back to managing your business securely." },
+      {
+        name: "description",
+        content:
+          "Set a new password for your Daraven ERP account and get back to managing your business securely.",
+      },
       { property: "og:title", content: "Reset password — Daraven ERP" },
-      { property: "og:description", content: "Set a new password for your Daraven ERP account and get back to managing your business securely." },
+      {
+        property: "og:description",
+        content:
+          "Set a new password for your Daraven ERP account and get back to managing your business securely.",
+      },
       { property: "og:url", content: "https://daraven.com/reset-password" },
       { name: "robots", content: "noindex" },
     ],

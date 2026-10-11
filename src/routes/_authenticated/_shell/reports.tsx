@@ -373,10 +373,9 @@ function Reports() {
   function exportRows(name: string, rows: Row[]) {
     if (!rows.length) return;
     const keys = Object.keys(rows[0]);
-    const csv = [
-      keys.join(","),
-      ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(",")),
-    ].join("\n");
+    const csv = [keys.join(","), ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join(
+      "\n",
+    );
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;

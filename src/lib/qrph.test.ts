@@ -16,7 +16,11 @@ import {
 } from "./qrph-core";
 
 // Isolate from any real secrets present in the environment (values are never printed).
-const NAMES = [...GENERIC_WEBHOOK_SECRET_NAMES, "PAYMONGO_TEST_WEBHOOK_SECRET", "PAYMONGO_LIVE_WEBHOOK_SECRET"];
+const NAMES = [
+  ...GENERIC_WEBHOOK_SECRET_NAMES,
+  "PAYMONGO_TEST_WEBHOOK_SECRET",
+  "PAYMONGO_LIVE_WEBHOOK_SECRET",
+];
 const saved: Record<string, string | undefined> = {};
 beforeEach(() => {
   for (const n of NAMES) {
@@ -33,9 +37,17 @@ afterEach(() => {
 });
 
 async function sign(secret: string, body: string, t: number, key: "te" | "li") {
-  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const k = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
   const s = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${t}.${body}`));
-  const hex = Array.from(new Uint8Array(s)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hex = Array.from(new Uint8Array(s))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return `t=${t},${key}=${hex}`;
 }
 
@@ -62,16 +74,32 @@ describe("signature verification", () => {
   it("accepts a valid live signature over the raw body", async () => {
     const t = Math.floor(Date.now() / 1000);
     const h = await sign("whsk_live", body, t, "li");
-    const r = await verifyWebhookSignatureDetailed(body, h, { live: "whsk_live" }, { toleranceSeconds: 600 });
+    const r = await verifyWebhookSignatureDetailed(
+      body,
+      h,
+      { live: "whsk_live" },
+      { toleranceSeconds: 600 },
+    );
     expect(r).toMatchObject({ valid: true, mode: "live" });
   });
   it("rejects wrong secret, tampered body and stale timestamps", async () => {
     const t = Math.floor(Date.now() / 1000);
     const h = await sign("whsk_live", body, t, "li");
     expect((await verifyWebhookSignatureDetailed(body, h, { live: "other" })).valid).toBe(false);
-    expect((await verifyWebhookSignatureDetailed(body + " ", h, { live: "whsk_live" })).valid).toBe(false);
+    expect((await verifyWebhookSignatureDetailed(body + " ", h, { live: "whsk_live" })).valid).toBe(
+      false,
+    );
     const old = await sign("whsk_live", body, t - 4000, "li");
-    expect((await verifyWebhookSignatureDetailed(body, old, { live: "whsk_live" }, { toleranceSeconds: 600 })).valid).toBe(false);
+    expect(
+      (
+        await verifyWebhookSignatureDetailed(
+          body,
+          old,
+          { live: "whsk_live" },
+          { toleranceSeconds: 600 },
+        )
+      ).valid,
+    ).toBe(false);
   });
 });
 
@@ -82,9 +110,17 @@ describe("amounts and QR parsing", () => {
     expect(() => toCentavos(-1)).toThrow();
   });
   it("extracts next_action.code.image_url", () => {
-    expect(extractQrImage({ data: { attributes: { next_action: { code: { image_url: "data:image/png;base64,AA" } } } } })).toBe("data:image/png;base64,AA");
+    expect(
+      extractQrImage({
+        data: { attributes: { next_action: { code: { image_url: "data:image/png;base64,AA" } } } },
+      }),
+    ).toBe("data:image/png;base64,AA");
     expect(extractQrImage({ data: { attributes: {} } })).toBeNull();
-    expect(extractQrImage({ data: { attributes: { next_action: { code: { image_url: "javascript:x" } } } } })).toBeNull();
+    expect(
+      extractQrImage({
+        data: { attributes: { next_action: { code: { image_url: "javascript:x" } } } },
+      }),
+    ).toBeNull();
   });
   it("sanitizes keys out of errors", () => {
     expect(sanitizePayMongoError(new Error("bad sk_live_abc123 key"))).toBe("bad [key] key");
@@ -98,29 +134,77 @@ describe("amounts and QR parsing", () => {
         ? { data: { id: "pi_1", attributes: { client_key: "ck" } } }
         : url.endsWith("/payment_methods")
           ? { data: { id: "pm_1" } }
-          : { data: { attributes: { next_action: { code: { image_url: "data:image/png;base64,QQ" } } } } };
+          : {
+              data: {
+                attributes: { next_action: { code: { image_url: "data:image/png;base64,QQ" } } },
+              },
+            };
       return new Response(JSON.stringify(json), { status: 200 });
     });
-    const r = await createQrPhIntent({ base: "http://sim", secret: "sk_test_x", amountCentavos: 99900, description: "d", metadata: {}, idempotencyKey: "k" });
+    const r = await createQrPhIntent({
+      base: "http://sim",
+      secret: "sk_test_x",
+      amountCentavos: 99900,
+      description: "d",
+      metadata: {},
+      idempotencyKey: "k",
+    });
     expect(r).toEqual({ intentId: "pi_1", qrImage: "data:image/png;base64,QQ" });
-    expect(calls[0]!.body.data.attributes).toMatchObject({ amount: 99900, currency: "PHP", payment_method_allowed: ["qrph"] });
+    expect(calls[0]!.body.data.attributes).toMatchObject({
+      amount: 99900,
+      currency: "PHP",
+      payment_method_allowed: ["qrph"],
+    });
     expect(calls[1]!.body.data.attributes.type).toBe("qrph");
     expect(calls[2]!.body.data.attributes).toEqual({ payment_method: "pm_1", client_key: "ck" });
   });
   it("surfaces sanitized PayMongo errors", async () => {
-    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ errors: [{ detail: "qrph not enabled" }] }), { status: 400 }));
-    await expect(createQrPhIntent({ base: "http://sim", secret: "s", amountCentavos: 99900, description: "d", metadata: {}, idempotencyKey: "k" })).rejects.toThrow("qrph not enabled");
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(JSON.stringify({ errors: [{ detail: "qrph not enabled" }] }), { status: 400 }),
+    );
+    await expect(
+      createQrPhIntent({
+        base: "http://sim",
+        secret: "s",
+        amountCentavos: 99900,
+        description: "d",
+        metadata: {},
+        idempotencyKey: "k",
+      }),
+    ).rejects.toThrow("qrph not enabled");
   });
 });
 
 describe("paid event decision", () => {
-  const co: CheckoutForEvent = { id: "c1", business_id: "b1", status: "awaiting_action", currency: "PHP", amount_centavos: 99900, test_mode: false, payment_method_type: "qrph", paymongo_payment_intent_id: "pi_1" };
-  const ev = { signatureMode: "live" as const, intentId: "pi_1", amount: 99900, currency: "PHP", status: "paid", livemode: true, metadata: { checkout_id: "c1", business_id: "b1" } };
+  const co: CheckoutForEvent = {
+    id: "c1",
+    business_id: "b1",
+    status: "awaiting_action",
+    currency: "PHP",
+    amount_centavos: 99900,
+    test_mode: false,
+    payment_method_type: "qrph",
+    paymongo_payment_intent_id: "pi_1",
+  };
+  const ev = {
+    signatureMode: "live" as const,
+    intentId: "pi_1",
+    amount: 99900,
+    currency: "PHP",
+    status: "paid",
+    livemode: true,
+    metadata: { checkout_id: "c1", business_id: "b1" },
+  };
   it("activates only a fully matching verified paid event", () => {
     expect(decidePaidEvent(ev, co).action).toBe("activate");
   });
   it("ignores duplicates and failed/expired checkouts", () => {
-    expect(decidePaidEvent(ev, { ...co, status: "succeeded" })).toEqual({ action: "ignore", reason: "duplicate" });
+    expect(decidePaidEvent(ev, { ...co, status: "succeeded" })).toEqual({
+      action: "ignore",
+      reason: "duplicate",
+    });
     expect(decidePaidEvent(ev, { ...co, status: "expired" }).action).toBe("ignore");
     expect(decidePaidEvent(ev, null).action).toBe("ignore");
   });

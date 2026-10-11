@@ -479,7 +479,11 @@ function BillingPage() {
                 />
                 <Flag
                   ok={!!diagQuery.data?.lastVerifiedWebhookAt}
-                  label={diagQuery.data?.lastVerifiedWebhookAt ? `Last verified webhook: ${new Date(diagQuery.data.lastVerifiedWebhookAt).toLocaleString()}` : "No verified webhook received yet"}
+                  label={
+                    diagQuery.data?.lastVerifiedWebhookAt
+                      ? `Last verified webhook: ${new Date(diagQuery.data.lastVerifiedWebhookAt).toLocaleString()}`
+                      : "No verified webhook received yet"
+                  }
                 />
                 <Flag
                   ok={!!diagQuery.data?.recurringBillingReady}
