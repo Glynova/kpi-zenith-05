@@ -57,6 +57,7 @@ export function PlanQrPhDialog({
     setQr(null);
     try {
       const res = (await start({ data: { businessId, planSlug } })) as Qr;
+      console.error("QRDBG", JSON.stringify(res).slice(0, 120));
       setQr(res);
       setState("pending");
     } catch (e) {
@@ -67,6 +68,7 @@ export function PlanQrPhDialog({
   }, [start, businessId, planSlug]);
 
   useEffect(() => {
+    console.error("QRDBG effect", open);
     if (open) {
       paidOnce.current = false;
       void generate();
