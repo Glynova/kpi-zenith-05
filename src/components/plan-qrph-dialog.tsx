@@ -56,7 +56,8 @@ export function PlanQrPhDialog({
     setState("idle");
     setQr(null);
     try {
-      const res = (await start({ data: { businessId, planSlug } })) as Qr;
+      const res = (await start({ data: { businessId, planSlug } })) as Qr | undefined;
+      if (!res?.qrImage || !res.checkoutId) throw new Error("No QR code was returned. Please try again.");
       setQr(res);
       setState("pending");
     } catch (e) {
