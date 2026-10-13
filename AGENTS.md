@@ -13,3 +13,4 @@
 - Costing method (business or item) can only change while the affected items hold no stock or open cost layers; enforced by DB trigger guard_costing_method_change. Why: past FIFO layers and running averages must never be reinterpreted under another method.
 - Item-level costing_method overrides business_settings.costing_method everywhere costs are taken (apply_cost_layers, complete_sale). Why: the item form sets it intentionally.
 - Workspace headers use PageHeader with stacked text/actions below desktop; filters use page-toolbar and actions use page-actions. Why: shared layouts prevent action groups from squeezing titles or overflowing small screens.
+- Public, workspace, admin and affiliate headers use BrandIdentity with shared brand typography tokens and existing theme-specific artwork. Why: portal branding must not drift while navigation remains independent.
