@@ -697,9 +697,9 @@ function POSPage() {
         title="Point of Sale"
         description="Scan or search, take payment, print the receipt. Stock leaves through the inventory ledger."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="page-actions w-full sm:w-auto">
             <Select value={locationId} onValueChange={setLocationId}>
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
@@ -718,7 +718,7 @@ function POSPage() {
       />
 
       {settings.enable_cash_register && !register && (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-dashed p-4">
+        <Card className="grid grid-cols-1 items-start gap-3 border-dashed p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <p className="text-sm text-muted-foreground">
             No register is open for you. Open one to track cash for this shift.
           </p>
@@ -726,9 +726,9 @@ function POSPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* -------------------------------------------------- catalogue */}
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -780,7 +780,7 @@ function POSPage() {
                       key={p.id}
                       type="button"
                       onClick={() => addToCart(p)}
-                      className="flex flex-col gap-2 rounded-lg border bg-card p-3 text-left transition hover:border-primary hover:shadow-sm"
+                      className="flex min-w-0 flex-col gap-2 rounded-lg border bg-card p-3 text-left transition hover:border-primary hover:shadow-sm"
                     >
                       <div className="aspect-square w-full overflow-hidden rounded-md bg-muted">
                         {p.image_url ? (
@@ -791,8 +791,8 @@ function POSPage() {
                           </div>
                         )}
                       </div>
-                      <span className="line-clamp-2 text-sm font-medium">{p.name}</span>
-                      <span className="text-sm font-semibold">
+                      <span className="line-clamp-2 break-words text-sm font-medium">{p.name}</span>
+                      <span className="break-words text-sm font-semibold">
                         {formatCurrency(Number(p.selling_price ?? 0), currency)}
                       </span>
                       {stocked && settings.track_quantity && (
@@ -809,11 +809,11 @@ function POSPage() {
         </div>
 
         {/* -------------------------------------------------------- cart */}
-        <Card className="flex h-fit flex-col gap-3 p-4 lg:sticky lg:top-4">
+        <Card className="flex h-fit flex-col gap-3 p-4 xl:sticky xl:top-4">
           <div className="flex items-center gap-2">
             <UserRound className="size-4 text-muted-foreground" />
             <Select value={customerId || walkIn?.id || ""} onValueChange={setCustomerId}>
-              <SelectTrigger className="flex-1">
+              <SelectTrigger className="min-w-0 flex-1">
                 <SelectValue placeholder="Walk-in customer" />
               </SelectTrigger>
               <SelectContent>
@@ -847,7 +847,7 @@ function POSPage() {
                         <Trash2 className="size-4" />
                       </Button>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 grid grid-cols-[auto_minmax(0,4rem)_auto] items-center gap-2 sm:flex sm:flex-wrap">
                       <Button
                         size="icon"
                         variant="outline"
@@ -856,7 +856,7 @@ function POSPage() {
                         <Minus className="size-3" />
                       </Button>
                       <Input
-                        className="h-8 w-16 text-center"
+                        className="h-8 w-full min-w-0 text-center sm:w-16"
                         type="number"
                         value={l.quantity}
                         onChange={(e) => setQty(l.key, Number(e.target.value))}
@@ -868,7 +868,7 @@ function POSPage() {
                       >
                         <Plus className="size-3" />
                       </Button>
-                      <span className="flex-1 text-right text-sm font-semibold">
+                      <span className="col-span-3 min-w-0 break-words text-right text-sm font-semibold sm:flex-1">
                         {formatCurrency(
                           l.quantity * l.unit_price - Number(l.discount || 0),
                           currency,
@@ -896,7 +896,7 @@ function POSPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <Button variant="outline" onClick={() => hold.mutate()} disabled={!cart.length}>
               <Pause className="size-4" /> Hold
             </Button>

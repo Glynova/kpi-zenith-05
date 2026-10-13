@@ -51,7 +51,7 @@ function MasterDataPage() {
       <div
         role="tablist"
         aria-label="Master data"
-        className="inline-flex rounded-lg border border-border bg-muted/40 p-1"
+        className="grid w-full min-w-0 grid-cols-3 rounded-lg border border-border bg-muted/40 p-1 sm:inline-flex sm:w-auto"
       >
         {tabs.map((t) => (
           <Link
@@ -61,7 +61,7 @@ function MasterDataPage() {
             role="tab"
             aria-selected={t.id === current.id}
             className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              "min-w-0 rounded-md px-2 py-1.5 text-center text-sm font-medium transition-colors sm:px-3",
               t.id === current.id
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",

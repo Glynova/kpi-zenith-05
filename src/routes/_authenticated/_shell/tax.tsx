@@ -194,7 +194,7 @@ function TaxPage() {
           )
         }
       />
-      <div className="flex flex-wrap gap-3">
+      <div className="page-toolbar">
         <div>
           <Label className="text-xs">From</Label>
           <Input
@@ -214,7 +214,7 @@ function TaxPage() {
           />
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {["VAT", "VAT_EXEMPT", "ZERO_RATED", "WITHHOLDING"].map((k) => (
           <Card key={k}>
             <CardContent className="p-4">
