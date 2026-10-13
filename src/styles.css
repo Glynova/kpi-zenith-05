@@ -474,10 +474,59 @@ button:not(:disabled):active {
 
 /* Horizontal table scrollers: fade the right edge as a scroll affordance. */
 @utility table-scroller {
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Shared workspace layouts: text gets its own row before actions on smaller screens. */
+@utility page-actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  & > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  & > div {
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 1024px) {
+    justify-content: flex-end;
+  }
+}
+
+@utility page-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+
+  & > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+.erp-workspace .page-enter > *,
+.erp-workspace .surface-panel {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Sticky table headers inside a scroll container. */

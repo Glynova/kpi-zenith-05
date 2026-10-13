@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
+
 - [ ] Business Setup Wizard rework (10 steps: Business profile, Legal & tax, What you sell, Inventory & tracking, Sales & purchasing, Locations, Units, Costing, Product defaults, Review)
   - Hydrate from current businesses / business_compliance / business_settings / warehouses / units; keep drafts
   - All capability toggles go through withPrerequisites; show dependents on disable

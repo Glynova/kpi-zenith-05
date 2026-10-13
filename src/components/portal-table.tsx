@@ -42,12 +42,12 @@ export function DataCard<T>({
 }) {
   return (
     <Card className="shadow-elevate-1">
-      <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 space-y-0">
-        <div>
+      <CardHeader className="grid grid-cols-1 items-start gap-3 space-y-0 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="min-w-0">
           <CardTitle className="text-base">{title}</CardTitle>
           {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
         </div>
-        {actions}
+        {actions && <div className="page-actions">{actions}</div>}
       </CardHeader>
       <CardContent className="px-0 sm:px-6">
         {rows.length === 0 ? (

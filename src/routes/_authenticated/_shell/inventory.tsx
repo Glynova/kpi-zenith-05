@@ -214,7 +214,7 @@ function StockMovements() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="surface-panel p-4">
           <p className="text-xs text-muted-foreground">Units on hand</p>
           <p className="font-display text-2xl font-semibold">{formatNumber(totals.units, 2)}</p>
@@ -227,13 +227,13 @@ function StockMovements() {
         </div>
         <div className="surface-panel p-4">
           <p className="text-xs text-muted-foreground">Costing method</p>
-          <p className="font-display text-2xl font-semibold">
+          <p className="break-words font-display text-2xl font-semibold">
             {titleCase(String(settings.costing_method))}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="page-toolbar">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -244,7 +244,7 @@ function StockMovements() {
           />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="All movements" />
           </SelectTrigger>
           <SelectContent>
@@ -258,7 +258,7 @@ function StockMovements() {
         </Select>
         {feature("track_locations") && (
           <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="All locations" />
             </SelectTrigger>
             <SelectContent>

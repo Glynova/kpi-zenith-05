@@ -12,14 +12,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+    <header className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
       <div className="min-w-0">
-        <h1 className="truncate font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-          {title}
-        </h1>
+        <h1 className="break-words font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="page-actions">{actions}</div>}
     </header>
   );
 }
