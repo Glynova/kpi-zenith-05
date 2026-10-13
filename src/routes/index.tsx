@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandIdentity } from "@/components/brand-logo";
 import { WorkspaceMockup } from "@/components/landing/workspace-mockup";
 import { ScrollStory } from "@/components/landing/scroll-story";
 import { useReveal } from "@/hooks/use-reveal";
@@ -156,15 +156,7 @@ function Landing() {
       >
         <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-4 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <BrandLogo markClassName="size-9" compact />
-            <span className="min-w-0 leading-none">
-              <span className="block truncate font-display text-sm font-semibold tracking-[0.22em] text-white">
-                DARAVEN
-              </span>
-              <span className="mt-1 block text-[9px] tracking-[0.4em] text-[color:var(--gold)]">
-                ERP
-              </span>
-            </span>
+            <BrandIdentity inverse />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">

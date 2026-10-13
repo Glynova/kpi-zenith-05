@@ -20,6 +20,37 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 
+/** Shared header identity; artwork remains theme-specific, lettering stays consistent. */
+export function BrandIdentity({
+  compact = false,
+  inverse = false,
+}: {
+  compact?: boolean;
+  inverse?: boolean;
+}) {
+  return (
+    <span
+      aria-label="Daraven ERP"
+      data-brand-identity
+      className={cn("inline-flex min-w-0 items-center gap-2.5", inverse && "brand-identity-inverse")}
+    >
+      <span className="flex h-8 w-10 shrink-0 items-center justify-center">
+        {inverse ? (
+          <img src={markAsset.url} alt="" className="h-8 w-auto max-w-full object-contain" />
+        ) : (
+          <BrandMark className="h-8 w-auto max-w-full" />
+        )}
+      </span>
+      {!compact && (
+        <span className="min-w-0 leading-none" aria-hidden="true">
+          <span className="brand-name block truncate">DARAVEN</span>
+          <span className="brand-edition mt-1 block">ERP</span>
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function BrandLogo({
   className,
   markClassName,

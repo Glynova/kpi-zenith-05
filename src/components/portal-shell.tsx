@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, LogOut, Moon, Sun, type LucideIcon } from "lucide-react";
 
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandIdentity } from "@/components/brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,15 +40,15 @@ export function PortalShell({
             : "border-primary/30 bg-primary/5",
         )}
       >
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
-          <BrandLogo />
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:px-6">
+          <BrandIdentity />
           <Badge
             variant={tone === "admin" ? "destructive" : "default"}
-            className="uppercase tracking-wide"
+            className="col-span-2 row-start-2 w-fit shrink-0 uppercase tracking-wide"
           >
             {label}
           </Badge>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="col-start-2 row-start-1 ml-auto flex shrink-0 items-center gap-1">
             <Button asChild variant="ghost" size="sm">
               <Link to="/dashboard">
                 <ArrowLeft className="size-4" /> <span className="hidden sm:inline">Workspace</span>
