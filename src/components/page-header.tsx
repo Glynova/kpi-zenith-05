@@ -14,12 +14,10 @@ export function PageHeader({
   return (
     <header className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
       <div className="min-w-0">
-        <h1 className="break-words font-display text-2xl font-semibold sm:text-3xl">
-          {title}
-        </h1>
+        <h1 className="break-words font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-       {actions && <div className="page-actions">{actions}</div>}
+      {actions && <div className="page-actions">{actions}</div>}
     </header>
   );
 }
