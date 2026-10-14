@@ -115,6 +115,15 @@ function Landing() {
   useReveal();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Sign-in links that still return to the homepage (older emails, OAuth) carry
+  // tokens in the URL — finish sign-in instead of leaving users on the landing page.
+  useEffect(() => {
+    const { hash, search } = window.location;
+    if (/access_token=|refresh_token=/.test(hash) || /[?&]code=/.test(search)) {
+      window.location.replace(`/auth/callback${search}${hash}`);
+    }
+  }, []);
   const heroRef = useRef<HTMLDivElement>(null);
 
   // Scroll-driven hero depth. rAF-throttled, writes CSS vars directly — no
