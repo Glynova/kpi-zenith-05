@@ -111,9 +111,6 @@ function AdminLoginPage() {
     if (signInError) {
       setLoading(false);
       setError("Invalid email or password.");
-      void logEvent({
-        data: { action: "admin_login_failed", success: false, email, reason: "bad_credentials" },
-      });
       return;
     }
 
@@ -125,8 +122,6 @@ function AdminLoginPage() {
         void logEvent({
           data: {
             action: "admin_access_denied",
-            success: false,
-            email,
             reason: "not_platform_admin",
             path: target,
           },
@@ -139,7 +134,7 @@ function AdminLoginPage() {
         return;
       }
       void logEvent({
-        data: { action: "admin_login_success", success: true, email, path: target },
+        data: { action: "admin_login_success", path: target },
       });
       toast.success("Welcome back, admin.");
       navigate({ to: target, replace: true });
