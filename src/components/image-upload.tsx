@@ -23,7 +23,8 @@ export function useImageSrc(value?: string | null) {
     }
     supabase.storage
       .from(BUCKET)
-      .createSignedUrl(value, 60 * 60)
+      // Short-lived link so removed members lose image access almost immediately.
+      .createSignedUrl(value, 60)
       .then(({ data }) => {
         if (active) setSrc(data?.signedUrl ?? null);
       });

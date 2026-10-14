@@ -70,26 +70,37 @@ export const getPlatformAdminSession = createServerFn({ method: "GET" })
   });
 
 /**
- * Records an admin auth event. Callable without a session so failed sign-ins
- * are recorded too; only a fixed set of actions and no credentials are stored.
+ * Records an admin auth event for the signed-in caller. Identity (user id and
+ * email) is taken from the verified session, never from the request body, and
+ * only post-sign-in actions are accepted so entries cannot be forged.
  */
 export const logAdminAuthEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
-        action: z.enum(AUDIT_ACTIONS),
-        success: z.boolean(),
-        email: z.string().email().max(200).optional(),
+        action: z.enum(["admin_access_denied", "admin_login_success", "admin_portal_access", "admin_logout"]),
         reason: z.string().max(300).optional(),
         path: z.string().max(300).optional(),
       })
       .parse(d),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: me } = await context.supabase
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", context.userId)
+      .eq("status", "active")
+      .maybeSingle();
+    const isAdmin = !!me;
+    // Success-type events are only recorded when the server confirms admin status.
+    const success = data.action !== "admin_access_denied" && isAdmin;
+    const action = data.action !== "admin_access_denied" && !isAdmin ? "admin_access_denied" : data.action;
     await writeAudit({
-      email: data.email ?? null,
-      action: data.action,
-      success: data.success,
+      user_id: context.userId,
+      email: ((context.claims as any)?.email ?? null) as string | null,
+      action,
+      success,
       detail: { reason: data.reason ?? null, path: data.path ?? null },
     });
     return { ok: true };

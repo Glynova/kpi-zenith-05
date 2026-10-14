@@ -323,6 +323,13 @@
       "when": 1791590606977,
       "tag": "0045_billing_checkouts_qrph",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1791937196754,
+      "tag": "0046_security_entitlements_admin_verified",
+      "breakpoints": true
     }
   ]
 }
