@@ -22,7 +22,9 @@ export function DaravenLogoSvg({
       preserveAspectRatio="xMidYMid meet"
       className={cn("h-9 w-auto shrink-0", className)}
     >
-      {artwork.paths.map((path, index) => <path key={index} {...path} />)}
+      {artwork.paths.map((path, index) => (
+        <path key={index} {...path} />
+      ))}
     </svg>
   );
 }

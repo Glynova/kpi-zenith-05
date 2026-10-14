@@ -6,7 +6,11 @@ export function BrandMark({ className }: { className?: string }) {
   return (
     <>
       <DaravenLogoSvg compact className={cn("size-8 w-auto dark:hidden", className)} />
-      <DaravenLogoSvg compact variant="blue" className={cn("hidden size-8 w-auto dark:block", className)} />
+      <DaravenLogoSvg
+        compact
+        variant="blue"
+        className={cn("hidden size-8 w-auto dark:block", className)}
+      />
     </>
   );
 }
