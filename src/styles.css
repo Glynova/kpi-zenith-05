@@ -4,25 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-.brand-name {
-  font-family: var(--font-display);
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  color: var(--foreground);
-}
-.brand-edition {
-  font-family: var(--font-sans);
-  font-size: 0.5625rem;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--primary);
-}
-.brand-identity-inverse .brand-name {
-  color: var(--brand-on-dark);
-}
-.brand-identity-inverse .brand-edition {
-  color: var(--gold);
+.brand-artwork {
+  height: 2rem;
+  width: auto;
+  max-width: 100%;
 }
 
 @theme inline {
