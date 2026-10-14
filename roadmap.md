@@ -1,7 +1,7 @@
 # Roadmap
 
 - [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
-- [ ] Standardize public, workspace, affiliate and admin brand identity; verify header sizing and theme contrast without changing access rules.
+- [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.
 
 - [ ] Business Setup Wizard rework (10 steps: Business profile, Legal & tax, What you sell, Inventory & tracking, Sales & purchasing, Locations, Units, Costing, Product defaults, Review)
   - Hydrate from current businesses / business_compliance / business_settings / warehouses / units; keep drafts
