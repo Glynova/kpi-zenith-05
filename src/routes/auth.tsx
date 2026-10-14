@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BrandLogo } from "@/components/brand-logo";
+import { postAuthDestination } from "@/lib/post-auth";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -41,8 +42,8 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/dashboard", replace: true });
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) navigate({ to: await postAuthDestination(), replace: true });
     });
   }, [navigate]);
 
@@ -50,9 +51,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+    const to = await postAuthDestination();
     setLoading(false);
-    if (error) return toast.error(error.message);
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to, replace: true });
   }
 
   async function signUp(e: React.FormEvent) {
@@ -62,7 +67,7 @@ function AuthPage() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { full_name: fullName },
       },
     });
@@ -72,16 +77,16 @@ function AuthPage() {
       toast.success("Check your email to confirm your account.");
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: "/onboarding", replace: true });
   }
 
   async function google() {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/auth/callback`,
     });
     if (result.error) return toast.error("Google sign-in failed. Please try again.");
     if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: await postAuthDestination(), replace: true });
   }
 
   async function reset() {
