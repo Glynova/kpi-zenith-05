@@ -330,6 +330,13 @@
       "when": 1791937196754,
       "tag": "0046_security_entitlements_admin_verified",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1792022592535,
+      "tag": "0047_sale_bom_finished_goods_and_delete_guard",
+      "breakpoints": true
     }
   ]
 }

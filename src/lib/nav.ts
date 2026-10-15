@@ -80,7 +80,6 @@ export const NAV_GROUPS: NavGroup[] = [
         keywords: "till register checkout",
       },
       { title: "Sales", url: "/sales", icon: ShoppingCart, keywords: "orders quotes revenue" },
-      { title: "Invoices", url: "/invoices", icon: FileText, keywords: "billing" },
       { title: "Customers", url: "/customers", icon: Users, keywords: "clients buyers" },
     ],
   },
