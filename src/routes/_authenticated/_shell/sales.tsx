@@ -14,11 +14,11 @@ import { ReturnDialog } from "@/components/return-dialog";
 import {
   LineItemsEditor,
   emptyLine,
-  itemsCost,
   itemsSubtotal,
   lineTotal,
   type LineItem,
 } from "@/components/line-items";
+import { createSale, recordPayment, completeSale } from "@/lib/sales";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -155,87 +155,49 @@ function SalesPage() {
           throw new Error(`Choose a variant for ${i.product_name || "the selected product"}`);
       }
 
-      const { data: sale, error } = await db
-        .from("sales")
-        .insert({
-          business_id: businessId,
-          customer_id: form.customer_id || null,
-          sale_number: form.sale_number,
-          sale_type: form.sale_type ?? "walk_in",
-          status: "completed",
-          payment_method: form.payment_method ?? "cash",
-          payment_status: form.payment_status ?? "paid",
-          sale_date: form.sale_date ?? todayISO(),
-          subtotal,
-          discount,
-          tax,
-          total,
-          paid,
-          cost_total: itemsCost(valid),
-          notes: form.notes || null,
-          created_by: userId,
-        })
-        .select("id, sale_number, sale_date, customer_id")
-        .single();
-      if (error) throw error;
-
-      const { error: itemsError } = await db.from("sale_items").insert(
-        valid.map((i) => ({
-          business_id: businessId,
-          sale_id: sale.id,
-          product_id: i.product_id,
+      // Same server posting path as POS: draft → payments → complete_sale(),
+      // which deducts finished stock or made-to-order components atomically.
+      const sale = await createSale({
+        businessId: businessId!,
+        documentType: "sale",
+        number: form.sale_number || undefined,
+        customerId: form.customer_id || null,
+        locationId: form.location_id || null,
+        channel: "manual",
+        saleDate: form.sale_date ?? todayISO(),
+        paymentMethod: form.payment_method ?? "cash",
+        notes: form.notes || null,
+        status: "draft",
+        orderDiscount: discount,
+        orderDiscountType: "amount",
+        createdBy: userId,
+        lines: valid.map((i) => ({
+          key: i.key,
+          product_id: i.product_id!,
           variant_id: i.variant_id,
           product_name: i.product_name,
-          quantity: i.quantity,
-          unit_price: i.unit_price,
-          unit_cost: i.unit_cost,
-          discount: i.discount,
-          tax: 0,
-          total: lineTotal(i),
+          quantity: Number(i.quantity),
+          unit_price: Number(i.unit_price),
+          unit_cost: Number(i.unit_cost),
+          discount: Number(i.discount || 0),
+          tax_rate: taxRate,
         })),
-      );
-      if (itemsError) throw itemsError;
-
-      // Stock movements keep product stock in sync (trigger applies the delta).
-      const { error: moveError } = await db.from("inventory_movements").insert(
-        valid.map((i) => ({
-          business_id: businessId,
-          product_id: i.product_id,
-          variant_id: i.variant_id,
-          type: "sale_out",
-          quantity: i.quantity,
-          unit_cost: i.unit_cost,
-          reference: sale.sale_number,
-          notes: "Auto-generated from sale",
-          created_by: userId,
-        })),
-      );
-      if (moveError) throw moveError;
-
-      const balance = total - paid;
-      if (balance > 0.001) {
-        await db.from("accounts_receivable").insert({
-          business_id: businessId,
-          customer_id: sale.customer_id,
-          sale_id: sale.id,
-          amount: balance,
-          paid: 0,
-          due_date: form.due_date || null,
-          status: "open",
-          notes: `Balance from sale ${sale.sale_number}`,
-        });
-      }
-      if (paid > 0.001) {
-        await db.from("cash_transactions").insert({
-          business_id: businessId,
-          type: "inflow",
-          amount: paid,
-          category: "sales",
-          description: `Payment for sale ${sale.sale_number}`,
-          reference: sale.sale_number,
-          transaction_date: sale.sale_date,
-          created_by: userId,
-        });
+      });
+      const paidNow = form.payment_status === "paid" ? Number(sale.total) : Math.min(paid, Number(sale.total));
+      try {
+        if (paidNow > 0.001) {
+          await recordPayment({
+            businessId: businessId!,
+            saleId: sale.id,
+            method: form.payment_method ?? "cash",
+            amount: paidNow,
+            createdBy: userId,
+          });
+        }
+        await completeSale(sale.id);
+      } catch (e) {
+        // Draft stays (never silently deleted once payments exist); surface the reason.
+        throw e;
       }
       return sale;
     },
