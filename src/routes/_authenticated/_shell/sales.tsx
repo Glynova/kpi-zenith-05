@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2, Eye, Printer, FileText, Undo2 } from "lucide-react";
+import { Plus, Search, Trash2, Eye, Printer, FileText, Undo2, Ban } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
@@ -423,9 +423,13 @@ function SalesPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setDeleting(row)}
-                            aria-label={isPosted(row) ? "Void sale" : "Delete"}
+                            aria-label={isPosted(row) ? "Void sale" : "Delete draft"}
                           >
-                            <Trash2 className="size-4 text-destructive" />
+                            {isPosted(row) ? (
+                              <Ban className="size-4 text-destructive" />
+                            ) : (
+                              <Trash2 className="size-4 text-destructive" />
+                            )}
                           </Button>
                         )}
                       </>
