@@ -31,6 +31,11 @@ function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
       done = true;
+      const invite = sessionStorage.getItem("daraven_pending_invite");
+      if (invite) {
+        navigate({ to: "/invite/$token", params: { token: invite }, replace: true });
+        return;
+      }
       navigate({ to: await postAuthDestination(), replace: true });
     };
     void go();

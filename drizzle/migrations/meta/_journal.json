@@ -337,6 +337,13 @@
       "when": 1792022592535,
       "tag": "0047_sale_bom_finished_goods_and_delete_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1792109190609,
+      "tag": "0048_team_invitations",
+      "breakpoints": true
     }
   ]
 }

@@ -6358,6 +6358,59 @@ export type Database = {
           },
         ]
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          business_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          business_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          business_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unit_conversions: {
         Row: {
           business_id: string
@@ -6828,6 +6881,7 @@ export type Database = {
         Args: { _business_id: string; _prefix: string }
         Returns: string
       }
+      accept_team_invitation: { Args: { _token: string }; Returns: string }
       apply_qrph_payment: {
         Args: {
           _amount_centavos: number
@@ -6911,6 +6965,16 @@ export type Database = {
           feature_key: string
           limit_value: number
           plan_id: string
+        }[]
+      }
+      get_team_invitation: {
+        Args: { _token: string }
+        Returns: {
+          business_name: string
+          email: string
+          expired: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
         }[]
       }
       is_business_admin: { Args: { _business_id: string }; Returns: boolean }
