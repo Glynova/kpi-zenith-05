@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { BrandLogo } from "@/components/brand-logo";
 import { ROLE_LABEL } from "@/lib/permissions";
 
-export const PENDING_INVITE_KEY = "daraven_pending_invite";
+const PENDING_INVITE_KEY = "daraven_pending_invite";
 
 export const Route = createFileRoute("/invite/$token")({
   ssr: false,

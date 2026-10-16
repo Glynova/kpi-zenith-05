@@ -23,6 +23,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AffiliateLoginRouteImport } from './routes/affiliate.login'
 import { Route as AffiliateSignupRouteImport } from './routes/affiliate.signup'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedShellAnalyticsRouteImport } from './routes/_authenticated/_shell/analytics'
 import { Route as AuthenticatedShellArAgingRouteImport } from './routes/_authenticated/_shell/ar-aging'
@@ -149,6 +150,11 @@ const AffiliateSignupRoute = AffiliateSignupRouteImport.update({
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth_/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -506,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/affiliate/login': typeof AffiliateLoginRoute
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/ar-aging': typeof AuthenticatedShellArAgingRoute
@@ -576,6 +583,7 @@ export interface FileRoutesByTo {
   '/affiliate/login': typeof AffiliateLoginRoute
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/r/$code': typeof RCodeRoute
   '/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/ar-aging': typeof AuthenticatedShellArAgingRoute
@@ -651,6 +659,7 @@ export interface FileRoutesById {
   '/affiliate/login': typeof AffiliateLoginRoute
   '/affiliate/signup': typeof AffiliateSignupRoute
   '/auth_/callback': typeof AuthCallbackRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/r/$code': typeof RCodeRoute
   '/_authenticated/_shell/analytics': typeof AuthenticatedShellAnalyticsRoute
   '/_authenticated/_shell/ar-aging': typeof AuthenticatedShellArAgingRoute
@@ -725,6 +734,7 @@ export interface FileRouteTypes {
     | '/affiliate/login'
     | '/affiliate/signup'
     | '/auth/callback'
+    | '/invite/$token'
     | '/r/$code'
     | '/analytics'
     | '/ar-aging'
@@ -795,6 +805,7 @@ export interface FileRouteTypes {
     | '/affiliate/login'
     | '/affiliate/signup'
     | '/auth/callback'
+    | '/invite/$token'
     | '/r/$code'
     | '/analytics'
     | '/ar-aging'
@@ -869,6 +880,7 @@ export interface FileRouteTypes {
     | '/affiliate/login'
     | '/affiliate/signup'
     | '/auth_/callback'
+    | '/invite/$token'
     | '/r/$code'
     | '/_authenticated/_shell/analytics'
     | '/_authenticated/_shell/ar-aging'
@@ -939,6 +951,7 @@ export interface RootRouteChildren {
   AffiliateLoginRoute: typeof AffiliateLoginRoute
   AffiliateSignupRoute: typeof AffiliateSignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   RCodeRoute: typeof RCodeRoute
   ApiPublicWebhooksPaymongoRoute: typeof ApiPublicWebhooksPaymongoRoute
 }
@@ -1041,6 +1054,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -1636,6 +1656,7 @@ const rootRouteChildren: RootRouteChildren = {
   AffiliateLoginRoute: AffiliateLoginRoute,
   AffiliateSignupRoute: AffiliateSignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  InviteTokenRoute: InviteTokenRoute,
   RCodeRoute: RCodeRoute,
   ApiPublicWebhooksPaymongoRoute: ApiPublicWebhooksPaymongoRoute,
 }
