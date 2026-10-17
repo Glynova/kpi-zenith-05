@@ -9,8 +9,14 @@ function safePublicBase(value?: string): string {
   if (!value) return DEFAULT_PUBLIC_APP_URL;
   try {
     const url = new URL(value);
-    if (url.protocol !== "https:" || url.username || url.password ||
-      /(^|\.)(lovableproject\.com|lovableproject-dev\.com|lovable\.app|lovable\.dev|gpt-eng\.com|gptengineer\.app)$/.test(url.hostname)) {
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      /(^|\.)(lovableproject\.com|lovableproject-dev\.com|lovable\.app|lovable\.dev|gpt-eng\.com|gptengineer\.app)$/.test(
+        url.hostname,
+      )
+    ) {
       return DEFAULT_PUBLIC_APP_URL;
     }
     return url.origin;
@@ -20,18 +26,36 @@ function safePublicBase(value?: string): string {
 }
 
 /** Only actual app previews are allowed, never editor/project hosts. */
-export function publicAppBaseUrl(origin?: string, configured?: string, localPreview = false): string {
+export function publicAppBaseUrl(
+  origin?: string,
+  configured?: string,
+  localPreview = false,
+): string {
   try {
     const url = new URL(origin ?? "");
-    if (!url.username && !url.password && (
-      (url.protocol === "https:" && /^id-preview(?:-[a-z0-9]+)?--[a-f0-9-]{36}\.lovable\.app$/.test(url.hostname)) ||
-      (localPreview && url.protocol === "http:" && url.hostname === "localhost" && url.port === "8080")
-    )) return url.origin;
-  } catch { /* Invalid origins use the canonical public app. */ }
+    if (
+      !url.username &&
+      !url.password &&
+      ((url.protocol === "https:" &&
+        /^id-preview(?:-[a-z0-9]+)?--[a-f0-9-]{36}\.lovable\.app$/.test(url.hostname)) ||
+        (localPreview &&
+          url.protocol === "http:" &&
+          url.hostname === "localhost" &&
+          url.port === "8080"))
+    )
+      return url.origin;
+  } catch {
+    /* Invalid origins use the canonical public app. */
+  }
   return safePublicBase(configured);
 }
 
-export function buildInviteUrl(token: string, origin?: string, configured?: string, localPreview = false): string {
+export function buildInviteUrl(
+  token: string,
+  origin?: string,
+  configured?: string,
+  localPreview = false,
+): string {
   if (!isInviteToken(token)) throw new Error("This invitation link is not valid");
   return `${publicAppBaseUrl(origin, configured, localPreview)}/invite/${token}`;
 }

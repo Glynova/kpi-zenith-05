@@ -12,7 +12,13 @@ import { Label } from "@/components/ui/label";
 import { BrandLogo } from "@/components/brand-logo";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { lovable } from "@/integrations/lovable/index";
-import { buildInviteUrl, invitationError, isInviteToken, PENDING_INVITE_KEY, publicAppBaseUrl } from "@/lib/invite-links";
+import {
+  buildInviteUrl,
+  invitationError,
+  isInviteToken,
+  PENDING_INVITE_KEY,
+  publicAppBaseUrl,
+} from "@/lib/invite-links";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/invite/$token")({
@@ -35,7 +41,13 @@ export const Route = createFileRoute("/invite/$token")({
   component: InvitePage,
 });
 
-type Invite = { business_name: string; email: string; role: string; status: string; expired: boolean };
+type Invite = {
+  business_name: string;
+  email: string;
+  role: string;
+  status: string;
+  expired: boolean;
+};
 
 function InvitePage() {
   const { token } = Route.useParams();
@@ -55,11 +67,19 @@ function InvitePage() {
     setLookupError(false);
     if (isInviteToken(token)) {
       sessionStorage.setItem(PENDING_INVITE_KEY, token);
-      (supabase as any).rpc("get_team_invitation", { _token: token }).then(({ data, error }: any) => {
-        if (!active) return;
-        setLookupError(!!error);
-        setInvite((data && data[0]) || null);
-      }).catch(() => { if (active) { setLookupError(true); setInvite(null); } });
+      (supabase as any)
+        .rpc("get_team_invitation", { _token: token })
+        .then(({ data, error }: any) => {
+          if (!active) return;
+          setLookupError(!!error);
+          setInvite((data && data[0]) || null);
+        })
+        .catch(() => {
+          if (active) {
+            setLookupError(true);
+            setInvite(null);
+          }
+        });
     } else {
       sessionStorage.removeItem(PENDING_INVITE_KEY);
       setInvite(null);
@@ -68,7 +88,10 @@ function InvitePage() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) =>
       setUserEmail(s?.user?.email ?? null),
     );
-    return () => { active = false; sub.subscription.unsubscribe(); };
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, [token]);
 
   async function accept() {
@@ -76,14 +99,18 @@ function InvitePage() {
     try {
       const { data: businessId, error } = await db.rpc("accept_team_invitation", { _token: token });
       if (error) return toast.error(error.message);
-      if (typeof businessId !== "string") throw new Error("Could not join the workspace. Please try again.");
+      if (typeof businessId !== "string")
+        throw new Error("Could not join the workspace. Please try again.");
       window.localStorage.setItem("kpioptiva-business", businessId);
       await queryClient.invalidateQueries({ queryKey: ["memberships"] });
       sessionStorage.removeItem(PENDING_INVITE_KEY);
       toast.success(`Welcome to ${invite?.business_name}`);
       await navigate({ to: "/dashboard", replace: true });
-    } catch { toast.error("Could not join the workspace. Please try again."); }
-    finally { setBusy(false); }
+    } catch {
+      toast.error("Could not join the workspace. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function auth(e: React.FormEvent) {
@@ -100,7 +127,12 @@ function InvitePage() {
       email: invite.email,
       password,
       options: {
-        emailRedirectTo: buildInviteUrl(token, window.location.origin, import.meta.env.VITE_PUBLIC_APP_URL, import.meta.env.DEV),
+        emailRedirectTo: buildInviteUrl(
+          token,
+          window.location.origin,
+          import.meta.env.VITE_PUBLIC_APP_URL,
+          import.meta.env.DEV,
+        ),
         data: { full_name: fullName },
       },
     });
@@ -113,7 +145,11 @@ function InvitePage() {
     setBusy(true);
     try {
       sessionStorage.setItem(PENDING_INVITE_KEY, token);
-      const base = publicAppBaseUrl(window.location.origin, import.meta.env.VITE_PUBLIC_APP_URL, import.meta.env.DEV);
+      const base = publicAppBaseUrl(
+        window.location.origin,
+        import.meta.env.VITE_PUBLIC_APP_URL,
+        import.meta.env.DEV,
+      );
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${base}/auth/callback?invite=${token}`,
       });
@@ -122,13 +158,15 @@ function InvitePage() {
         const { data } = await supabase.auth.getUser();
         setUserEmail(data.user?.email ?? null);
       }
-    } catch { toast.error("Google sign-in failed. Please try again."); }
-    finally { setBusy(false); }
+    } catch {
+      toast.error("Google sign-in failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const unusable = invitationError(invite ?? null);
-  const wrongUser =
-    invite && userEmail && userEmail.toLowerCase() !== invite.email.toLowerCase();
+  const wrongUser = invite && userEmail && userEmail.toLowerCase() !== invite.email.toLowerCase();
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
@@ -137,7 +175,11 @@ function InvitePage() {
         {invite === undefined || userEmail === undefined ? (
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         ) : !invite ? (
-          <p className="text-sm text-muted-foreground">{lookupError ? "Could not check this invitation. Please reload and try again." : "This invitation link is not valid."}</p>
+          <p className="text-sm text-muted-foreground">
+            {lookupError
+              ? "Could not check this invitation. Please reload and try again."
+              : "This invitation link is not valid."}
+          </p>
         ) : (
           <>
             <div>
@@ -154,7 +196,11 @@ function InvitePage() {
                 <p className="text-destructive">
                   You're signed in as {userEmail}. Sign out and continue with {invite.email}.
                 </p>
-                <Button variant="outline" className="w-full" onClick={() => supabase.auth.signOut()}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => supabase.auth.signOut()}
+                >
                   Sign out
                 </Button>
               </div>
@@ -171,24 +217,49 @@ function InvitePage() {
                 {mode === "signup" && (
                   <div>
                     <Label htmlFor="inv-name">Full name</Label>
-                    <Input id="inv-name" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1.5" />
+                    <Input
+                      id="inv-name"
+                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="mt-1.5"
+                    />
                   </div>
                 )}
                 <div>
-                  <Label htmlFor="inv-pass">{mode === "signup" ? "Create your password" : "Password"}</Label>
-                  <Input id="inv-pass" type="password" required minLength={mode === "signup" ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" />
+                  <Label htmlFor="inv-pass">
+                    {mode === "signup" ? "Create your password" : "Password"}
+                  </Label>
+                  <Input
+                    id="inv-pass"
+                    type="password"
+                    required
+                    minLength={mode === "signup" ? 8 : undefined}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1.5"
+                  />
                 </div>
                 <Button type="submit" className="w-full" disabled={busy}>
                   {busy ? "Please wait..." : mode === "signup" ? "Create login" : "Sign in"}
                 </Button>
-                <Button variant="ghost"
+                <Button
+                  variant="ghost"
                   type="button"
                   className="w-full text-xs text-muted-foreground underline-offset-4 hover:underline"
                   onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
                 >
-                  {mode === "signup" ? "Already have an account? Sign in" : "New here? Create a login"}
+                  {mode === "signup"
+                    ? "Already have an account? Sign in"
+                    : "New here? Create a login"}
                 </Button>
-                <Button type="button" variant="outline" className="w-full" disabled={busy} onClick={google}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={busy}
+                  onClick={google}
+                >
                   Continue with Google
                 </Button>
               </form>

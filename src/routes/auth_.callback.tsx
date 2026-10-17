@@ -8,7 +8,9 @@ import { isInviteToken, PENDING_INVITE_KEY } from "@/lib/invite-links";
 
 export const Route = createFileRoute("/auth_/callback")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => ({ invite: isInviteToken(search.invite) ? search.invite : undefined }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    invite: isInviteToken(search.invite) ? search.invite : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Signing you in — Daraven ERP" },
