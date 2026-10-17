@@ -13,8 +13,8 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { lovable } from "@/integrations/lovable/index";
 import {
+  APP_URL,
   buildInviteAuthRedirectUrl,
-  buildInviteUrl,
   invitationError,
   isInviteToken,
   PENDING_INVITE_KEY,
@@ -117,24 +117,54 @@ function InvitePage() {
     e.preventDefault();
     if (!invite) return;
     setBusy(true);
-    if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email: invite.email, password });
+    try {
+      if (mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({ email: invite.email, password });
+        if (error) toast.error(error.message);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("invite-signup", {
+        body: { token, email: invite.email, password, fullName },
+      });
+      if (error) {
+        let message = error.message;
+        if (error.context instanceof Response) {
+          const details = await error.context
+            .clone()
+            .json()
+            .catch(() => null);
+          if (details?.code === "account_exists") {
+            setMode("signin");
+            setPassword("");
+          }
+          message = details?.message ?? message;
+        }
+        toast.error(message);
+        return;
+      }
+      if (!data?.session || typeof data.businessId !== "string") {
+        toast.error("Could not finish joining this workspace. Please try again.");
+        return;
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      if (sessionError) {
+        toast.error("Your account joined the workspace. Sign in to continue.");
+        return;
+      }
+
+      window.localStorage.setItem("kpioptiva-business", data.businessId);
+      sessionStorage.removeItem(PENDING_INVITE_KEY);
+      window.location.replace(`${APP_URL}/dashboard`);
+    } catch {
+      toast.error("Could not finish account setup. Please try again.");
+    } finally {
       setBusy(false);
-      if (error) toast.error(error.message);
-      return;
     }
-    const confirmationUrl = buildInviteUrl(token);
-    const { data, error } = await supabase.auth.signUp({
-      email: invite.email,
-      password,
-      options: {
-        emailRedirectTo: confirmationUrl,
-        data: { full_name: fullName },
-      },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    if (!data.session) toast.success("Check your email to confirm, then open the link to join.");
   }
 
   async function google() {

@@ -1,9 +1,10 @@
 # Roadmap
 
 - [x] Invitation URL canonicalization: invite links, signup confirmation and OAuth redirects use the single `APP_URL` constant (`https://daraven.com`); client/runtime origin and preview/config fallbacks removed; pending invite resend rotates to a fresh production-domain link. Focused verification passed; no publication.
+- [x] Invite password signup: public Edge Function verifies pending token, expiry and invited email before admin-creating a confirmed user, signing in and accepting the stored role; redirect to production dashboard. Normal `/auth` signup remains confirmation-gated. Focused helper tests and build passed; no publication or real account test.
 
 - [x] Urgent invitation repair: canonical production links, validated callback token, selected joined workspace; 63 tests and targeted lint passed, automatic build OK; real unknown-token lookup and simulated pending/expired/revoked screens verified without accounts or publishing.
-- [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (blocked: no live accounts permitted; available authentication configuration tool does not expose redirect settings).
+- [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (requires Edge Function deployment; no live accounts used, local Deno/Supabase CLI unavailable, and available authentication configuration tool does not expose redirect settings).
 
 - [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
 - [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.
