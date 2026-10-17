@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Urgent invitation repair: first-party production links, secure acceptance/auth return, URL/state tests and preview verification; no publishing or live accounts.
+
 - [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
 - [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.
 
