@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { buildInviteUrl } from "@/lib/invite-links";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -86,15 +85,13 @@ export const addTeamMember = createServerFn({ method: "POST" })
         businessId: z.string().uuid(),
         email: z.string().email(),
         role: z.enum(ASSIGNABLE),
-        origin: z.string().url(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
-    // Resolve before any write, so missing configuration cannot rotate an existing token.
     const token = newToken();
-    const link = buildInviteUrl(token, getRequestHeader("origin"), process.env["PUBLIC_APP_URL"]);
+    const link = buildInviteUrl(token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
     const email = data.email.trim().toLowerCase();

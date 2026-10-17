@@ -13,11 +13,11 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { lovable } from "@/integrations/lovable/index";
 import {
+  buildInviteAuthRedirectUrl,
   buildInviteUrl,
   invitationError,
   isInviteToken,
   PENDING_INVITE_KEY,
-  publicAppBaseUrl,
 } from "@/lib/invite-links";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -123,13 +123,7 @@ function InvitePage() {
       if (error) toast.error(error.message);
       return;
     }
-    let confirmationUrl: string;
-    try {
-      confirmationUrl = buildInviteUrl(token, window.location.origin, import.meta.env.VITE_PUBLIC_APP_URL);
-    } catch (error) {
-      setBusy(false);
-      return toast.error(error instanceof Error ? error.message : "Invitation links are not configured.");
-    }
+    const confirmationUrl = buildInviteUrl(token);
     const { data, error } = await supabase.auth.signUp({
       email: invite.email,
       password,
@@ -147,12 +141,8 @@ function InvitePage() {
     setBusy(true);
     try {
       sessionStorage.setItem(PENDING_INVITE_KEY, token);
-      const base = publicAppBaseUrl(
-        window.location.origin,
-        import.meta.env.VITE_PUBLIC_APP_URL,
-      );
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${base}/auth/callback?invite=${token}`,
+        redirect_uri: buildInviteAuthRedirectUrl(token),
       });
       if (result.error) toast.error("Google sign-in failed. Please try again.");
       else if (!result.redirected) {
@@ -160,7 +150,9 @@ function InvitePage() {
         setUserEmail(data.user?.email ?? null);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Google sign-in failed. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Google sign-in failed. Please try again.",
+      );
     } finally {
       setBusy(false);
     }

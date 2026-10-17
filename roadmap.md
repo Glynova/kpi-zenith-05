@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Invitation follow-up: reject localhost in every mode, fail clearly without a usable deployed URL/configuration, clarify stored pending roles, run focused verification; no publication.
+- [x] Invitation URL canonicalization: invite links, signup confirmation and OAuth redirects use the single `APP_URL` constant (`https://daraven.com`); client/runtime origin and preview/config fallbacks removed; pending invite resend rotates to a fresh production-domain link. Focused verification passed; no publication.
 
 - [x] Urgent invitation repair: canonical production links, validated callback token, selected joined workspace; 63 tests and targeted lint passed, automatic build OK; real unknown-token lookup and simulated pending/expired/revoked screens verified without accounts or publishing.
 - [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (blocked: no live accounts permitted; available authentication configuration tool does not expose redirect settings).

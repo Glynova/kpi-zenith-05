@@ -71,7 +71,7 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
 
   const invite = useMutation({
     mutationFn: (v: { email: string; role: string }) =>
-      addFn({ data: { businessId, email: v.email, role: v.role as any, origin: window.location.origin } }),
+      addFn({ data: { businessId, email: v.email, role: v.role as any } }),
     onSuccess: (r) => {
       toast.success(r.reissued ? "New join link created" : "Invitation created");
       setLastLink({ email: r.email, link: r.link });
@@ -169,7 +169,9 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
             set their own password; the link works once and expires in 7 days.
           </p>
           <div className="mt-2 flex min-w-0 items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1">{lastLink.link}</code>
+            <code className="min-w-0 flex-1 truncate rounded bg-background px-2 py-1">
+              {lastLink.link}
+            </code>
             <Button size="sm" variant="outline" onClick={() => copyLink(lastLink.link)}>
               <Copy className="size-4" /> Copy
             </Button>
@@ -189,7 +191,9 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
                     <p className="truncate text-sm font-medium">{i.email}</p>
                     <p className="text-xs text-muted-foreground">
                       {ROLE_LABEL[i.role] ?? i.role} ·{" "}
-                      {expired ? "Expired" : `Expires ${new Date(i.expires_at).toLocaleDateString()}`}
+                      {expired
+                        ? "Expired"
+                        : `Expires ${new Date(i.expires_at).toLocaleDateString()}`}
                     </p>
                   </div>
                   {expired && <Badge variant="outline">Expired</Badge>}
