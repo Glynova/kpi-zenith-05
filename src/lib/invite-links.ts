@@ -1,13 +1,13 @@
-export const APP_URL = "https://daraven.com";
+export const APP_URL = import.meta.env.VITE_PUBLIC_APP_URL || "https://daraven.com";
 export const PENDING_INVITE_KEY = "daraven_pending_invite";
 
 export function isInviteToken(value: unknown): value is string {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 }
 
-export function buildInviteUrl(token: string): string {
+export function buildInviteUrl(token: string, appUrl = APP_URL): string {
   if (!isInviteToken(token)) throw new Error("This invitation link is not valid");
-  return `${APP_URL}/invite/${token}`;
+  return `${appUrl.replace(/\/$/, "")}/invite/${token}`;
 }
 
 export function buildInviteAuthRedirectUrl(token: string): string {

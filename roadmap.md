@@ -1,6 +1,6 @@
 # Roadmap
 
-- [x] Invitation URL canonicalization: invite links, signup confirmation and OAuth redirects use the single `APP_URL` constant (`https://daraven.com`); client/runtime origin and preview/config fallbacks removed; pending invite resend rotates to a fresh production-domain link. Focused verification passed; no publication.
+- [x] Invitation URL canonicalization: invite links, signup confirmation and OAuth redirects use `APP_URL` from `VITE_PUBLIC_APP_URL` or the `https://daraven.com` fallback; server-generated links prefer server-side `APP_URL`, never client/runtime origin. Pending invite resend rotates to a fresh production-domain link. Focused verification passed; no publication.
 - [x] Invite password signup: public Edge Function verifies pending token, expiry and invited email before admin-creating a confirmed user, signing in and accepting the stored role; redirect to production dashboard. Normal `/auth` signup remains confirmation-gated. Focused helper tests and build passed; no publication or real account test.
 
 - [x] Urgent invitation repair: canonical production links, validated callback token, selected joined workspace; 63 tests and targeted lint passed, automatic build OK; real unknown-token lookup and simulated pending/expired/revoked screens verified without accounts or publishing.

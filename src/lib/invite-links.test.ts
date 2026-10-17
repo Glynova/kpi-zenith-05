@@ -10,8 +10,13 @@ import {
 const token = "a".repeat(64);
 describe("production invitation URLs", () => {
   it("uses the single production APP_URL for invite links", () => {
-    expect(APP_URL).toBe("https://daraven.com");
+    expect(APP_URL).toBe(import.meta.env.VITE_PUBLIC_APP_URL || "https://daraven.com");
     expect(buildInviteUrl(token)).toBe(`${APP_URL}/invite/${token}`);
+  });
+  it("uses an explicit server APP_URL without adding a duplicate slash", () => {
+    expect(buildInviteUrl(token, "https://daraven.com/")).toBe(
+      `https://daraven.com/invite/${token}`,
+    );
   });
   it("uses APP_URL for signup confirmation and OAuth callback redirects", () => {
     expect(buildInviteAuthRedirectUrl(token)).toBe(`${APP_URL}/auth/callback?invite=${token}`);

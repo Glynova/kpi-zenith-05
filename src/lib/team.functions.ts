@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { buildInviteUrl } from "@/lib/invite-links";
+import { APP_URL, buildInviteUrl } from "@/lib/invite-links";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -91,7 +91,7 @@ export const addTeamMember = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
     const token = newToken();
-    const link = buildInviteUrl(token);
+    const link = buildInviteUrl(token, process.env["APP_URL"] || APP_URL);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
     const email = data.email.trim().toLowerCase();

@@ -1,6 +1,6 @@
 # Team invitation domains and authentication
 
-All invitation URLs and invitation auth redirects use the single `APP_URL` constant in `src/lib/invite-links.ts`, currently `https://daraven.com`. Runtime origins, Lovable preview hosts, client-submitted origins and environment overrides do not affect invitation URLs.
+All invitation URLs and invitation auth redirects use the `APP_URL` constant in `src/lib/invite-links.ts`, sourced from `VITE_PUBLIC_APP_URL` with `https://daraven.com` as fallback. Set the public build variable to `https://daraven.com` in production. Server-generated invitation links prefer the server-side `APP_URL` environment variable and never use the request/browser origin. Do not set either variable to a Lovable preview host.
 
 Password signup from `/invite/<token>` calls the `invite-signup` Supabase Edge Function. It checks the token hash, pending status, expiry and case-insensitive email match before creating a user with `email_confirm: true`. It then signs the new user in and calls the existing transactional acceptance function, which adds the member with the stored invitation role. The browser installs the returned session and navigates to `https://daraven.com/dashboard`. Invite-based password signup does not require email confirmation. Normal public signup at `/auth` continues to require email confirmation. Existing accounts can sign in from the invitation page; Google OAuth continues through the validated auth callback.
 
