@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Row } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
+import { resolveImageSrc } from "@/lib/storage-images";
 
 /** Thermal-style receipt for completed POS sales. */
-export function printReceipt({
+export async function printReceipt({
   business,
   sale,
   items,
@@ -22,10 +23,14 @@ export function printReceipt({
   currency: string;
   taxName?: string;
 }) {
+  const win = window.open("", "_blank", "width=420,height=760");
+  if (!win) return false;
+  const logoSrc = await resolveImageSrc(business?.logo_url);
+
   const esc = (v: any) =>
     String(v ?? "").replace(
-      /[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string,
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string,
     );
   const money = (n: number) => esc(formatCurrency(Number(n ?? 0), currency));
 
@@ -64,6 +69,7 @@ export function printReceipt({
     .tot div{display:flex;justify-content:space-between;font-size:12px;padding:2px 0}
     .tot .grand{font-weight:700;font-size:14px;border-top:1px solid #111;margin-top:4px;padding-top:4px}
   </style></head><body>
+  ${logoSrc ? `<img src="${esc(logoSrc)}" alt="Business logo" style="display:block;max-width:120px;max-height:64px;margin:0 auto 8px;object-fit:contain" />` : ""}
   <h1>${esc(business?.name ?? "Receipt")}</h1>
   <div class="center muted">${esc(business?.address ?? "")}</div>
   <div class="center muted">${esc(business?.phone ?? "")} ${esc(business?.email ?? "")}</div>
@@ -95,8 +101,6 @@ export function printReceipt({
   <script>window.onload=()=>{window.print()}</script>
   </body></html>`;
 
-  const win = window.open("", "_blank", "width=420,height=760");
-  if (!win) return false;
   win.document.write(html);
   win.document.close();
   return true;

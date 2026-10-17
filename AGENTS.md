@@ -15,3 +15,5 @@
 - Workspace headers use PageHeader with stacked text/actions below desktop; filters use page-toolbar and actions use page-actions. Why: shared layouts prevent action groups from squeezing titles or overflowing small screens.
 - Public, workspace, admin and affiliate headers use BrandIdentity and the shared official SVG path artwork, including its wordmark; inverse marks always-dark surfaces. Why: portal branding must preserve the supplied artwork without font substitutions while navigation remains independent.
 - Invitation links use the shared invite-links resolver and server-observed deployed request origin or explicit public URL configuration, never localhost or client-provided origin; resolve before writes and fail on missing/invalid configuration. Acceptance selects the RPC-returned business and OAuth carries a validated token through the public callback. Why: invitations must be shareable, first-party and join the intended existing workspace.
+
+always review the roadmap.md plan and folder before startworking. update that MD file as a working document if you make changes that would impact the truthfulness of that document.

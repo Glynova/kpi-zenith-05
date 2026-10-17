@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { db } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
+import { ImageUpload } from "@/components/image-upload";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,9 +37,8 @@ export const Route = createFileRoute("/_authenticated/_shell/settings")({
 });
 
 function SettingsPage() {
-  const { business, businessId, isAdmin, memberships, role } = useBusiness();
+  const { business, businessId, isAdmin, memberships, role, refresh } = useBusiness();
   const { theme, toggle } = useTheme();
-  const queryClient = useQueryClient();
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -64,7 +63,7 @@ function SettingsPage() {
       .eq("id", businessId);
     setSaving(false);
     if (error) return toast.error(error.message);
-    queryClient.invalidateQueries({ queryKey: ["memberships"] });
+    refresh();
     toast.success("Settings saved");
   }
 
@@ -73,7 +72,6 @@ function SettingsPage() {
     { key: "currency", label: "Currency" },
     { key: "tax_rate", label: "Tax rate (%)" },
     { key: "timezone", label: "Timezone" },
-    { key: "logo_url", label: "Logo URL" },
     { key: "phone", label: "Phone" },
     { key: "email", label: "Email" },
     { key: "address", label: "Address" },
@@ -103,6 +101,28 @@ function SettingsPage() {
               />
             </div>
           ))}
+          <div className="min-w-0 sm:col-span-2">
+            <Label htmlFor="business-logo" className="text-xs">
+              Business logo
+            </Label>
+            <div className="mt-1.5">
+              <ImageUpload
+                id="business-logo"
+                value={value("logo_url") || null}
+                onChange={(logoUrl) =>
+                  setForm((current) => ({ ...current, logo_url: logoUrl ?? "" }))
+                }
+                businessId={businessId}
+                disabled={!isAdmin}
+                variant="dropzone"
+                hint="Upload business logo"
+                subHint="PNG, JPG or WEBP up to 10MB"
+              />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Shown on printed receipts and sales documents.
+            </p>
+          </div>
           <div className="sm:col-span-2">
             <Button onClick={save} disabled={saving || !isAdmin}>
               {saving ? "Saving..." : "Save changes"}

@@ -3,11 +3,11 @@ import { ImagePlus, Loader2, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { resolveImageSrc } from "@/lib/storage-images";
 import { Button } from "@/components/ui/button";
 
 const BUCKET = "product-images";
 
-/** Resolves a stored value (storage path or absolute URL) to a viewable image src. */
 export function useImageSrc(value?: string | null) {
   const [src, setSrc] = useState<string | null>(null);
 
@@ -17,17 +17,10 @@ export function useImageSrc(value?: string | null) {
       setSrc(null);
       return;
     }
-    if (/^(https?:|data:|blob:)/.test(value)) {
-      setSrc(value);
-      return;
-    }
-    supabase.storage
-      .from(BUCKET)
-      // Short-lived link so removed members lose image access almost immediately.
-      .createSignedUrl(value, 60)
-      .then(({ data }) => {
-        if (active) setSrc(data?.signedUrl ?? null);
-      });
+    // Short-lived links ensure removed members lose image access quickly.
+    void resolveImageSrc(value).then((url) => {
+      if (active) setSrc(url);
+    });
     return () => {
       active = false;
     };
@@ -80,6 +73,7 @@ type Props = {
   /** Dropzone copy. */
   hint?: string;
   subHint?: string;
+  disabled?: boolean;
 };
 
 const ACCEPTED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
@@ -94,6 +88,7 @@ export function ImageUpload({
   variant = "inline",
   hint = "Upload receipt or image",
   subHint,
+  disabled = false,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -143,6 +138,7 @@ export function ImageUpload({
       type="file"
       accept="image/png,image/jpeg,image/webp"
       className="hidden"
+      disabled={disabled}
       onChange={(e) => pick(e.target.files?.[0])}
     />
   );
@@ -171,7 +167,7 @@ export function ImageUpload({
               type="button"
               variant="outline"
               size="sm"
-              disabled={uploading}
+              disabled={disabled || uploading}
               onClick={() => inputRef.current?.click()}
             >
               Replace
@@ -181,6 +177,7 @@ export function ImageUpload({
               variant="ghost"
               size="icon"
               aria-label="Remove attachment"
+              disabled={disabled || uploading}
               onClick={() => {
                 onChange(null);
                 setFileName(null);
@@ -192,7 +189,7 @@ export function ImageUpload({
         ) : (
           <button
             type="button"
-            disabled={uploading}
+            disabled={disabled || uploading}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => {
               e.preventDefault();
@@ -240,7 +237,7 @@ export function ImageUpload({
           type="button"
           variant="outline"
           size="sm"
-          disabled={uploading}
+          disabled={disabled || uploading}
           onClick={() => inputRef.current?.click()}
         >
           {uploading ? (
@@ -251,7 +248,13 @@ export function ImageUpload({
           {value ? "Replace" : "Upload image"}
         </Button>
         {value && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={disabled || uploading}
+            onClick={() => onChange(null)}
+          >
             <Trash2 className="mr-1 size-4" />
             Remove
           </Button>

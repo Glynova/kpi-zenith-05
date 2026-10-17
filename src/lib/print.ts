@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Row } from "@/lib/db";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { resolveImageSrc } from "@/lib/storage-images";
 
-export function printDocument({
+export async function printDocument({
   title,
   business,
   doc,
@@ -19,10 +20,14 @@ export function printDocument({
   currency: string;
   terms?: string | null;
 }) {
+  const win = window.open("", "_blank", "width=900,height=1000");
+  if (!win) return false;
+  const logoSrc = await resolveImageSrc(business?.logo_url);
+
   const esc = (v: any) =>
     String(v ?? "").replace(
-      /[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c] as string,
+      /[&<>"]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string,
     );
 
   const rows = items
@@ -41,6 +46,7 @@ export function printDocument({
   <style>
     *{box-sizing:border-box} body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;margin:40px;}
     h1{font-size:24px;margin:0 0 4px} .muted{color:#64748b;font-size:12px}
+    .business-logo{display:block;max-width:180px;max-height:72px;object-fit:contain;object-position:left center;margin-bottom:10px}
     .head{display:flex;justify-content:space-between;gap:24px;border-bottom:2px solid #0f172a;padding-bottom:16px;margin-bottom:24px}
     table{width:100%;border-collapse:collapse;margin-top:16px}
     th,td{padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:13px}
@@ -53,6 +59,7 @@ export function printDocument({
   </style></head><body>
   <div class="head">
     <div>
+      ${logoSrc ? `<img class="business-logo" src="${esc(logoSrc)}" alt="Business logo" />` : ""}
       <h1>${esc(business?.name ?? "Business")}</h1>
       <div class="muted">${esc(business?.address ?? "")}</div>
       <div class="muted">${esc(business?.email ?? "")} ${esc(business?.phone ?? "")}</div>
@@ -79,8 +86,6 @@ export function printDocument({
   <script>window.onload=()=>{window.print()}</script>
   </body></html>`;
 
-  const win = window.open("", "_blank", "width=900,height=1000");
-  if (!win) return false;
   win.document.write(html);
   win.document.close();
   return true;

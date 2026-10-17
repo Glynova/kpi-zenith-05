@@ -1,0 +1,1 @@
+always review the roadmap.md plan and folder before startworking. update that MD file as a working document if you make changes that would impact the truthfulness of that document.
