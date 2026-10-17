@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { buildInviteUrl } from "@/lib/invite-links";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -133,8 +135,9 @@ export const addTeamMember = createServerFn({ method: "POST" })
           invited_by: context.userId,
         });
     if (error) throw new Error("Could not create the invitation");
-    const origin = new URL(data.origin).origin;
-    return { ok: true, email, link: `${origin}/invite/${token}`, reissued: !!pending, hasAccount: !!profile };
+    // Never trust the client-submitted origin: it may be an editor/project URL.
+    const link = buildInviteUrl(token, getRequestHeader("origin"), process.env["PUBLIC_APP_URL"], process.env["NODE_ENV"] === "development");
+    return { ok: true, email, link, reissued: !!pending, hasAccount: !!profile };
   });
 
 export const listInvitations = createServerFn({ method: "GET" })

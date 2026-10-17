@@ -4,9 +4,11 @@ import { Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { postAuthDestination } from "@/lib/post-auth";
+import { isInviteToken, PENDING_INVITE_KEY } from "@/lib/invite-links";
 
 export const Route = createFileRoute("/auth_/callback")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({ invite: isInviteToken(search.invite) ? search.invite : undefined }),
   head: () => ({
     meta: [
       { title: "Signing you in — Daraven ERP" },
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/auth_/callback")({
 
 function AuthCallback() {
   const navigate = useNavigate();
+  const { invite: returnedInvite } = Route.useSearch();
 
   useEffect(() => {
     let done = false;
@@ -31,8 +34,8 @@ function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
       done = true;
-      const invite = sessionStorage.getItem("daraven_pending_invite");
-      if (invite) {
+      const invite = returnedInvite ?? sessionStorage.getItem(PENDING_INVITE_KEY);
+      if (isInviteToken(invite)) {
         navigate({ to: "/invite/$token", params: { token: invite }, replace: true });
         return;
       }
@@ -49,7 +52,7 @@ function AuthCallback() {
       sub.subscription.unsubscribe();
       window.clearTimeout(timeout);
     };
-  }, [navigate]);
+  }, [navigate, returnedInvite]);
 
   return (
     <div className="flex min-h-screen items-center justify-center gap-3 text-sm text-muted-foreground">
