@@ -268,7 +268,7 @@ function Landing() {
             >
               <div data-reveal className="min-w-0">
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/60">
-                  <span className="size-1.5 rounded-full bg-[color:var(--gold)]" />
+                  <span className="size-1.5 rounded-full bg-gold" />
                   Business performance platform
                 </span>
                 <h1 className="mt-6 font-display text-[2.5rem] font-semibold leading-[1.03] text-white sm:text-6xl">
@@ -344,7 +344,7 @@ function Landing() {
                 style={{ ["--reveal-delay" as string]: `${i * 70}ms` }}
                 className="flex items-start gap-2 text-sm text-white/60"
               >
-                <Check className="mt-0.5 size-4 shrink-0 text-[color:var(--gold)]" />
+                <Check className="mt-0.5 size-4 shrink-0 text-gold" />
                 <span className="min-w-0">{t}</span>
               </p>
             ))}
@@ -357,9 +357,7 @@ function Landing() {
         {/* ---------------- Capabilities ---------------- */}
         <section id="platform" className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
           <div data-reveal className="max-w-2xl">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--gold)]">
-              Capabilities
-            </p>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Capabilities</p>
             <h2 className="mt-4 font-display text-3xl font-semibold text-white sm:text-4xl">
               One system of record for the whole operation.
             </h2>
@@ -372,7 +370,7 @@ function Landing() {
                 style={{ ["--reveal-delay" as string]: `${(i % 3) * 90}ms` }}
                 className="group bg-[oklch(0.15_0.03_264)] p-7 transition-colors hover:bg-[oklch(0.18_0.035_264)]"
               >
-                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-[color:var(--gold)]">
+                <span className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-gold">
                   <f.icon className="size-5" />
                 </span>
                 <h3 className="mt-5 font-display text-base font-semibold text-white">{f.title}</h3>
@@ -392,9 +390,7 @@ function Landing() {
                 className={`grid items-center gap-8 lg:grid-cols-2 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}
               >
                 <div className="min-w-0">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--gold)]">
-                    0{i + 1}
-                  </p>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-gold">0{i + 1}</p>
                   <h3 className="mt-3 font-display text-2xl font-semibold text-white sm:text-3xl">
                     {m.label}
                   </h3>
@@ -404,7 +400,7 @@ function Landing() {
                   <ul className="mt-6 space-y-2">
                     {m.points.map((p) => (
                       <li key={p} className="flex items-start gap-2 text-sm text-white/70">
-                        <Check className="mt-0.5 size-4 shrink-0 text-[color:var(--gold)]" />
+                        <Check className="mt-0.5 size-4 shrink-0 text-gold" />
                         <span className="min-w-0">{p}</span>
                       </li>
                     ))}
@@ -455,7 +451,7 @@ function Landing() {
                 style={{ ["--reveal-delay" as string]: `${i * 60}ms` }}
                 className="glass-panel flex min-w-0 flex-col items-start gap-3 p-5"
               >
-                <u.icon className="size-5 shrink-0 text-[color:var(--gold)]" />
+                <u.icon className="size-5 shrink-0 text-gold" />
                 <span className="truncate text-sm text-white/75">{u.label}</span>
               </div>
             ))}
@@ -466,7 +462,7 @@ function Landing() {
         <section id="security" className="border-y border-white/8 bg-black/25">
           <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 sm:px-6 sm:py-28 lg:grid-cols-2">
             <div data-reveal className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--gold)]">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-gold">
                 Security & reliability
               </p>
               <h2 className="mt-4 font-display text-3xl font-semibold text-white sm:text-4xl">
@@ -507,7 +503,7 @@ function Landing() {
                   style={{ ["--reveal-delay" as string]: `${i * 80}ms` }}
                   className="glass-panel min-w-0 p-5"
                 >
-                  <c.icon className="size-5 text-[color:var(--gold)]" />
+                  <c.icon className="size-5 text-gold" />
                   <h3 className="mt-3 font-display text-sm font-semibold text-white">{c.t}</h3>
                   <p className="mt-1.5 text-xs leading-relaxed text-white/55">{c.b}</p>
                 </div>

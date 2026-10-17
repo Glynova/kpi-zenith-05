@@ -15,15 +15,22 @@ function Iso({ children }: { children: React.ReactNode }) {
       >
         <defs>
           <linearGradient id="isoTop" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="var(--chart-2)" stopOpacity="0.75" />
+            <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity="0.75" />
           </linearGradient>
           <linearGradient id="isoSide" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.25" />
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.25" />
           </linearGradient>
         </defs>
-        <ellipse cx="80" cy="104" rx="52" ry="10" fill="var(--muted-foreground)" opacity="0.14" />
+        <ellipse
+          cx="80"
+          cy="104"
+          rx="52"
+          ry="10"
+          fill="hsl(var(--muted-foreground))"
+          opacity="0.14"
+        />
         {children}
       </svg>
     </div>
@@ -55,7 +62,7 @@ function Box({
       />
       <polygon
         points={`${x + w},${y} ${x + w / 2},${y + d} ${x + w / 2},${y + d + h} ${x + w},${y + h}`}
-        fill="var(--primary)"
+        fill="hsl(var(--primary))"
         opacity="0.35"
       />
     </g>

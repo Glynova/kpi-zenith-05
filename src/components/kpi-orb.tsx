@@ -1,7 +1,4 @@
-/**
- * Signature 3D moment for the dashboard.
- * Pure CSS 3D (transform-only, GPU composited) — no WebGL, no extra bundle weight.
- */
+/** Compact semantic health score indicator. */
 export function KpiOrb({
   score,
   label = "Business health",
@@ -11,44 +8,29 @@ export function KpiOrb({
   label?: string;
   caption?: string;
 }) {
-  const rings = [0, 30, 60, 90, 120, 150];
-  const tone = score >= 70 ? "var(--chart-2)" : score >= 45 ? "var(--chart-3)" : "var(--chart-5)";
+  const progress = Math.min(100, Math.max(0, score));
+  const tone =
+    score >= 70 ? "var(--success)" : score >= 45 ? "var(--warning)" : "var(--destructive)";
 
   return (
-    <div className="scene-3d relative grid h-56 place-items-center select-none">
-      {/* ambient glow */}
+    <div className="grid min-h-56 place-items-center select-none">
       <div
-        aria-hidden
-        className="pointer-events-none absolute size-48 rounded-full blur-3xl opacity-40"
-        style={{ background: `radial-gradient(circle, ${tone}, transparent 65%)` }}
-      />
-      <div className="orb-float">
-        <div className="orb-3d relative size-40">
-          {rings.map((deg, i) => (
-            <div
-              key={deg}
-              aria-hidden
-              className="orb-ring absolute inset-0 rounded-full border"
-              style={{
-                transform: `rotateY(${deg}deg)`,
-                borderColor: i % 2 === 0 ? tone : "var(--primary)",
-                animationDelay: `${i * 240}ms`,
-              }}
-            />
-          ))}
-          <div
-            aria-hidden
-            className="absolute inset-6 rounded-full opacity-70 blur-md"
-            style={{
-              background: `radial-gradient(circle at 35% 30%, color-mix(in oklab, ${tone} 65%, transparent), transparent 70%)`,
-            }}
-          />
+        className="grid size-44 place-items-center rounded-full"
+        style={{
+          background: `conic-gradient(hsl(${tone}) ${progress * 3.6}deg, hsl(var(--border)) 0deg)`,
+        }}
+        role="img"
+        aria-label={`${label}: ${Math.round(score)} out of 100`}
+      >
+        <div className="grid size-36 content-center justify-items-center rounded-full border border-card-border bg-card text-center shadow-elevate-1">
+          <p className="font-display text-4xl font-semibold tabular-nums">{Math.round(score)}</p>
+          <p className="mt-1 max-w-28 text-center text-sm font-medium text-muted-foreground">
+            {label}
+          </p>
+          {caption && (
+            <p className="mt-1 max-w-28 text-center text-sm text-muted-foreground">{caption}</p>
+          )}
         </div>
-      </div>
-      <div className="pointer-events-none absolute text-center">
-        <p className="font-display text-3xl font-semibold tabular-nums">{Math.round(score)}</p>
-        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-        {caption && <p className="mt-1 text-[11px] text-muted-foreground">{caption}</p>}
       </div>
     </div>
   );

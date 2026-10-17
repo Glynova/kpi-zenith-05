@@ -513,9 +513,6 @@ export function ResourcePage({
         actions={
           <>
             {toolbar}
-            <Button variant="outline" size="sm" onClick={exportCsv}>
-              <Download className="size-4" /> Export
-            </Button>
             {editable && enableImport && (
               <>
                 <input
@@ -568,6 +565,9 @@ export function ResourcePage({
             {search.trim() && data ? ` of ${data.length}` : ""}
           </p>
         )}
+        <Button variant="outline" onClick={exportCsv} className="sm:ml-auto">
+          <Download /> Export
+        </Button>
       </div>
 
       {isLoading ? (

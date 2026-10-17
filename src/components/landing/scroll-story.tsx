@@ -62,9 +62,7 @@ export function ScrollStory() {
     <section aria-label="How Daraven works" className="border-b border-white/8 bg-black/20">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28">
         <div data-reveal className="max-w-2xl">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--gold)]">
-            The workflow
-          </p>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-gold">The workflow</p>
           <h2 className="mt-4 font-display text-3xl font-semibold text-white sm:text-4xl">
             One workspace, from the stockroom to the board pack
           </h2>
@@ -77,7 +75,7 @@ export function ScrollStory() {
               <div className="relative min-w-0">
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute -inset-8 -z-10 rounded-[2rem] bg-[radial-gradient(circle_at_50%_35%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_70%)] blur-2xl"
+                  className="pointer-events-none absolute -inset-8 -z-10 rounded-[2rem] bg-[radial-gradient(circle_at_50%_35%,color-mix(in_oklab,hsl(var(--primary))_22%,transparent),transparent_70%)] blur-2xl"
                 />
                 <WorkspaceMockup />
                 <div className="mt-6 flex items-center gap-2" role="presentation">
@@ -86,7 +84,7 @@ export function ScrollStory() {
                       key={c.kicker}
                       className={cn(
                         "h-[3px] flex-1 rounded-full transition-colors duration-500",
-                        i === active ? "bg-[color:var(--gold)]" : "bg-white/12",
+                        i === active ? "bg-gold" : "bg-white/12",
                       )}
                     />
                   ))}
@@ -107,7 +105,7 @@ export function ScrollStory() {
                   className={cn(
                     "rounded-2xl border p-6 transition-all duration-500 motion-reduce:transition-none sm:p-7",
                     i === active
-                      ? "border-[color:var(--gold)]/35 bg-white/[0.06] shadow-[0_24px_60px_-40px_rgba(0,0,0,0.9)] lg:translate-x-0 lg:opacity-100"
+                      ? "border-gold/35 bg-white/[0.06] shadow-[0_24px_60px_-40px_rgba(0,0,0,0.9)] lg:translate-x-0 lg:opacity-100"
                       : "border-white/8 bg-white/[0.02] lg:opacity-60",
                   )}
                 >
@@ -115,9 +113,7 @@ export function ScrollStory() {
                     <span
                       className={cn(
                         "grid size-9 shrink-0 place-items-center rounded-xl transition-colors",
-                        i === active
-                          ? "bg-[color:var(--gold)]/15 text-[color:var(--gold)]"
-                          : "bg-white/6 text-white/50",
+                        i === active ? "bg-gold/15 text-gold" : "bg-white/6 text-white/50",
                       )}
                     >
                       <c.icon className="size-4" />

@@ -42,8 +42,6 @@ export type NavItem = {
   feature?: FeatureKey;
   /** Extra words that should match in the command palette. */
   keywords?: string;
-  /** Tabs shown nested under this item (links carry ?tab=). */
-  children?: { title: string; tab: string; feature?: FeatureKey }[];
 };
 
 export type NavGroup = {
@@ -94,11 +92,6 @@ export const NAV_GROUPS: NavGroup[] = [
         url: "/inventory/master-data",
         icon: Tags,
         keywords: "categories suppliers vendors locations warehouse branch setup",
-        children: [
-          { title: "Categories", tab: "categories" },
-          { title: "Suppliers", tab: "suppliers", feature: "enable_purchasing" },
-          { title: "Locations", tab: "locations" },
-        ],
       },
       { title: "Stock Movements", url: "/inventory", icon: Boxes, keywords: "ledger stock in out" },
       {

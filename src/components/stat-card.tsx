@@ -6,12 +6,12 @@ import { Sparkline } from "@/components/sparkline";
 
 export type StatTone = "default" | "success" | "warning" | "destructive" | "gold";
 
-const TONE: Record<StatTone, { text: string; glow: string }> = {
-  default: { text: "text-primary", glow: "from-primary/12" },
-  success: { text: "text-success", glow: "from-success/12" },
-  warning: { text: "text-warning", glow: "from-warning/12" },
-  destructive: { text: "text-destructive", glow: "from-destructive/12" },
-  gold: { text: "text-gold", glow: "from-gold/12" },
+const TONE: Record<StatTone, { text: string }> = {
+  default: { text: "text-foreground" },
+  success: { text: "text-success" },
+  warning: { text: "text-warning" },
+  destructive: { text: "text-destructive" },
+  gold: { text: "text-gold" },
 };
 
 /**
@@ -52,22 +52,20 @@ export function StatCard({
   const DeltaIcon = up ? ArrowUpRight : down ? ArrowDownRight : Minus;
 
   return (
-    <div className={cn("surface-card relative isolate overflow-hidden p-4 sm:p-5", className)}>
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute -right-10 -top-14 -z-10 size-32 rounded-full bg-gradient-to-b to-transparent blur-2xl",
-          t.glow,
-        )}
-      />
+    <div className={cn("surface-card relative isolate min-h-32 overflow-hidden p-6", className)}>
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 truncate text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="min-w-0 truncate text-[13px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
           {label}
         </p>
         {Icon && <Icon className={cn("size-4 shrink-0", t.text)} />}
       </div>
 
-      <p className="mt-3 truncate font-display text-xl font-semibold tabular-nums sm:text-2xl">
+      <p
+        className={cn(
+          "mt-3 truncate font-display font-semibold tabular-nums",
+          value.length > 12 ? "text-2xl" : "text-4xl",
+        )}
+      >
         {value}
       </p>
 
@@ -76,7 +74,7 @@ export function StatCard({
           {hasDelta && (
             <span
               className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] font-medium tabular-nums",
+                "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[13px] font-medium tabular-nums",
                 good
                   ? "border-success/30 bg-success/10 text-success"
                   : bad
@@ -89,7 +87,7 @@ export function StatCard({
             </span>
           )}
           {(sub || deltaLabel) && (
-            <p className="mt-1 truncate text-xs text-muted-foreground">{sub ?? deltaLabel}</p>
+            <p className="mt-1 truncate text-sm text-muted-foreground">{sub ?? deltaLabel}</p>
           )}
         </div>
         {series && series.length > 1 && (
@@ -98,14 +96,14 @@ export function StatCard({
             className="h-8 w-20 shrink-0 opacity-90"
             stroke={
               tone === "success"
-                ? "var(--success)"
+                ? "hsl(var(--success))"
                 : tone === "warning"
-                  ? "var(--warning)"
+                  ? "hsl(var(--warning))"
                   : tone === "destructive"
-                    ? "var(--destructive)"
+                    ? "hsl(var(--destructive))"
                     : tone === "gold"
-                      ? "var(--gold)"
-                      : "var(--primary)"
+                      ? "hsl(var(--gold))"
+                      : "hsl(var(--primary))"
             }
           />
         )}

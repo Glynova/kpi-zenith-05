@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, Command } from "lucide-react";
 
@@ -7,6 +7,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
@@ -53,20 +54,33 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel className="h-8 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Workspace
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {groups.map((group) => {
-                if (group.url) {
-                  const active = pathname === group.url;
+                if (group.id !== "inventory") {
+                  const directItems = group.url
+                    ? [{ title: group.label, url: group.url, icon: group.icon }]
+                    : group.items;
                   return (
-                    <SidebarMenuItem key={group.id}>
-                      <SidebarMenuButton asChild isActive={active} tooltip={group.label}>
-                        <Link to={group.url} className="flex items-center gap-2">
-                          <group.icon className="size-4 shrink-0" />
-                          <span className="truncate">{group.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <Fragment key={group.id}>
+                      {directItems.map((item) => (
+                        <SidebarMenuItem key={item.url}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
+                            tooltip={item.title}
+                          >
+                            <Link to={item.url} className="flex items-center gap-3">
+                              <item.icon className="size-5 shrink-0" />
+                              <span className="truncate">{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </Fragment>
                   );
                 }
 
@@ -78,8 +92,8 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
                   return (
                     <SidebarMenuItem key={group.id}>
                       <SidebarMenuButton asChild isActive={hasActive} tooltip={group.label}>
-                        <Link to={group.items[0].url} className="flex items-center gap-2">
-                          <group.icon className="size-4 shrink-0" />
+                        <Link to={group.items[0].url} className="flex items-center gap-3">
+                          <group.icon className="size-5 shrink-0" />
                           <span className="truncate">{group.label}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -97,7 +111,7 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton isActive={hasActive && !isOpen} tooltip={group.label}>
-                          <group.icon className="size-4 shrink-0" />
+                          <group.icon className="size-5 shrink-0" />
                           <span className="truncate">{group.label}</span>
                           <ChevronRight
                             className={`ml-auto size-4 shrink-0 transition-transform duration-200 ${
@@ -112,27 +126,10 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
                             <SidebarMenuSubItem key={item.url}>
                               <SidebarMenuSubButton asChild isActive={pathname === item.url}>
                                 <Link to={item.url} className="flex items-center gap-2">
-                                  <item.icon className="size-3.5 shrink-0 opacity-70" />
+                                  <item.icon className="size-5 shrink-0 opacity-70" />
                                   <span className="truncate">{item.title}</span>
                                 </Link>
                               </SidebarMenuSubButton>
-                              {item.children && (
-                                <ul className="ml-5 mt-0.5 space-y-0.5 border-l border-sidebar-border pl-2">
-                                  {item.children
-                                    .filter((c) => !c.feature || feature(c.feature))
-                                    .map((c) => (
-                                      <li key={c.tab}>
-                                        <Link
-                                          to="/inventory/master-data"
-                                          search={{ tab: c.tab as "categories" }}
-                                          className="block rounded px-2 py-1 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                                        >
-                                          {c.title}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                </ul>
-                              )}
                             </SidebarMenuSubItem>
                           ))}
                         </SidebarMenuSub>
@@ -149,10 +146,14 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={onOpenPalette} tooltip="Search (⌘K)">
+            <SidebarMenuButton
+              onClick={onOpenPalette}
+              tooltip="Search (⌘K)"
+              className="rounded-full border border-sidebar-border bg-sidebar-accent/40"
+            >
               <Command className="size-4 shrink-0" />
               <span className="truncate">Quick search</span>
-              <kbd className="ml-auto rounded border border-sidebar-border px-1 text-[10px] text-muted-foreground">
+              <kbd className="ml-auto rounded-full border border-sidebar-border px-2 py-0.5 text-xs text-muted-foreground">
                 ⌘K
               </kbd>
             </SidebarMenuButton>

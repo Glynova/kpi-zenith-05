@@ -335,11 +335,11 @@ function Dashboard() {
     m.payables !== 0;
 
   const chartColors = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
   ];
 
   return (
@@ -510,15 +510,15 @@ function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="sales"
-                    stroke="var(--chart-1)"
-                    fill="var(--chart-1)"
+                    stroke="hsl(var(--chart-1))"
+                    fill="hsl(var(--chart-1))"
                     fillOpacity={0.15}
                   />
                   <Area
                     type="monotone"
                     dataKey="expenses"
-                    stroke="var(--chart-5)"
-                    fill="var(--chart-5)"
+                    stroke="hsl(var(--chart-5))"
+                    fill="hsl(var(--chart-5))"
                     fillOpacity={0.12}
                   />
                 </AreaChart>
@@ -583,7 +583,7 @@ function Dashboard() {
                       borderRadius: 8,
                     }}
                   />
-                  <Bar dataKey="revenue" fill="var(--chart-2)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

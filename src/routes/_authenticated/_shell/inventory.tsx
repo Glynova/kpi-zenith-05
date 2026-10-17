@@ -11,6 +11,7 @@ import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { ADJUSTMENT_REASONS, MOVEMENT_GROUPS, movementSign } from "@/lib/inventory";
 import { PageHeader, EmptyState } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,21 @@ import {
 
 const description =
   "The stock movement ledger — every receipt, issue, transfer, adjustment and count, with cost and reference.";
+
+function movementBadgeClass(type: string) {
+  if (type === "opening_balance") return "border-primary/30 bg-primary/10 text-primary";
+  if (["purchase", "return_in", "production_in"].includes(type))
+    return "border-success/30 bg-success/10 text-success";
+  if (["sale", "return_out"].includes(type))
+    return "border-border bg-muted-surface text-muted-foreground";
+  if (["consumption", "production_out", "waste", "damage"].includes(type))
+    return "border-destructive/30 bg-destructive/10 text-destructive";
+  if (type.startsWith("transfer_"))
+    return "border-accent-violet/30 bg-accent-violet/10 text-accent-violet";
+  if (type.startsWith("adjustment_")) return "border-warning/30 bg-warning/10 text-warning";
+  if (type === "stock_count") return "border-cyan/30 bg-cyan/10 text-cyan";
+  return "border-border bg-muted-surface text-muted-foreground";
+}
 
 function StockMovements() {
   const { businessId, currency, canWrite, feature, settings } = useBusiness();
@@ -113,6 +129,29 @@ function StockMovements() {
       0,
     );
     return { units, value };
+  }, [data]);
+
+  const todayActivity = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    const movements = (data?.movements ?? []).filter((movement) => {
+      const created = new Date(movement.created_at);
+      return created >= start && created < end;
+    });
+    const receivedTypes = ["purchase", "return_in", "production_in", "transfer_in"];
+    const received = movements
+      .filter((movement) => receivedTypes.includes(movement.type))
+      .reduce((sum, movement) => sum + Number(movement.base_quantity ?? movement.quantity ?? 0), 0);
+    const consumedTypes = ["sale", "consumption", "production_out", "waste", "damage"];
+    const consumed = movements
+      .filter((movement) => consumedTypes.includes(movement.type))
+      .reduce((sum, movement) => sum + Number(movement.base_quantity ?? movement.quantity ?? 0), 0);
+    const adjustments = movements.filter((movement) =>
+      ["adjustment_in", "adjustment_out", "stock_count"].includes(movement.type),
+    ).length;
+    return { received, consumed, adjustments };
   }, [data]);
 
   const record = useMutation({
@@ -197,9 +236,6 @@ function StockMovements() {
         description={description}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length}>
-              <Download className="size-4" /> Export
-            </Button>
             {canWrite && (
               <>
                 <Button variant="outline" size="sm" onClick={openAdjustment}>
@@ -214,23 +250,25 @@ function StockMovements() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <div className="surface-panel p-4">
-          <p className="text-xs text-muted-foreground">Units on hand</p>
-          <p className="font-display text-2xl font-semibold">{formatNumber(totals.units, 2)}</p>
-        </div>
-        <div className="surface-panel p-4">
-          <p className="text-xs text-muted-foreground">Inventory value</p>
-          <p className="font-display text-2xl font-semibold">
-            {formatCurrency(totals.value, currency)}
-          </p>
-        </div>
-        <div className="surface-panel p-4">
-          <p className="text-xs text-muted-foreground">Costing method</p>
-          <p className="break-words font-display text-2xl font-semibold">
-            {titleCase(String(settings.costing_method))}
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-6">
+        <StatCard label="Units on hand" value={formatNumber(totals.units, 2)} />
+        <StatCard label="Inventory value" value={formatCurrency(totals.value, currency)} />
+        <StatCard label="Costing method" value={titleCase(String(settings.costing_method))} />
+        <StatCard
+          label="Received today"
+          value={formatNumber(todayActivity.received, 2)}
+          tone={todayActivity.received > 0 ? "success" : "default"}
+        />
+        <StatCard
+          label="Consumed today"
+          value={formatNumber(todayActivity.consumed, 2)}
+          tone={todayActivity.consumed > 0 ? "destructive" : "default"}
+        />
+        <StatCard
+          label="Adjustments"
+          value={formatNumber(todayActivity.adjustments, 0)}
+          tone={todayActivity.adjustments > 0 ? "warning" : "default"}
+        />
       </div>
 
       <div className="page-toolbar">
@@ -271,6 +309,14 @@ function StockMovements() {
             </SelectContent>
           </Select>
         )}
+        <Button
+          variant="outline"
+          onClick={exportCsv}
+          disabled={!rows.length}
+          className="sm:ml-auto"
+        >
+          <Download /> Export
+        </Button>
       </div>
 
       {isLoading ? (
@@ -292,7 +338,6 @@ function StockMovements() {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Product</TableHead>
-                <TableHead>SKU</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Movement</TableHead>
                 <TableHead className="text-right">Quantity</TableHead>
@@ -310,31 +355,43 @@ function StockMovements() {
                 return (
                   <TableRow key={m.id}>
                     <TableCell className="whitespace-nowrap">{formatDate(m.created_at)}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {product ? (
-                        <Link
-                          to="/products/$productId"
-                          params={{ productId: product.id }}
-                          className="font-medium hover:underline"
-                        >
-                          {product.name}
-                        </Link>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {product?.sku ?? "—"}
+                    <TableCell className="min-w-56">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="table-image-avatar grid size-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white text-lg font-semibold text-slate-900">
+                          {String(product?.name ?? "?")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                        <span className="min-w-0">
+                          {product ? (
+                            <Link
+                              to="/products/$productId"
+                              params={{ productId: product.id }}
+                              className="block truncate font-semibold hover:text-primary"
+                            >
+                              {product.name}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                          <span className="block truncate text-sm text-muted-foreground">
+                            {product?.sku ?? "No SKU"}
+                          </span>
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {warehouseMap[m.warehouse_id]?.name ?? "—"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
-                      <Badge variant={sign < 0 ? "destructive" : "secondary"}>
+                      <Badge variant="outline" className={movementBadgeClass(m.type)}>
                         {titleCase(m.type)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium">
+                    <TableCell
+                      className={`whitespace-nowrap text-right font-medium ${sign < 0 ? "text-destructive" : sign > 0 ? "text-success" : "text-foreground"}`}
+                    >
                       {sign < 0 ? "−" : sign > 0 ? "+" : ""}
                       {formatNumber(qty, 2)}
                     </TableCell>

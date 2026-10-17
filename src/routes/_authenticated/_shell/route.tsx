@@ -122,7 +122,7 @@ function Shell() {
       <div className="flex min-h-screen w-full">
         <AppSidebar onOpenPalette={() => setPaletteOpen(true)} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-background/85 px-2 py-2 backdrop-blur-xl sm:gap-3 sm:px-3">
+          <header className="sticky top-0 z-20 grid h-[72px] shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-background/90 px-3 backdrop-blur-xl sm:gap-3 sm:px-5">
             <SidebarTrigger className="shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
               <DropdownMenu>
@@ -130,7 +130,7 @@ function Shell() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="min-w-0 gap-2 rounded-xl border border-transparent px-2 hover:border-border"
+                    className="min-w-0 gap-2 rounded-2xl border border-card-border bg-muted-surface px-3 hover:border-card-border-hover"
                   >
                     <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-primary/12 text-[10px] font-semibold tracking-wide text-primary">
                       {initials}
@@ -159,6 +159,16 @@ function Shell() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                onClick={() => navigate({ to: "/onboarding" })}
+                aria-label="Add a business"
+                title="Add a business"
+              >
+                <Plus />
+              </Button>
               {role && (
                 <Badge variant="secondary" className="hidden shrink-0 lg:inline-flex">
                   {titleCase(role)}
@@ -168,22 +178,23 @@ function Shell() {
             <div className="flex shrink-0 items-center gap-1">
               <Button
                 variant="outline"
-                size="sm"
-                className="hidden gap-2 rounded-xl text-muted-foreground lg:inline-flex"
+                size="icon"
+                className="hidden rounded-full lg:inline-flex"
                 onClick={() => setPaletteOpen(true)}
+                aria-label="Search (⌘K)"
+                title="Search (⌘K)"
               >
-                <Search className="size-4" />
-                <span>Search</span>
-                <kbd className="rounded border border-border px-1 text-[10px]">⌘K</kbd>
+                <Search />
               </Button>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="lg:hidden"
+                className="rounded-full lg:hidden"
                 onClick={() => setPaletteOpen(true)}
-                aria-label="Search"
+                aria-label="Search (⌘K)"
+                title="Search (⌘K)"
               >
-                <Search className="size-4" />
+                <Search />
               </Button>
               <AlertBell />
               <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">

@@ -5,7 +5,7 @@
 export function Sparkline({
   data,
   className,
-  stroke = "var(--primary)",
+  stroke = "hsl(var(--primary))",
   height = 32,
   width = 96,
   fill = true,

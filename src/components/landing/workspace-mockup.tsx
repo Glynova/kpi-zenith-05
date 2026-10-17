@@ -52,7 +52,7 @@ export function WorkspaceMockup() {
         className="pointer-events-none absolute inset-x-4 top-10 -z-10 h-64 rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(closest-side, color-mix(in oklab, var(--gold) 22%, transparent), transparent)",
+            "radial-gradient(closest-side, color-mix(in oklab, hsl(var(--gold)) 22%, transparent), transparent)",
         }}
       />
       <div ref={stageRef} className="tilt-stage">
@@ -92,7 +92,7 @@ export function WorkspaceMockup() {
                     <p className="mt-1.5 truncate font-display text-sm font-semibold text-white sm:text-lg">
                       {k.v}
                     </p>
-                    <p className="text-[9px] text-[color:var(--gold)] sm:text-[10px]">{k.d}</p>
+                    <p className="text-[9px] text-gold sm:text-[10px]">{k.d}</p>
                   </div>
                 ))}
               </div>
@@ -210,7 +210,7 @@ export function WorkspaceMockup() {
                     "Payroll run completed · 24 employees",
                   ].map((t) => (
                     <li key={t} className="flex gap-2 text-[10px] leading-relaxed text-white/60">
-                      <span className="mt-1 size-1.5 shrink-0 rounded-full bg-[color:var(--gold)]" />
+                      <span className="mt-1 size-1.5 shrink-0 rounded-full bg-gold" />
                       <span className="min-w-0">{t}</span>
                     </li>
                   ))}
@@ -243,7 +243,7 @@ export function WorkspaceMockup() {
             {[5, 9, 6, 12, 8, 14, 11].map((h, i) => (
               <span
                 key={i}
-                className="flex-1 rounded-sm bg-[color:var(--gold)]/70"
+                className="flex-1 rounded-sm bg-gold/70"
                 style={{ height: `${h * 6}%` }}
               />
             ))}
