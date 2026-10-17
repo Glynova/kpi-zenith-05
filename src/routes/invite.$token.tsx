@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { BrandLogo } from "@/components/brand-logo";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { lovable } from "@/integrations/lovable/index";
+import { useServerFn } from "@tanstack/react-start";
+import { inviteSignup } from "@/lib/team.functions";
 import {
   APP_URL,
   buildInviteAuthRedirectUrl,
@@ -52,6 +54,7 @@ type Invite = {
 function InvitePage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
+  const signupInvite = useServerFn(inviteSignup);
   const queryClient = useQueryClient();
   const [invite, setInvite] = useState<Invite | null | undefined>(undefined);
   const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
@@ -124,40 +127,28 @@ function InvitePage() {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("invite-signup", {
-        body: { token, email: invite.email, password, fullName },
+      const result = await signupInvite({
+        data: { token, email: invite.email, password, fullName },
       });
-      if (error) {
-        let message = error.message;
-        if (error.context instanceof Response) {
-          const details = await error.context
-            .clone()
-            .json()
-            .catch(() => null);
-          if (details?.code === "account_exists") {
-            setMode("signin");
-            setPassword("");
-          }
-          message = details?.message ?? message;
+      if (!result.ok) {
+        if (result.code === "account_exists") {
+          setMode("signin");
+          setPassword("");
         }
-        toast.error(message);
-        return;
-      }
-      if (!data?.session || typeof data.businessId !== "string") {
-        toast.error("Could not finish joining this workspace. Please try again.");
+        toast.error(result.message);
         return;
       }
 
       const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
       });
       if (sessionError) {
         toast.error("Your account joined the workspace. Sign in to continue.");
         return;
       }
 
-      window.localStorage.setItem("kpioptiva-business", data.businessId);
+      window.localStorage.setItem("kpioptiva-business", result.businessId);
       sessionStorage.removeItem(PENDING_INVITE_KEY);
       window.location.replace(`${APP_URL}/dashboard`);
     } catch {

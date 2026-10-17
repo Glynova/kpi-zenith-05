@@ -1,10 +1,10 @@
 # Roadmap
 
 - [x] Invitation URL canonicalization: invite links, signup confirmation and OAuth redirects use `APP_URL` from `VITE_PUBLIC_APP_URL` or the `https://daraven.com` fallback; server-generated links prefer server-side `APP_URL`, never client/runtime origin. Pending invite resend rotates to a fresh production-domain link. Focused verification passed; no publication.
-- [x] Invite password signup: public Edge Function verifies pending token, expiry and invited email before admin-creating a confirmed user, signing in and accepting the stored role; redirect to production dashboard. Normal `/auth` signup remains confirmation-gated. Focused helper tests and build passed; no publication or real account test.
+- [x] Invite password signup: native TanStack `inviteSignup` server function verifies pending token, expiry and invited email before admin-creating a confirmed user, signing in and accepting the stored role; redirect to production dashboard. Normal `/auth` signup remains confirmation-gated. Focused tests and build passed; no publication or real account test.
 
 - [x] Urgent invitation repair: canonical production links, validated callback token, selected joined workspace; 63 tests and targeted lint passed, automatic build OK; real unknown-token lookup and simulated pending/expired/revoked screens verified without accounts or publishing.
-- [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (live Edge Function OPTIONS probe returned 404; deploy attempt requires a Supabase access token not present in this workspace; no live accounts used and hosted redirect settings remain unavailable).
+- [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (no live accounts used; hosted redirect settings remain unavailable).
 
 - [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
 - [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.

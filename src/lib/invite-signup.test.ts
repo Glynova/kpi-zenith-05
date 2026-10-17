@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  hashInviteToken,
-  isInviteToken,
-  validateInvite,
-} from "../../supabase/functions/_shared/invite-validation";
+import { hashInviteToken, isInviteToken, validateInvite } from "./invite-validation";
 
 const token = "a".repeat(64);
 const pendingInvite = {

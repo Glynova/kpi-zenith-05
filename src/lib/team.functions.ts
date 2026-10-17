@@ -2,6 +2,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { APP_URL, buildInviteUrl } from "@/lib/invite-links";
+import { hashInviteToken, isInviteToken, validateInvite } from "@/lib/invite-validation";
+import type { Database } from "@/integrations/supabase/types";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -16,6 +18,146 @@ const ASSIGNABLE = [
   "employee",
   "auditor",
 ] as const;
+
+type InviteSignupResult =
+  | { ok: true; businessId: string; session: { access_token: string; refresh_token: string } }
+  | { ok: false; code: string; message: string };
+
+function supabaseFetch(apiKey: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
+    );
+    if (init?.headers) new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    if (
+      (apiKey.startsWith("sb_publishable_") || apiKey.startsWith("sb_secret_")) &&
+      headers.get("Authorization") === `Bearer ${apiKey}`
+    ) {
+      headers.delete("Authorization");
+    }
+    headers.set("apikey", apiKey);
+    return fetch(input, { ...init, headers });
+  };
+}
+
+export const inviteSignup = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        token: z.string(),
+        email: z.string().email(),
+        password: z.string().min(8).max(72),
+        fullName: z.string().trim().min(1).max(120),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<InviteSignupResult> => {
+    const token = data.token.trim();
+    const email = data.email.trim().toLowerCase();
+    if (!isInviteToken(token)) {
+      return { ok: false, code: "invalid", message: "This invitation link is not valid." };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const tokenHash = await hashInviteToken(token);
+    const { data: invite, error: lookupError } = await (supabaseAdmin as any)
+      .from("team_invitations")
+      .select("email, status, expires_at")
+      .eq("token_hash", tokenHash)
+      .maybeSingle();
+    if (lookupError) {
+      return {
+        ok: false,
+        code: "invite_lookup_failed",
+        message: "Could not validate this invitation. Please try again.",
+      };
+    }
+
+    const invalidReason = validateInvite(invite, email);
+    if (invalidReason) {
+      const messages = {
+        invalid: "This invitation link is not valid.",
+        used: "This invitation was already used or cancelled.",
+        expired: "This invitation has expired. Ask the workspace owner for a new link.",
+        email_mismatch: "This invitation was sent to a different email address.",
+      };
+      return { ok: false, code: invalidReason, message: messages[invalidReason] };
+    }
+
+    const { data: created, error: createError } = await (
+      supabaseAdmin as any
+    ).auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName.trim() },
+    });
+    if (createError || !created?.user) {
+      if (
+        createError?.code === "email_exists" ||
+        /already (registered|exists)/i.test(createError?.message ?? "")
+      ) {
+        return {
+          ok: false,
+          code: "account_exists",
+          message: "An account already exists for this email. Sign in to accept the invitation.",
+        };
+      }
+      return {
+        ok: false,
+        code: "account_creation_failed",
+        message: createError?.message ?? "Could not create this account.",
+      };
+    }
+
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+      if (!supabaseUrl || !publishableKey) {
+        throw new Error("Supabase public client configuration is missing.");
+      }
+      const { createClient } = await import("@supabase/supabase-js");
+      const userClient = createClient<Database>(supabaseUrl, publishableKey, {
+        global: { fetch: supabaseFetch(publishableKey) },
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      });
+
+      const { data: authData, error: signInError } = await userClient.auth.signInWithPassword({
+        email,
+        password: data.password,
+      });
+      if (signInError || !authData.session) {
+        throw new Error(signInError?.message ?? "Could not sign in the new account.");
+      }
+
+      const { data: businessId, error: acceptError } = await userClient.rpc(
+        "accept_team_invitation",
+        { _token: token },
+      );
+      if (acceptError || typeof businessId !== "string") {
+        throw new Error(acceptError?.message ?? "Could not accept this invitation.");
+      }
+
+      return {
+        ok: true,
+        businessId,
+        session: {
+          access_token: authData.session.access_token,
+          refresh_token: authData.session.refresh_token,
+        },
+      };
+    } catch (error) {
+      await (supabaseAdmin as any).auth.admin.deleteUser(created.user.id);
+      return {
+        ok: false,
+        code: "invite_acceptance_failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not finish joining this workspace. Please try again.",
+      };
+    }
+  });
 
 async function assertAdmin(supabase: any, userId: string, businessId: string) {
   const { data, error } = await supabase
