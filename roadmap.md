@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Urgent invitation repair: first-party production links, secure acceptance/auth return, URL/state tests and preview verification; no publishing or live accounts.
+- [x] Urgent invitation repair: canonical production links, validated callback token, selected joined workspace; 63 tests and targeted lint passed, automatic build OK; real unknown-token lookup and simulated pending/expired/revoked screens verified without accounts or publishing.
+- [ ] Invitation real-user end-to-end acceptance and hosted redirect allowlist verification (blocked: no live accounts permitted; available authentication configuration tool does not expose redirect settings).
 
 - [x] Responsive ERP headers, toolbars, cards and tables; verified 20 signed-in pages at mobile/tablet/desktop without transaction writes.
 - [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.
