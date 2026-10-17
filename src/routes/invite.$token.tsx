@@ -123,16 +123,18 @@ function InvitePage() {
       if (error) toast.error(error.message);
       return;
     }
+    let confirmationUrl: string;
+    try {
+      confirmationUrl = buildInviteUrl(token, window.location.origin, import.meta.env.VITE_PUBLIC_APP_URL);
+    } catch (error) {
+      setBusy(false);
+      return toast.error(error instanceof Error ? error.message : "Invitation links are not configured.");
+    }
     const { data, error } = await supabase.auth.signUp({
       email: invite.email,
       password,
       options: {
-        emailRedirectTo: buildInviteUrl(
-          token,
-          window.location.origin,
-          import.meta.env.VITE_PUBLIC_APP_URL,
-          import.meta.env.DEV,
-        ),
+        emailRedirectTo: confirmationUrl,
         data: { full_name: fullName },
       },
     });
@@ -148,7 +150,6 @@ function InvitePage() {
       const base = publicAppBaseUrl(
         window.location.origin,
         import.meta.env.VITE_PUBLIC_APP_URL,
-        import.meta.env.DEV,
       );
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: `${base}/auth/callback?invite=${token}`,
@@ -158,8 +159,8 @@ function InvitePage() {
         const { data } = await supabase.auth.getUser();
         setUserEmail(data.user?.email ?? null);
       }
-    } catch {
-      toast.error("Google sign-in failed. Please try again.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Google sign-in failed. Please try again.");
     } finally {
       setBusy(false);
     }

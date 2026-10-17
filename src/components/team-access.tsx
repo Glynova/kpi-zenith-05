@@ -137,7 +137,7 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
           />
         </div>
         <div className="min-w-0">
-          <Label className="text-xs">Role</Label>
+          <Label className="text-xs">New invitation role</Label>
           <Select value={role} onValueChange={setRole}>
             <SelectTrigger className="mt-1.5">
               <SelectValue />
@@ -199,7 +199,7 @@ export function TeamAccess({ businessId, canManage }: { businessId: string; canM
                     disabled={invite.isPending}
                     onClick={() => invite.mutate({ email: i.email, role: i.role })}
                   >
-                    <RefreshCw className="size-4" /> New link
+                    <RefreshCw className="size-4" /> Resend {ROLE_LABEL[i.role] ?? i.role} invite
                   </Button>
                   <Button
                     size="icon"
