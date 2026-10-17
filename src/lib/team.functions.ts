@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { buildInviteUrl } from "@/lib/invite-links";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -122,7 +124,13 @@ export const addTeamMember = createServerFn({ method: "POST" })
     const { error } = pending
       ? await admin
           .from("team_invitations")
-          .update({ token_hash, role: data.role, expires_at, invited_by: context.userId, updated_at: new Date().toISOString() })
+          .update({
+            token_hash,
+            role: data.role,
+            expires_at,
+            invited_by: context.userId,
+            updated_at: new Date().toISOString(),
+          })
           .eq("id", pending.id)
       : await admin.from("team_invitations").insert({
           business_id: data.businessId,
@@ -133,8 +141,14 @@ export const addTeamMember = createServerFn({ method: "POST" })
           invited_by: context.userId,
         });
     if (error) throw new Error("Could not create the invitation");
-    const origin = new URL(data.origin).origin;
-    return { ok: true, email, link: `${origin}/invite/${token}`, reissued: !!pending, hasAccount: !!profile };
+    // Never trust the client-submitted origin: it may be an editor/project URL.
+    const link = buildInviteUrl(
+      token,
+      getRequestHeader("origin"),
+      process.env["PUBLIC_APP_URL"],
+      process.env["NODE_ENV"] === "development",
+    );
+    return { ok: true, email, link, reissued: !!pending, hasAccount: !!profile };
   });
 
 export const listInvitations = createServerFn({ method: "GET" })
@@ -149,7 +163,13 @@ export const listInvitations = createServerFn({ method: "GET" })
       .eq("status", "pending")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (rows ?? []) as Array<{ id: string; email: string; role: string; status: string; expires_at: string }>;
+    return (rows ?? []) as Array<{
+      id: string;
+      email: string;
+      role: string;
+      status: string;
+      expires_at: string;
+    }>;
   });
 
 export const revokeInvitation = createServerFn({ method: "POST" })
