@@ -6,6 +6,7 @@
 - `src/lib/invite-links.test.ts` — 8 tests, including fixed production destinations for invite and auth redirect URLs, malformed tokens, invalid/expired/revoked/used invitation states.
 - `src/lib/team.functions.ts` — generated and reissued links use `APP_URL`; client origin and public URL configuration are not accepted.
 - `supabase/functions/invite-signup/index.ts` — validates invitation token hash, pending status, expiry and email match; creates a confirmed auth user, signs in, accepts the invitation under that user session and returns the session/business ID. Deletes the new auth user if sign-in/acceptance fails.
+- The Edge Function wraps all request handling so explicit errors and unexpected exceptions return CORS headers; OPTIONS returns 204 with allowed origin, headers and methods.
 - `supabase/functions/_shared/invite-validation.ts` — token hash and invitation state/email validation shared by the Edge Function.
 - `supabase/config.toml` — disables gateway JWT verification only for the token-gated `invite-signup` endpoint.
 - `src/routes/invite.$token.tsx` — invokes the Edge Function for password signup, installs its session, selects the returned workspace and redirects to `${APP_URL}/dashboard`; existing-user sign-in and Google callback remain available.
@@ -22,7 +23,8 @@
 - Targeted ESLint on the changed invitation route, helper, server function, team component and tests: **passed**.
 - `npm run build`: **passed**.
 - Full `npx vitest run`: **61 passed, 1 unrelated failure** in `src/lib/qrph.test.ts`; it expected the secret source label `Paymongo_Webhook_Secret` but received `PAYMONGO_WEBHOOK_SECRET`.
-- Edge Function local runtime/type check was not available because neither Deno nor the Supabase CLI is installed in this workspace.
+- Production OPTIONS probe to `invite-signup` returned **404**. The gateway response had `Access-Control-Allow-Origin: *` but omitted `content-type` from `Access-Control-Allow-Headers` and had no `Access-Control-Allow-Methods`, confirming the function is not deployed at that endpoint.
+- `npx supabase functions deploy invite-signup --project-ref ykcbknwsdolavuhrqpik` was attempted and blocked because no Supabase access token is available. Deno is not installed, so the Edge Function could not be run locally.
 - Current database function definitions and current membership/invitation RLS read and reviewed: verified email, token hash lookup, expiry/revocation, row lock, stored role and business-scoped activation remain in the existing transactional acceptance function. Current INSERT membership policy requires business admin; historical self-join policy is not present.
 - Browser: real `/invite/invalid` showed invalid-link message. Real anonymous lookup of an unknown well-formed token returned HTTP 200 with `[]` and showed invalid-link message.
 - Browser, simulated lookup responses only: pending invitation showed create-login, Google, and existing-user sign-in controls; switching to existing-user sign-in worked. Expired and revoked invitations hid login/acceptance controls. Revoked page checked at 390px with no horizontal overflow; desktop checked at 1280px. Screenshots inspected. **Zero browser runtime errors.**

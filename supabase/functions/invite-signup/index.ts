@@ -14,8 +14,24 @@ function respond(body: unknown, status = 200) {
   });
 }
 
-Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+async function handleRequest(request: Request): Promise<Response> {
+  try {
+    return await handleRequestInner(request);
+  } catch (error) {
+    console.error(
+      "invite-signup request failed",
+      error instanceof Error ? error.message : "Unknown error",
+    );
+    return respond(
+      { code: "internal_error", message: "Could not process this invitation. Please try again." },
+      500,
+    );
+  }
+}
+
+async function handleRequestInner(request: Request): Promise<Response> {
+  if (request.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: corsHeaders });
   if (request.method !== "POST") return respond({ code: "method_not_allowed" }, 405);
 
   let payload: unknown;
@@ -140,4 +156,6 @@ Deno.serve(async (request) => {
       400,
     );
   }
-});
+}
+
+Deno.serve(handleRequest);
