@@ -5,23 +5,29 @@ export function isInviteToken(value: unknown): value is string {
   return typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
 }
 
-function safePublicBase(value?: string): string {
-  if (!value) return DEFAULT_PUBLIC_APP_URL;
+export const INVITE_URL_CONFIG_ERROR = "Invitation links are not configured for this session. Set PUBLIC_APP_URL to https://daraven.com in Project Settings → Secrets and VITE_PUBLIC_APP_URL for browser confirmation links.";
+
+function safePublicBase(value: string): string {
   try {
     const url = new URL(value);
     if (
       url.protocol !== "https:" ||
       url.username ||
       url.password ||
+      url.hostname === "localhost" ||
+      url.hostname.endsWith(".localhost") ||
+      !url.hostname.includes(".") ||
+      /^[\d.]+$/.test(url.hostname) ||
+      url.hostname.includes(":") ||
       /(^|\.)(lovableproject\.com|lovableproject-dev\.com|lovable\.app|lovable\.dev|gpt-eng\.com|gptengineer\.app)$/.test(
         url.hostname,
       )
     ) {
-      return DEFAULT_PUBLIC_APP_URL;
+      throw new Error(INVITE_URL_CONFIG_ERROR);
     }
     return url.origin;
   } catch {
-    return DEFAULT_PUBLIC_APP_URL;
+    throw new Error(INVITE_URL_CONFIG_ERROR);
   }
 }
 
@@ -29,35 +35,31 @@ function safePublicBase(value?: string): string {
 export function publicAppBaseUrl(
   origin?: string,
   configured?: string,
-  localPreview = false,
 ): string {
   try {
     const url = new URL(origin ?? "");
     if (
       !url.username &&
       !url.password &&
-      ((url.protocol === "https:" &&
-        /^id-preview(?:-[a-z0-9]+)?--[a-f0-9-]{36}\.lovable\.app$/.test(url.hostname)) ||
-        (localPreview &&
-          url.protocol === "http:" &&
-          url.hostname === "localhost" &&
-          url.port === "8080"))
+      url.protocol === "https:" &&
+      /^id-preview(?:-[a-z0-9]+)?--[a-f0-9-]{36}\.lovable\.app$/.test(url.hostname)
     )
       return url.origin;
   } catch {
-    /* Invalid origins use the canonical public app. */
+    /* No usable deployed runtime origin. */
   }
-  return safePublicBase(configured);
+  if (configured) return safePublicBase(configured);
+  if (["https://daraven.com", "https://www.daraven.com", "https://daravenerp.lovable.app"].includes(origin ?? "")) return DEFAULT_PUBLIC_APP_URL;
+  throw new Error(INVITE_URL_CONFIG_ERROR);
 }
 
 export function buildInviteUrl(
   token: string,
   origin?: string,
   configured?: string,
-  localPreview = false,
 ): string {
   if (!isInviteToken(token)) throw new Error("This invitation link is not valid");
-  return `${publicAppBaseUrl(origin, configured, localPreview)}/invite/${token}`;
+  return `${publicAppBaseUrl(origin, configured)}/invite/${token}`;
 }
 
 export type InvitationState = { status: string; expired: boolean };

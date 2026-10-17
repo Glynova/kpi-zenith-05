@@ -1,6 +1,17 @@
 # Team invitation domains and authentication
 
-Production links default to `https://daraven.com/invite/<64-character-token>`. Set optional server configuration `PUBLIC_APP_URL=https://daraven.com` to override the public base. If changing that base, also set public build configuration `VITE_PUBLIC_APP_URL` to the same HTTPS origin for email confirmation links. Neither value is a secret. Editor/project hosts are rejected even when configured. The published `.lovable.app` site generates canonical Daraven links; only `id-preview--<project-id>.lovable.app` app previews (and localhost:8080 in development) keep their preview origin. The server ignores the client-submitted origin.
+Production links use `https://daraven.com/invite/<64-character-token>` when the runtime origin is Daraven or its known published app host. Real `id-preview--<project-id>.lovable.app` runtime origins keep that preview host. Localhost is never returned, even in development. Missing configuration on a local, unknown, or editor/project session produces a clear error before any invitation is saved or rotated. The server ignores the client-submitted origin and never trusts forwarded host headers.
+
+### Exact configuration steps
+
+1. Open **Project Settings → Secrets** and add `PUBLIC_APP_URL` with value `https://daraven.com`. This server variable is read inside invitation creation. No existing credentials need changing.
+2. For browser email-confirmation/Google return URL resolution on a non-deployed session, set the public build variable `VITE_PUBLIC_APP_URL=https://daraven.com` in project environment configuration. This value is intentionally public, not a credential. Deployed Daraven and recognized app-preview origins do not require this fallback.
+3. Use only an HTTPS deployed app origin, without credentials. Localhost, IP addresses, editor/project hosts and generic preview domains are rejected. A real preview origin is used only when observed at runtime, never by configuring an arbitrary preview URL as production.
+4. After configuration, reissue previous localhost links from Pending invitations. Preview links may require project access; for outside staff use the public Daraven domain rather than a restricted preview.
+
+No environment values or hosted settings were changed by this repair. Frontend and TanStack server-function changes require publication before affecting the published app; no publication was performed.
+
+The New invitation role selector is independent of pending rows. Each row shows its stored role; its Resend action uses that same stored role, not the new invitation selector.
 
 ## Authentication domain requirements
 

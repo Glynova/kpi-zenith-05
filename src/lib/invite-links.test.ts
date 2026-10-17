@@ -9,16 +9,14 @@ describe("first-party invitation URLs", () => {
     );
   });
   it("never uses lovableproject.com even when submitted or configured", () => {
-    const link = buildInviteUrl(
+    expect(() => buildInviteUrl(
       token,
       "https://project.lovableproject.com",
       "https://project.lovableproject.com",
-    );
-    expect(link).toBe(`https://daraven.com/invite/${token}`);
-    expect(link).not.toContain("lovableproject.com");
+    )).toThrow("not configured");
   });
   it("does not trust arbitrary submitted origins", () => {
-    expect(publicAppBaseUrl("https://attacker.example")).toBe("https://daraven.com");
+    expect(() => publicAppBaseUrl("https://attacker.example")).toThrow("not configured");
   });
   it("uses a configured HTTPS public app base", () => {
     expect(publicAppBaseUrl("https://attacker.example", "https://www.daraven.com/path")).toBe(
@@ -29,11 +27,19 @@ describe("first-party invitation URLs", () => {
     const origin = "https://id-preview--c5cdce3b-6d7c-40eb-9e3a-30c3cb8fa501.lovable.app";
     expect(buildInviteUrl(token, origin)).toBe(`${origin}/invite/${token}`);
   });
-  it("only uses localhost in explicit development preview", () => {
-    expect(publicAppBaseUrl("http://localhost:8080")).toBe("https://daraven.com");
-    expect(publicAppBaseUrl("http://localhost:8080", undefined, true)).toBe(
-      "http://localhost:8080",
-    );
+  it("rejects localhost without deployed URL configuration", () => {
+    expect(() => publicAppBaseUrl("http://localhost:8080")).toThrow("not configured");
+    expect(() => publicAppBaseUrl("https://localhost:8080", "https://localhost:8080")).toThrow("not configured");
+  });
+  it("uses daraven.com from localhost only when explicitly configured", () => {
+    expect(buildInviteUrl(token, "http://localhost:8080", "https://daraven.com")).toBe(`https://daraven.com/invite/${token}`);
+  });
+  it("uses the canonical production runtime without missing-config fallback", () => {
+    expect(buildInviteUrl(token, "https://daraven.com")).toBe(`https://daraven.com/invite/${token}`);
+  });
+  it("rejects missing configuration and IP loopback", () => {
+    expect(() => publicAppBaseUrl()).toThrow("not configured");
+    expect(() => publicAppBaseUrl("http://127.0.0.1:8080", "https://127.0.0.1")).toThrow("not configured");
   });
   it("rejects invalid tokens and callback path injection", () => {
     expect(isInviteToken("//attacker.example")).toBe(false);

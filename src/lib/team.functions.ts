@@ -92,6 +92,9 @@ export const addTeamMember = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId, data.businessId);
+    // Resolve before any write, so missing configuration cannot rotate an existing token.
+    const token = newToken();
+    const link = buildInviteUrl(token, getRequestHeader("origin"), process.env["PUBLIC_APP_URL"]);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const admin = supabaseAdmin as any;
     const email = data.email.trim().toLowerCase();
@@ -111,7 +114,6 @@ export const addTeamMember = createServerFn({ method: "POST" })
       if (existing?.status === "active") throw new Error("That person is already on your team");
     }
 
-    const token = newToken();
     const token_hash = await sha256Hex(token);
     const expires_at = new Date(Date.now() + 7 * 864e5).toISOString();
     const { data: pending } = await admin
@@ -141,13 +143,6 @@ export const addTeamMember = createServerFn({ method: "POST" })
           invited_by: context.userId,
         });
     if (error) throw new Error("Could not create the invitation");
-    // Never trust the client-submitted origin: it may be an editor/project URL.
-    const link = buildInviteUrl(
-      token,
-      getRequestHeader("origin"),
-      process.env["PUBLIC_APP_URL"],
-      process.env["NODE_ENV"] === "development",
-    );
     return { ok: true, email, link, reissued: !!pending, hasAccount: !!profile };
   });
 
