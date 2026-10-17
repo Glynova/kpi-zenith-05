@@ -656,6 +656,7 @@ function POSPage() {
         cashier: null,
         currency,
         taxName: settings.tax_name ?? "Tax",
+        receiptSettings: settings.extra?.receipt_print,
       });
       toast.success(`Sale ${sale.sale_number} completed`);
       setCart([]);

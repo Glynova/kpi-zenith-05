@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, Command } from "lucide-react";
 
@@ -60,27 +60,17 @@ export function AppSidebar({ onOpenPalette }: { onOpenPalette?: () => void }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {groups.map((group) => {
-                if (group.id !== "inventory") {
-                  const directItems = group.url
-                    ? [{ title: group.label, url: group.url, icon: group.icon }]
-                    : group.items;
+                if (group.url) {
+                  const active = pathname === group.url;
                   return (
-                    <Fragment key={group.id}>
-                      {directItems.map((item) => (
-                        <SidebarMenuItem key={item.url}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={pathname === item.url || pathname.startsWith(`${item.url}/`)}
-                            tooltip={item.title}
-                          >
-                            <Link to={item.url} className="flex items-center gap-3">
-                              <item.icon className="size-5 shrink-0" />
-                              <span className="truncate">{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </Fragment>
+                    <SidebarMenuItem key={group.id}>
+                      <SidebarMenuButton asChild isActive={active} tooltip={group.label}>
+                        <Link to={group.url} className="flex items-center gap-3">
+                          <group.icon className="size-5 shrink-0" />
+                          <span className="truncate">{group.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   );
                 }
 
