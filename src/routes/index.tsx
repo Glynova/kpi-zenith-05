@@ -553,9 +553,17 @@ function Landing() {
           <p className="min-w-0 text-xs text-white/40">
             © {new Date().getFullYear()} Daraven ERP. Smarter Decisions. Better Performance.
           </p>
-          <Link to="/pricing" className="shrink-0 text-xs text-white/60 hover:text-white">
-            Pricing
-          </Link>
+          <nav className="flex shrink-0 items-center gap-4 text-xs">
+            <Link to="/pricing" className="text-white/60 hover:text-white">
+              Pricing
+            </Link>
+            <Link to="/terms" className="text-white/60 hover:text-white">
+              Terms
+            </Link>
+            <Link to="/privacy" className="text-white/60 hover:text-white">
+              Privacy
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>
