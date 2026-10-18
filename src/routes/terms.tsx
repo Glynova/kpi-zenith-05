@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LegalPage, Placeholder, type LegalSection } from "@/components/legal-page";
-
-export const TERMS_VERSION = "1.0";
-export const TERMS_EFFECTIVE = "October 18, 2026";
+import { TERMS_EFFECTIVE, TERMS_VERSION } from "@/lib/legal";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({

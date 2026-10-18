@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LegalPage, Placeholder, type LegalSection } from "@/components/legal-page";
-
-export const PRIVACY_VERSION = "1.0";
-export const PRIVACY_EFFECTIVE = "October 18, 2026";
+import { PRIVACY_EFFECTIVE, PRIVACY_VERSION } from "@/lib/legal";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
