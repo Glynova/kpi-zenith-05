@@ -65,13 +65,24 @@ function AuthPage() {
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptedLegal) {
+      return toast.error("Please accept the Terms of Service and Data Privacy Policy.");
+    }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: { full_name: fullName },
+        data: {
+          full_name: fullName,
+          // Record of explicit acceptance (version + timestamp) in user metadata.
+          legal_acceptance: {
+            terms_version: TERMS_VERSION,
+            privacy_version: PRIVACY_VERSION,
+            accepted_at: new Date().toISOString(),
+          },
+        },
       },
     });
     setLoading(false);
@@ -209,7 +220,37 @@ function AuthPage() {
                     className="mt-1.5"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <div className="flex items-start gap-2.5">
+                  <Checkbox
+                    id="accept-legal"
+                    checked={acceptedLegal}
+                    onCheckedChange={(v) => setAcceptedLegal(v === true)}
+                    className="mt-0.5"
+                  />
+                  <Label
+                    htmlFor="accept-legal"
+                    className="text-xs font-normal leading-relaxed text-muted-foreground"
+                  >
+                    I agree to the{" "}
+                    <Link
+                      to="/terms"
+                      target="_blank"
+                      className="text-foreground underline-offset-4 hover:underline"
+                    >
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      className="text-foreground underline-offset-4 hover:underline"
+                    >
+                      Data Privacy Policy
+                    </Link>
+                    .
+                  </Label>
+                </div>
+                <Button type="submit" className="w-full" disabled={loading || !acceptedLegal}>
                   {loading ? "Creating..." : "Create account"}
                 </Button>
               </form>
