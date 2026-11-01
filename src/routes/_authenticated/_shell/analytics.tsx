@@ -34,10 +34,11 @@ function Analytics() {
     queryKey: ["analytics", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, customers, cash, ar, ap] = await Promise.all([
+      const [sales, expenses, products, variants, customers, cash, ar, ap] = await Promise.all([
         db.from("sales").select("*").eq("business_id", businessId),
         db.from("expenses").select("*").eq("business_id", businessId),
         db.from("products").select("*").eq("business_id", businessId),
+        db.from("product_variants").select("id,product_id,stock").eq("business_id", businessId),
         db.from("customers").select("*").eq("business_id", businessId),
         db.from("cash_transactions").select("*").eq("business_id", businessId),
         db.from("accounts_receivable").select("*").eq("business_id", businessId),
@@ -47,6 +48,7 @@ function Analytics() {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
         products: (products.data ?? []) as Row[],
+        variants: (variants.data ?? []) as Row[],
         customers: (customers.data ?? []) as Row[],
         cash: (cash.data ?? []) as Row[],
         ar: (ar.data ?? []) as Row[],
@@ -75,6 +77,11 @@ function Analytics() {
   const turnover = inventoryValue > 0 ? cogs / inventoryValue : 0;
   const inStock = data.products.filter((p) => Number(p.stock) > 0).length;
   const outOfStock = data.products.filter((p) => Number(p.stock) <= 0).length;
+  const productsWithVariants = new Set(data.variants.map((variant) => variant.product_id));
+  const negativeStock =
+    data.products.filter(
+      (product) => !productsWithVariants.has(product.id) && Number(product.stock) < 0,
+    ).length + data.variants.filter((variant) => Number(variant.stock) < 0).length;
   const aov = m.aov;
   const payingCustomers = new Set(
     data.sales.filter((s) => s.customer_id && Number(s.total ?? 0) > 0).map((s) => s.customer_id),
@@ -100,6 +107,7 @@ function Analytics() {
     revenue,
     netCashFlow: cashIn - cashOut,
     outOfStock,
+    negativeStock,
     productCount: data.products.length,
     receivables,
     payables,

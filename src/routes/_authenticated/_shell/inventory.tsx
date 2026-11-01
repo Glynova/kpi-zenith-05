@@ -73,16 +73,20 @@ function StockMovements() {
     queryKey: ["stock-movements", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [movements, products, warehouses, balances] = await Promise.all([
+      const [movements, products, variants, warehouses, balances] = await Promise.all([
         db
           .from("inventory_movements")
-          .select("*")
+          .select("*, approver:profiles!inventory_movements_approved_by_fkey(full_name,email)")
           .eq("business_id", businessId)
           .order("created_at", { ascending: false })
-          .limit(400),
+          .limit(5000),
         db
           .from("products")
-          .select("id, name, sku, unit, average_cost, cost_price")
+          .select("id, name, sku, unit, average_cost, cost_price, stock")
+          .eq("business_id", businessId),
+        db
+          .from("product_variants")
+          .select("id, product_id, name, sku, stock")
           .eq("business_id", businessId),
         db.from("warehouses").select("id, name").eq("business_id", businessId),
         db.from("inventory_balances").select("*").eq("business_id", businessId),
@@ -91,6 +95,7 @@ function StockMovements() {
       return {
         movements: (movements.data ?? []) as Row[],
         products: (products.data ?? []) as Row[],
+        variants: (variants.data ?? []) as Row[],
         warehouses: (warehouses.data ?? []) as Row[],
         balances: (balances.data ?? []) as Row[],
       };
@@ -109,7 +114,8 @@ function StockMovements() {
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (data?.movements ?? []).filter((m) => {
-      if (typeFilter !== "all" && m.type !== typeFilter) return false;
+      if (typeFilter === "negative" && !m.caused_negative_stock) return false;
+      if (typeFilter !== "all" && typeFilter !== "negative" && m.type !== typeFilter) return false;
       if (locationFilter !== "all" && (m.warehouse_id ?? "none") !== locationFilter) return false;
       if (!q) return true;
       const product = productMap[m.product_id];
@@ -121,6 +127,32 @@ function StockMovements() {
       );
     });
   }, [data, search, typeFilter, locationFilter, productMap]);
+
+  const negativeProducts = useMemo(() => {
+    const variantsByProduct = new Set((data?.variants ?? []).map((v) => v.product_id));
+    const items = [
+      ...(data?.products ?? [])
+        .filter((p) => !variantsByProduct.has(p.id) && Number(p.stock ?? 0) < 0)
+        .map((product) => ({ product, variant: null, quantity: Number(product.stock) })),
+      ...(data?.variants ?? [])
+        .filter((variant) => Number(variant.stock ?? 0) < 0)
+        .map((variant) => ({
+          product: productMap[variant.product_id],
+          variant,
+          quantity: Number(variant.stock),
+        }))
+        .filter((item) => !!item.product),
+    ];
+    return items.map((item) => ({
+      ...item,
+      lastSale: (data?.movements ?? []).find(
+        (m) =>
+          m.product_id === item.product.id &&
+          (m.variant_id ?? null) === (item.variant?.id ?? null) &&
+          m.type === "sale",
+      ),
+    }));
+  }, [data, productMap]);
 
   const totals = useMemo(() => {
     const units = (data?.balances ?? []).reduce((a, b) => a + Number(b.quantity ?? 0), 0);
@@ -271,6 +303,52 @@ function StockMovements() {
         />
       </div>
 
+      {negativeProducts.length > 0 && (
+        <div className="surface-panel overflow-x-auto p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold">Negative Stock</h2>
+            <Badge variant="destructive">{negativeProducts.length} items</Badge>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item</TableHead>
+                <TableHead className="text-right">Quantity</TableHead>
+                <TableHead>Last sale date</TableHead>
+                <TableHead>Approver</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {negativeProducts.map(({ product, variant, quantity, lastSale }) => (
+                <TableRow key={variant?.id ?? product.id}>
+                  <TableCell>
+                    <Link
+                      to="/products/$productId"
+                      params={{ productId: product.id }}
+                      className="font-medium hover:text-primary"
+                    >
+                      {product.name}
+                      {variant ? `, ${variant.name}` : ""}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-destructive">
+                    {formatNumber(quantity, 2)} <Badge variant="destructive">Negative</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {lastSale ? formatDate(lastSale.movement_date ?? lastSale.created_at) : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {lastSale?.approver?.full_name ??
+                      lastSale?.approver?.email ??
+                      (lastSale?.approved_by ? String(lastSale.approved_by).slice(0, 8) : "—")}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
       <div className="page-toolbar">
         <div className="relative min-w-0 flex-1 sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -287,6 +365,7 @@ function StockMovements() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All movements</SelectItem>
+            <SelectItem value="negative">Negative Stock</SelectItem>
             {MOVEMENT_GROUPS.flatMap((g) => g.types).map((t) => (
               <SelectItem key={t} value={t}>
                 {titleCase(t)}
@@ -345,6 +424,7 @@ function StockMovements() {
                 <TableHead className="text-right">Total value</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Reference</TableHead>
+                <TableHead>Approver</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -388,6 +468,11 @@ function StockMovements() {
                       <Badge variant="outline" className={movementBadgeClass(m.type)}>
                         {titleCase(m.type)}
                       </Badge>
+                      {m.caused_negative_stock && (
+                        <Badge variant="destructive" className="ml-2">
+                          Negative
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell
                       className={`whitespace-nowrap text-right font-medium ${sign < 0 ? "text-destructive" : sign > 0 ? "text-success" : "text-foreground"}`}
@@ -409,6 +494,9 @@ function StockMovements() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {m.reference ?? "—"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {m.approver?.full_name ?? m.approver?.email ?? "—"}
                     </TableCell>
                   </TableRow>
                 );

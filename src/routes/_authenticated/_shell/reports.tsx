@@ -82,12 +82,13 @@ function Reports() {
         db
           .from("inventory_movements")
           .select(
-            "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date",
+            "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date,caused_negative_stock,approved_by,approver:profiles!inventory_movements_approved_by_fkey(full_name,email)",
           )
           .eq("business_id", businessId)
           .order("movement_date", { ascending: false })
           .limit(5000),
       ]);
+      if (movements.error) throw movements.error;
       return {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
@@ -233,6 +234,38 @@ function Reports() {
     }))
     .filter((r) => matches(r.product, r.variant, r.sku, r.barcode)) as unknown as Row[];
   const variantStockValue = variantStockRows.reduce((a, r) => a + Number(r.stock_value), 0);
+  const productsWithVariants = new Set(data.variants.map((v) => v.product_id));
+  const negativeStockItems = [
+    ...data.products
+      .filter((p) => !productsWithVariants.has(p.id) && Number(p.stock ?? 0) < 0)
+      .map((product) => ({ product, variant: null, quantity: Number(product.stock) })),
+    ...data.variants
+      .filter((variant) => Number(variant.stock ?? 0) < 0)
+      .flatMap((variant) => {
+        const product = productById.get(String(variant.product_id));
+        return product ? [{ product, variant, quantity: Number(variant.stock) }] : [];
+      }),
+  ];
+  const negativeStockRows = negativeStockItems
+    .map(({ product, variant, quantity }) => {
+      const lastSale = data.movements.find(
+        (movement) =>
+          movement.product_id === product.id &&
+          (movement.variant_id ?? null) === (variant?.id ?? null) &&
+          movement.type === "sale",
+      );
+      return {
+        item: product.name + (variant ? `, ${variant.name}` : ""),
+        sku: variant?.sku ?? product.sku ?? "",
+        quantity,
+        last_sale_date: lastSale?.movement_date ?? "",
+        approver:
+          lastSale?.approver?.full_name ??
+          lastSale?.approver?.email ??
+          (lastSale?.approved_by ? String(lastSale.approved_by) : ""),
+      };
+    })
+    .filter((r) => matches(r.item, r.sku)) as Row[];
 
   /**
    * Purchasing by exact variant. Value comes from the ordered line snapshot
@@ -325,6 +358,12 @@ function Reports() {
       rows: data.products,
       value: formatCurrency(inventoryValue, currency),
       note: `${formatNumber(data.products.length)} products`,
+    },
+    {
+      title: "Negative Stock Report",
+      rows: negativeStockRows,
+      value: `${formatNumber(negativeStockRows.length)} items`,
+      note: "Current negative balances, last sale date and approver",
     },
     {
       title: "Payroll Report",

@@ -10,6 +10,8 @@
 - [x] Replace approximated branding with official gold/light and blue/dark SVG artwork; verified signed-in workspace, affiliate and admin plus always-dark public headers at 390/768/1280px, mobile navigation and collapsed raven icons in both themes; no access-rule changes.
 - [x] KPIOptiva visual system pass: dark-first HSL tokens with light-theme support, shared glass surfaces/forms/tables/overlays, 280px workspace sidebar and 72px topbar, grouped collapsible module navigation, responsive Stock Movements KPIs/product cells, semantic movement badges and reduced-motion-safe row reveals. Production build passed; 62/63 tests pass with one unrelated PayMongo secret-label assertion; visual mobile preview inspected.
 
+- [ ] Configurable, business-scoped negative stock controls: settings and audit trail, role/product overrides, PIN approval, server-side movement guard, negative stock reporting/alerts, PO coverage notes, and Finished Product shortage warnings are implemented locally. Migration SQL is authored but has not been applied; hosted schema/transaction behavior and end-to-end sales, receipt, and tenant-isolation tests remain to be verified.
+
 - [ ] Business Setup Wizard rework (10 steps: Business profile, Legal & tax, What you sell, Inventory & tracking, Sales & purchasing, Locations, Units, Costing, Product defaults, Review)
   - Hydrate from current businesses / business_compliance / business_settings / warehouses / units; keep drafts
   - All capability toggles go through withPrerequisites; show dependents on disable

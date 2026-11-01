@@ -1403,6 +1403,9 @@ export type Database = {
         Row: {
           allow_negative_stock: boolean
           business_id: string
+          max_negative_qty: number | null
+          negative_stock_allowed_roles: string[]
+          negative_stock_requires_approval: boolean
           costing_method: string
           created_at: string
           discount_limit_percent: number
@@ -1454,6 +1457,9 @@ export type Database = {
         Insert: {
           allow_negative_stock?: boolean
           business_id: string
+          max_negative_qty?: number | null
+          negative_stock_allowed_roles?: string[]
+          negative_stock_requires_approval?: boolean
           costing_method?: string
           created_at?: string
           discount_limit_percent?: number
@@ -1505,6 +1511,9 @@ export type Database = {
         Update: {
           allow_negative_stock?: boolean
           business_id?: string
+          max_negative_qty?: number | null
+          negative_stock_allowed_roles?: string[]
+          negative_stock_requires_approval?: boolean
           costing_method?: string
           created_at?: string
           discount_limit_percent?: number
@@ -2532,6 +2541,7 @@ export type Database = {
           batch_id: string | null
           batch_number: string | null
           business_id: string
+          caused_negative_stock: boolean
           created_at: string
           created_by: string | null
           id: string
@@ -2545,6 +2555,7 @@ export type Database = {
           reference_type: string | null
           serial_id: string | null
           to_warehouse_id: string | null
+          approved_by: string | null
           total_cost: number | null
           type: string
           unit: string | null
@@ -2557,6 +2568,7 @@ export type Database = {
           batch_id?: string | null
           batch_number?: string | null
           business_id: string
+          caused_negative_stock?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2570,6 +2582,7 @@ export type Database = {
           reference_type?: string | null
           serial_id?: string | null
           to_warehouse_id?: string | null
+          approved_by?: string | null
           total_cost?: number | null
           type: string
           unit?: string | null
@@ -2582,6 +2595,7 @@ export type Database = {
           batch_id?: string | null
           batch_number?: string | null
           business_id?: string
+          caused_negative_stock?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -2595,6 +2609,7 @@ export type Database = {
           reference_type?: string | null
           serial_id?: string | null
           to_warehouse_id?: string | null
+          approved_by?: string | null
           total_cost?: number | null
           type?: string
           unit?: string | null
@@ -3559,6 +3574,7 @@ export type Database = {
           max_stock: number | null
           min_stock: number
           name: string
+          negative_stock_mode: string
           output_quantity: number
           overhead_per_unit: number
           price_includes_tax: boolean
@@ -3634,6 +3650,7 @@ export type Database = {
           max_stock?: number | null
           min_stock?: number
           name: string
+          negative_stock_mode?: string
           output_quantity?: number
           overhead_per_unit?: number
           price_includes_tax?: boolean
@@ -3709,6 +3726,7 @@ export type Database = {
           max_stock?: number | null
           min_stock?: number
           name?: string
+          negative_stock_mode?: string
           output_quantity?: number
           overhead_per_unit?: number
           price_includes_tax?: boolean

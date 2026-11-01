@@ -58,6 +58,7 @@ export function LineItemsEditor({
   currency,
   priceKey = "selling_price",
   priceLabel = "Unit price",
+  negativeStock,
 }: {
   items: LineItem[];
   setItems: (items: LineItem[]) => void;
@@ -67,6 +68,12 @@ export function LineItemsEditor({
   currency: string;
   priceKey?: "selling_price" | "cost_price";
   priceLabel?: string;
+  negativeStock?: {
+    enabled: boolean;
+    allowedRoles: string[];
+    role: string | null;
+    maxQuantity: number | null;
+  };
 }) {
   function update(key: string, patch: Partial<LineItem>) {
     setItems(items.map((i) => (i.key === key ? { ...i, ...patch } : i)));
@@ -119,93 +126,124 @@ export function LineItemsEditor({
       )}
 
       <div className="space-y-2">
-        {items.map((item) => (
-          <div
-            key={item.key}
-            className="grid grid-cols-2 items-end gap-2 rounded-lg border border-border p-3 sm:grid-cols-[minmax(0,2fr)_80px_110px_100px_auto]"
-          >
-            <div className="col-span-2 min-w-0 sm:col-span-1">
-              <Label className="mb-1 block text-[11px] text-muted-foreground">Product</Label>
-              <Select
-                value={item.product_id ?? undefined}
-                onValueChange={(v) => pickProduct(item.key, v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {variantsFor(item.product_id).length > 0 && (
-                <div className="mt-2">
-                  <Label className="mb-1 block text-[11px] text-muted-foreground">Variant</Label>
-                  <Select
-                    value={item.variant_id ?? undefined}
-                    onValueChange={(v) => pickVariant(item.key, v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select variant" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {variantsFor(item.product_id).map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.name}
-                          {v.sku ? ` · ${v.sku}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        {items.map((item) => {
+          const product = products.find((p) => p.id === item.product_id);
+          const variant = variants.find((v) => v.id === item.variant_id);
+          const available = variant ? Number(variant.stock) : Number(product?.stock);
+          const resultingStock = available - item.quantity;
+          const negative = item.product_id && item.quantity > 0 && resultingStock < 0;
+          const productAllowsNegative =
+            product?.negative_stock_mode === "allow" ||
+            (product?.negative_stock_mode !== "block" && !!negativeStock?.enabled);
+          const roleAllowsNegative = negativeStock?.allowedRoles.includes(negativeStock.role ?? "");
+          const withinLimit =
+            negativeStock?.maxQuantity == null || -resultingStock <= negativeStock.maxQuantity;
+          return (
+            <div
+              key={item.key}
+              className="grid grid-cols-2 items-end gap-2 rounded-lg border border-border p-3 sm:grid-cols-[minmax(0,2fr)_80px_110px_100px_auto]"
+            >
+              <div className="col-span-2 min-w-0 sm:col-span-1">
+                <Label className="mb-1 block text-[11px] text-muted-foreground">Product</Label>
+                <Select
+                  value={item.product_id ?? undefined}
+                  onValueChange={(v) => pickProduct(item.key, v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {variantsFor(item.product_id).length > 0 && (
+                  <div className="mt-2">
+                    <Label className="mb-1 block text-[11px] text-muted-foreground">Variant</Label>
+                    <Select
+                      value={item.variant_id ?? undefined}
+                      onValueChange={(v) => pickVariant(item.key, v)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select variant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {variantsFor(item.product_id).map((v) => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.name}
+                            {v.sku ? ` · ${v.sku}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={item.quantity}
+                  onChange={(e) => update(item.key, { quantity: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-[11px] text-muted-foreground">{priceLabel}</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={item.unit_price}
+                  onChange={(e) => update(item.key, { unit_price: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label className="mb-1 block text-[11px] text-muted-foreground">Discount</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  value={item.discount}
+                  onChange={(e) => update(item.key, { discount: Number(e.target.value) })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 sm:justify-end">
+                <span className="text-sm font-medium tabular-nums">
+                  {formatCurrency(lineTotal(item), currency)}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setItems(items.filter((i) => i.key !== item.key))}
+                  aria-label="Remove line"
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </div>
+              {negative && (
+                <p
+                  role="status"
+                  className={`col-span-2 text-xs font-medium sm:col-span-5 ${
+                    productAllowsNegative && roleAllowsNegative && withinLimit
+                      ? "text-warning"
+                      : "text-destructive"
+                  }`}
+                >
+                  {productAllowsNegative && roleAllowsNegative && withinLimit
+                    ? `This sale will result in negative stock (−${-resultingStock})`
+                    : !roleAllowsNegative
+                      ? "Your role is not allowed to sell into negative stock"
+                      : !withinLimit
+                        ? `This sale exceeds the maximum negative stock limit of ${negativeStock?.maxQuantity}`
+                        : "Insufficient stock"}
+                </p>
               )}
             </div>
-            <div>
-              <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>
-              <Input
-                type="number"
-                step="any"
-                value={item.quantity}
-                onChange={(e) => update(item.key, { quantity: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <Label className="mb-1 block text-[11px] text-muted-foreground">{priceLabel}</Label>
-              <Input
-                type="number"
-                step="any"
-                value={item.unit_price}
-                onChange={(e) => update(item.key, { unit_price: Number(e.target.value) })}
-              />
-            </div>
-            <div>
-              <Label className="mb-1 block text-[11px] text-muted-foreground">Discount</Label>
-              <Input
-                type="number"
-                step="any"
-                value={item.discount}
-                onChange={(e) => update(item.key, { discount: Number(e.target.value) })}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-2 sm:justify-end">
-              <span className="text-sm font-medium tabular-nums">
-                {formatCurrency(lineTotal(item), currency)}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setItems(items.filter((i) => i.key !== item.key))}
-                aria-label="Remove line"
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

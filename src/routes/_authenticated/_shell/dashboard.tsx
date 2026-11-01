@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   Area,
@@ -91,7 +91,7 @@ function pctChange(current: number, previous: number): number | null {
 }
 
 function Dashboard() {
-  const { businessId, currency } = useBusiness();
+  const { businessId, currency, role } = useBusiness();
   const [range, setRange] = useState("30");
   const days = Number(range);
   const from = daysAgoISO(days);
@@ -104,7 +104,7 @@ function Dashboard() {
     queryKey: ["dashboard", businessId, range],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, ar, ap, cash, saleItems, customers, logs] =
+      const [sales, expenses, products, variants, ar, ap, cash, saleItems, customers, logs] =
         await Promise.all([
           db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", prevFrom),
           db
@@ -114,6 +114,7 @@ function Dashboard() {
             .gte("expense_date", prevFrom),
 
           db.from("products").select("*").eq("business_id", businessId),
+          db.from("product_variants").select("id,product_id,stock").eq("business_id", businessId),
           db.from("accounts_receivable").select("*").eq("business_id", businessId),
           db.from("accounts_payable").select("*").eq("business_id", businessId),
           db.from("cash_transactions").select("*").eq("business_id", businessId),
@@ -130,6 +131,7 @@ function Dashboard() {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
         products: (products.data ?? []) as Row[],
+        variants: (variants.data ?? []) as Row[],
         ar: (ar.data ?? []) as Row[],
         ap: (ap.data ?? []) as Row[],
         cash: (cash.data ?? []) as Row[],
@@ -178,6 +180,11 @@ function Dashboard() {
       (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.reorder_level ?? 0),
     );
     const outOfStock = d.products.filter((p) => Number(p.stock) <= 0);
+    const productsWithVariants = new Set(d.variants.map((v) => v.product_id));
+    const negativeStock = [
+      ...d.products.filter((p) => !productsWithVariants.has(p.id) && Number(p.stock) < 0),
+      ...d.variants.filter((variant) => Number(variant.stock) < 0),
+    ];
     const receivables = d.ar.reduce((a, r) => a + (Number(r.amount) - Number(r.paid)), 0);
     const payables = d.ap.reduce((a, r) => a + (Number(r.amount) - Number(r.paid)), 0);
 
@@ -247,6 +254,7 @@ function Dashboard() {
       revenue,
       netCashFlow: cashIn - cashOut,
       outOfStock: outOfStock.length,
+      negativeStock: negativeStock.length,
       productCount: d.products.length,
       receivables,
       payables,
@@ -270,6 +278,7 @@ function Dashboard() {
       payables,
       lowStock,
       outOfStock,
+      negativeStock,
       series,
       revenueTrend,
       expenseTrend,
@@ -362,6 +371,22 @@ function Dashboard() {
           </Select>
         }
       />
+
+      {(role === "owner" || role === "admin") && m.negativeStock.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="flex items-center gap-3">
+              <PackageX className="size-5 text-destructive" />
+              <p className="text-sm font-semibold text-destructive">
+                {m.negativeStock.length} items have negative stock
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/inventory">View inventory</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {!hasActivity && (
         <Card className="surface-card border-0">

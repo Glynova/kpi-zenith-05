@@ -63,7 +63,8 @@ const SALE_TYPES = ["walk_in", "wholesale", "credit", "return", "refund"];
 const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "mobile_money", "cheque", "credit"];
 
 function SalesPage() {
-  const { businessId, business, currency, canWrite, userId, feature } = useBusiness();
+  const { businessId, business, currency, canWrite, userId, feature, settings, role } =
+    useBusiness();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -94,7 +95,7 @@ function SalesPage() {
     queryFn: async () => {
       const { data } = await db
         .from("products")
-        .select("id,name,selling_price,cost_price,average_cost,tax_rate,stock")
+        .select("id,name,selling_price,cost_price,average_cost,tax_rate,stock,negative_stock_mode")
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];
@@ -183,22 +184,18 @@ function SalesPage() {
           tax_rate: taxRate,
         })),
       });
-      const paidNow = form.payment_status === "paid" ? Number(sale.total) : Math.min(paid, Number(sale.total));
-      try {
-        if (paidNow > 0.001) {
-          await recordPayment({
-            businessId: businessId!,
-            saleId: sale.id,
-            method: form.payment_method ?? "cash",
-            amount: paidNow,
-            createdBy: userId,
-          });
-        }
-        await completeSale(sale.id);
-      } catch (e) {
-        // Draft stays (never silently deleted once payments exist); surface the reason.
-        throw e;
+      const paidNow =
+        form.payment_status === "paid" ? Number(sale.total) : Math.min(paid, Number(sale.total));
+      if (paidNow > 0.001) {
+        await recordPayment({
+          businessId: businessId!,
+          saleId: sale.id,
+          method: form.payment_method ?? "cash",
+          amount: paidNow,
+          createdBy: userId,
+        });
       }
+      await completeSale(sale.id);
       return sale;
     },
     onSuccess: () => {
@@ -544,6 +541,18 @@ function SalesPage() {
             products={products}
             variants={productVariants}
             currency={currency}
+            negativeStock={{
+              enabled: !!settings.allow_negative_stock,
+              allowedRoles: (settings.negative_stock_allowed_roles ?? [
+                "owner",
+                "admin",
+                "manager",
+                "cashier",
+              ]) as string[],
+              role: role ?? null,
+              maxQuantity:
+                settings.max_negative_qty == null ? null : Number(settings.max_negative_qty),
+            }}
           />
 
           <div className="grid gap-4 sm:grid-cols-3">

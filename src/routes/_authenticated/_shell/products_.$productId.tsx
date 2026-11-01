@@ -173,12 +173,16 @@ function ProductDetail() {
             <CardTitle className="text-xs font-normal text-muted-foreground">On hand</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-display text-2xl font-semibold">{formatNumber(onHand, 2)}</p>
+            <p
+              className={`font-display text-2xl font-semibold ${onHand < 0 ? "text-destructive" : ""}`}
+            >
+              {formatNumber(onHand, 2)}
+            </p>
             <Badge
               className="mt-2"
-              variant={status === "out_of_stock" ? "destructive" : "secondary"}
+              variant={onHand < 0 || status === "out_of_stock" ? "destructive" : "secondary"}
             >
-              {STATUS_LABEL[status]}
+              {onHand < 0 ? "Negative" : STATUS_LABEL[status]}
             </Badge>
           </CardContent>
         </Card>
@@ -276,7 +280,18 @@ function ProductDetail() {
                 <TableRow key={b.id}>
                   <TableCell>{warehouseMap[b.warehouse_id] ?? "Unassigned"}</TableCell>
                   <TableCell className="text-right">
-                    {formatNumber(Number(b.quantity ?? 0), 2)}
+                    <span
+                      className={
+                        Number(b.quantity ?? 0) < 0 ? "font-semibold text-destructive" : ""
+                      }
+                    >
+                      {formatNumber(Number(b.quantity ?? 0), 2)}
+                    </span>
+                    {Number(b.quantity ?? 0) < 0 && (
+                      <Badge variant="destructive" className="ml-2">
+                        Negative
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatNumber(Number(b.reserved_quantity ?? 0), 2)}

@@ -40,11 +40,13 @@ import {
  * defaults — every capability stays editable by the owner.
  */
 export function InventorySettings() {
-  const { business, businessId, isAdmin, settings, refresh, refreshSettings } = useBusiness();
+  const { business, businessId, isAdmin, role, settings, refresh, refreshSettings } = useBusiness();
   const queryClient = useQueryClient();
   const [type, setType] = useState<string>(business?.type ?? "other");
   const [config, setConfig] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [pin, setPin] = useState("");
+  const [savingPin, setSavingPin] = useState(false);
 
   useEffect(() => {
     setType(business?.type ?? "other");
@@ -114,6 +116,29 @@ export function InventorySettings() {
       Number(config.po_approval_threshold ?? settings.po_approval_threshold ?? 0) || 0;
     payload.discount_limit_percent =
       Number(config.discount_limit_percent ?? settings.discount_limit_percent ?? 0) || 0;
+    const maxNegativeQty = config.max_negative_qty ?? settings.max_negative_qty ?? null;
+    if (maxNegativeQty !== null && maxNegativeQty !== "") {
+      const parsed = Number(maxNegativeQty);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        setSaving(false);
+        return toast.error("Maximum negative quantity must be zero or greater.");
+      }
+      payload.max_negative_qty = parsed;
+    } else {
+      payload.max_negative_qty = null;
+    }
+    payload.allow_negative_stock = !!(
+      config.allow_negative_stock ??
+      settings.allow_negative_stock ??
+      false
+    );
+    payload.negative_stock_requires_approval = !!(
+      config.negative_stock_requires_approval ??
+      settings.negative_stock_requires_approval ??
+      false
+    );
+    payload.negative_stock_allowed_roles = config.negative_stock_allowed_roles ??
+      settings.negative_stock_allowed_roles ?? ["owner", "admin", "manager", "cashier"];
 
     const { error: typeError } = await db.from("businesses").update({ type }).eq("id", businessId);
     const { error } = await db
@@ -126,6 +151,23 @@ export function InventorySettings() {
     queryClient.invalidateQueries({ queryKey: ["memberships"] });
     toast.success("Inventory configuration saved");
   }
+
+  async function savePin() {
+    if (!businessId) return;
+    setSavingPin(true);
+    const { error } = await db.rpc("set_negative_stock_pin", {
+      _business_id: businessId,
+      _pin: pin,
+    });
+    setSavingPin(false);
+    if (error) return toast.error(error.message);
+    setPin("");
+    toast.success("Manager approval PIN saved");
+  }
+
+  const negativeStockRoles = (config.negative_stock_allowed_roles ??
+    settings.negative_stock_allowed_roles ?? ["owner", "admin", "manager", "cashier"]) as string[];
+  const canSetApprovalPin = ["owner", "admin", "manager"].includes(role ?? "");
 
   const selected = BUSINESS_TYPES.find((t) => t.value === type);
 
@@ -347,6 +389,89 @@ export function InventorySettings() {
               disables the rule.
             </p>
           </div>
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 sm:col-span-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Allow Negative Stock</p>
+              <p className="text-xs text-muted-foreground">
+                Permit eligible users to complete sales that take a stocked item below zero.
+                Disabled by default; the server checks every sale.
+              </p>
+            </div>
+            <Switch
+              checked={!!(config.allow_negative_stock ?? settings.allow_negative_stock ?? false)}
+              disabled={!isAdmin}
+              onCheckedChange={(v: boolean) => setConfig({ ...config, allow_negative_stock: v })}
+            />
+          </div>
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 sm:col-span-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Require manager PIN</p>
+              <p className="text-xs text-muted-foreground">
+                Ask for an enrolled owner, admin or manager PIN before posting a sale that would
+                result in negative stock. The approver is recorded on the stock movement.
+              </p>
+            </div>
+            <Switch
+              checked={
+                !!(
+                  config.negative_stock_requires_approval ??
+                  settings.negative_stock_requires_approval ??
+                  false
+                )
+              }
+              disabled={!isAdmin}
+              onCheckedChange={(v: boolean) =>
+                setConfig({ ...config, negative_stock_requires_approval: v })
+              }
+            />
+          </div>
+          <div className="min-w-0">
+            <Label htmlFor="max-negative-qty" className="text-xs">
+              Maximum negative quantity
+            </Label>
+            <Input
+              id="max-negative-qty"
+              className="mt-1.5"
+              type="number"
+              min="0"
+              step="0.001"
+              disabled={!isAdmin}
+              placeholder="Unlimited"
+              value={config.max_negative_qty ?? settings.max_negative_qty ?? ""}
+              onChange={(e) => setConfig({ ...config, max_negative_qty: e.target.value })}
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Maximum units below zero for a product at a location. Leave blank for unlimited.
+            </p>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-xs font-medium">Roles allowed to sell into negative stock</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Applies only when Allow Negative Stock is on. Cashiers are included by default.
+            </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {(["owner", "admin", "manager", "cashier"] as const).map((allowedRole) => (
+                <div
+                  key={allowedRole}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border p-3"
+                >
+                  <span className="text-sm font-medium">
+                    {allowedRole[0].toUpperCase() + allowedRole.slice(1)}
+                  </span>
+                  <Switch
+                    checked={negativeStockRoles.includes(allowedRole)}
+                    disabled={!isAdmin}
+                    onCheckedChange={(enabled: boolean) => {
+                      const next = enabled
+                        ? [...negativeStockRoles, allowedRole]
+                        : negativeStockRoles.filter((r) => r !== allowedRole);
+                      setConfig({ ...config, negative_stock_allowed_roles: next });
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="sm:col-span-2">
             <Button onClick={save} disabled={saving || !isAdmin}>
               {saving ? "Saving..." : "Save configuration"}
@@ -354,6 +479,37 @@ export function InventorySettings() {
           </div>
         </CardContent>
       </Card>
+
+      {canSetApprovalPin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Manager approval PIN</CardTitle>
+            <CardDescription>
+              Enroll or replace your own six-digit PIN. PINs are stored as salted password hashes.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="negative-stock-pin" className="text-xs">
+                Six-digit PIN
+              </Label>
+              <Input
+                id="negative-stock-pin"
+                className="mt-1.5 max-w-xs"
+                inputMode="numeric"
+                autoComplete="new-password"
+                maxLength={6}
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+            </div>
+            <Button onClick={savePin} disabled={savingPin || pin.length !== 6}>
+              {savingPin ? "Saving..." : "Save PIN"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

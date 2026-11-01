@@ -515,7 +515,20 @@ export async function recordPayment(input: {
 /** Posts inventory, COGS, receivables and cash for a sale. Idempotent server-side. */
 export async function completeSale(saleId: string) {
   const { error } = await db.rpc("complete_sale", { _sale_id: saleId });
-  if (error) throw error;
+  if (!error) return;
+  if (!error.message.toLowerCase().includes("manager approval required")) throw error;
+
+  const pin = window.prompt("Manager approval is required. Enter an enrolled manager PIN.");
+  if (pin === null) throw error;
+  const { data, error: approvalError } = await db.rpc("approve_negative_stock_sale", {
+    _sale_id: saleId,
+    _pin: pin,
+  });
+  if (approvalError) throw approvalError;
+  if (!data?.approved) throw new Error(data?.message ?? "Manager approval was not granted");
+
+  const { error: retryError } = await db.rpc("complete_sale", { _sale_id: saleId });
+  if (retryError) throw retryError;
 }
 
 export async function postSalesReturn(returnId: string) {

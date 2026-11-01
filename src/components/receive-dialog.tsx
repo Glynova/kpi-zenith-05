@@ -111,6 +111,30 @@ export function ReceiveDialog({
     },
   });
 
+  const { data: receiptBalances = [] } = useQuery({
+    queryKey: ["receive-stock-balances", businessId],
+    enabled: open && !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("inventory_balances")
+        .select("product_id,variant_id,warehouse_id,quantity")
+        .eq("business_id", businessId);
+      if (error) throw error;
+      return (data ?? []) as Row[];
+    },
+  });
+
+  function negativeOnHand(line: Line) {
+    return receiptBalances
+      .filter(
+        (balance) =>
+          balance.product_id === line.product_id &&
+          (balance.variant_id ?? null) === line.variant_id &&
+          (balance.warehouse_id ?? null) === (order.warehouse_id ?? null),
+      )
+      .reduce((sum, balance) => sum + Number(balance.quantity ?? 0), 0);
+  }
+
   useEffect(() => {
     setLines(
       poItems.map((i) => {
@@ -353,6 +377,12 @@ export function ReceiveDialog({
                       <td className="px-2 py-2 text-right">{formatNumber(l.rejected, 0)}</td>
                       <td className="px-2 py-2 text-right font-medium">
                         {formatNumber(accepted(l), 0)}
+                        {negativeOnHand(l) < 0 && accepted(l) > 0 && (
+                          <span className="mt-1 block text-[11px] font-normal text-warning">
+                            {formatNumber(Math.min(accepted(l), -negativeOnHand(l)), 0)} units cover
+                            previous negative stock
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2 text-right">
                         {formatCurrency(

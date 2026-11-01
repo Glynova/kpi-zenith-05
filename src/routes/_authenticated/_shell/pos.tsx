@@ -123,6 +123,12 @@ function POSPage() {
   const taxInclusive = !!settings.tax_inclusive;
   const defaultTaxRate = Number(settings.tax_rate ?? 0);
   const allowNegative = !!settings.allow_negative_stock;
+  const allowedNegativeRoles = (settings.negative_stock_allowed_roles ?? [
+    "owner",
+    "admin",
+    "manager",
+    "cashier",
+  ]) as string[];
   const methods = (settings.payment_methods as string[] | undefined) ?? ["cash", "card"];
   const discountLimit = Number(settings.discount_limit_percent ?? 100);
   const canOverrideDiscount = role === "owner" || role === "admin" || role === "manager";
@@ -170,7 +176,7 @@ function POSPage() {
       const { data, error } = await db
         .from("products")
         .select(
-          "id,name,sku,barcode,selling_price,cost_price,tax_rate,image_url,category_id,reorder_level,has_variants,inventory_model,track_stock,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
+          "id,name,sku,barcode,selling_price,cost_price,tax_rate,image_url,category_id,reorder_level,has_variants,inventory_model,track_stock,negative_stock_mode,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
         )
         .eq("business_id", businessId)
         .neq("status", "discontinued")
@@ -192,6 +198,30 @@ function POSPage() {
     queryFn: () => fetchAddonLinks(businessId!),
   });
   const { data: componentCatalog = [] } = useComponentOptions(businessId);
+  const { data: madeFromComponents = [] } = useQuery({
+    queryKey: ["pos-made-from-components", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("bundle_components")
+        .select("bundle_product_id,component_product_id,variant_id")
+        .eq("business_id", businessId);
+      if (error) throw error;
+      return (data ?? []) as Row[];
+    },
+  });
+  const shortageComponentsFor = (productId: string) =>
+    madeFromComponents
+      .filter((component) => component.bundle_product_id === productId)
+      .map((component) =>
+        componentCatalog.find(
+          (option) =>
+            option.productId === component.component_product_id &&
+            option.variantId === (component.variant_id ?? null),
+        ),
+      )
+      .filter((component) => component && component.onHand <= 0)
+      .map((component) => component!.label);
   const groupsFor = (productId: string) =>
     (addonLinks[productId] ?? [])
       .map((id) => addonGroups.find((g) => g.id === id))
@@ -357,13 +387,31 @@ function POSPage() {
       .join(",")}`;
     const stock = avail(product.id, variant?.id ?? null);
     const stocked = isStocked(product);
+    const productAllowsNegative =
+      product.negative_stock_mode === "allow" ||
+      (product.negative_stock_mode !== "block" && allowNegative);
+    const roleAllowsNegative = allowedNegativeRoles.includes(role ?? "");
     const existing = cart.find((c) => c.key === key);
     const nextQty = (existing?.quantity ?? 0) + 1;
-    if (stocked && settings.track_quantity && !allowNegative && nextQty > stock) {
-      toast.error("Insufficient stock", {
-        description: `${product.name}: ${stock} available at this location.`,
-      });
-      return;
+    if (stocked && settings.track_quantity && nextQty > stock) {
+      const negativeQty = nextQty - stock;
+      const maxNegativeQty = settings.max_negative_qty;
+      if (!roleAllowsNegative) {
+        toast.error("Your role is not allowed to sell into negative stock");
+        return;
+      }
+      if (!productAllowsNegative) {
+        toast.error("Insufficient stock", {
+          description: `${product.name}: ${stock} available at this location.`,
+        });
+        return;
+      }
+      if (maxNegativeQty != null && negativeQty > Number(maxNegativeQty)) {
+        toast.error("Maximum negative stock exceeded", {
+          description: `This sale would leave ${negativeQty} units below zero; the limit is ${maxNegativeQty}.`,
+        });
+        return;
+      }
     }
     if (existing) {
       setCart((c) => c.map((l) => (l.key === key ? { ...l, quantity: nextQty } : l)));
@@ -428,17 +476,29 @@ function POSPage() {
     }
     const line = cart.find((l) => l.key === key);
     const lineProduct = line ? products.find((p) => p.id === line.product_id) : null;
-    if (
-      line &&
-      lineProduct &&
-      isStocked(lineProduct) &&
-      settings.track_quantity &&
-      !allowNegative
-    ) {
+    if (line && lineProduct && isStocked(lineProduct) && settings.track_quantity) {
       const stock = avail(line.product_id, line.variant_id);
       if (qty > stock) {
-        toast.error("Insufficient stock", { description: `Only ${stock} available.` });
-        return;
+        const negativeQty = qty - stock;
+        const productAllowsNegative =
+          lineProduct.negative_stock_mode === "allow" ||
+          (lineProduct.negative_stock_mode !== "block" && allowNegative);
+        const roleAllowsNegative = allowedNegativeRoles.includes(role ?? "");
+        const maxNegativeQty = settings.max_negative_qty;
+        if (!roleAllowsNegative) {
+          toast.error("Your role is not allowed to sell into negative stock");
+          return;
+        }
+        if (!productAllowsNegative) {
+          toast.error("Insufficient stock", { description: `Only ${stock} available.` });
+          return;
+        }
+        if (maxNegativeQty != null && negativeQty > Number(maxNegativeQty)) {
+          toast.error("Maximum negative stock exceeded", {
+            description: `This sale would leave ${negativeQty} units below zero; the limit is ${maxNegativeQty}.`,
+          });
+          return;
+        }
       }
     }
     setCart((c) => c.map((l) => (l.key === key ? { ...l, quantity: qty } : l)));
@@ -876,6 +936,21 @@ function POSPage() {
                         )}
                       </span>
                     </div>
+                    {l.available != null && l.available - l.quantity < 0 && (
+                      <p role="status" className="mt-2 text-xs font-medium text-destructive">
+                        This sale will result in negative stock (−
+                        {(l.available - l.quantity) * -1})
+                      </p>
+                    )}
+                    {shortageComponentsFor(l.product_id).map((componentName) => (
+                      <p
+                        key={componentName}
+                        role="status"
+                        className="mt-1 text-xs font-medium text-warning"
+                      >
+                        Component shortage: {componentName}
+                      </p>
+                    ))}
                   </li>
                 ))}
               </ul>

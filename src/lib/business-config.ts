@@ -81,6 +81,9 @@ export type BusinessSettings = Record<FeatureKey, boolean> & {
   payment_methods: string[];
   sales_channels: string[];
   allow_negative_stock?: boolean;
+  negative_stock_requires_approval?: boolean;
+  max_negative_qty?: number | null;
+  negative_stock_allowed_roles?: string[];
   extra?: Record<string, unknown>;
 };
 

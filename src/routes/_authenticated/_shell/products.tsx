@@ -290,6 +290,17 @@ function ProductsPage() {
     { key: "item_subtype", label: "Subtype", type: "text", default: "standard_product" },
     { key: "costing_method", label: "Costing method", type: "text" },
     { key: "track_stock", label: "Track stock", type: "boolean", default: true },
+    {
+      key: "negative_stock_mode",
+      label: "Negative stock override",
+      type: "select",
+      options: ["inherit", "allow", "block"],
+      default: "inherit",
+      hidden: ({ form }) =>
+        form.item_type === "service" ||
+        form.item_type === "non_stock" ||
+        form.track_stock === false,
+    },
     { key: "has_variants", label: "Has variants", type: "boolean", default: false },
     { key: "bundle_fixed_price", label: "Fixed bundle price", type: "boolean", default: false },
     { key: "consumption_mode", label: "Consumption mode", type: "text", default: "on_sale" },
@@ -356,16 +367,24 @@ function ProductsPage() {
                     );
                   },
                 }
-              : c.key === "stock" && variantsEnabled
+              : c.key === "stock"
                 ? {
                     ...c,
                     render: (row) => {
                       const summary = variantSummary[row.id];
-                      const qty = summary?.count ? summary.stock : Number(row.stock ?? 0);
+                      const qty =
+                        variantsEnabled && summary?.count ? summary.stock : Number(row.stock ?? 0);
                       return (
-                        <span className="tabular-nums">
+                        <span
+                          className={`tabular-nums ${qty < 0 ? "font-semibold text-destructive" : ""}`}
+                        >
                           {qty}
-                          {summary?.count ? (
+                          {qty < 0 && (
+                            <Badge variant="destructive" className="ml-2">
+                              Negative
+                            </Badge>
+                          )}
+                          {variantsEnabled && summary?.count ? (
                             <span className="ml-1 text-[11px] text-muted-foreground">
                               (derived)
                             </span>
@@ -420,6 +439,11 @@ function ProductsPage() {
             : madeFrom
               ? payload.consumption_mode === "on_production"
               : !!form.track_stock;
+        payload.negative_stock_mode = payload.track_stock
+          ? ["inherit", "allow", "block"].includes(String(form.negative_stock_mode))
+            ? String(form.negative_stock_mode)
+            : "inherit"
+          : "inherit";
         payload.inventory_model =
           kind === "service"
             ? "service"

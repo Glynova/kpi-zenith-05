@@ -60,7 +60,7 @@ export function useProductBom(businessId: string | null, currency: string) {
     queryFn: async () => {
       const { data } = await db
         .from("products")
-        .select("id,name,cost_price,average_cost")
+        .select("id,name,cost_price,average_cost,stock")
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];
@@ -307,6 +307,14 @@ export function useProductBom(businessId: string | null, currency: string) {
                     ))}
                   </SelectContent>
                 </Select>
+                {(() => {
+                  const component = products.find((p) => p.id === c.component_product_id);
+                  return component && Number(component.stock ?? 0) <= 0 ? (
+                    <p className="mt-1 text-[11px] font-medium text-warning">
+                      Component shortage: {component.name}
+                    </p>
+                  ) : null;
+                })()}
               </div>
               <div>
                 <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>

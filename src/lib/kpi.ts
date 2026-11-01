@@ -110,12 +110,14 @@ export function marginPercent(profit: number, revenue: number): number {
 /**
  * Business health, 0–100. Weighted, documented and shared everywhere:
  * profitability 40, activity 15, cash 20, stock availability 15, liquidity 10.
+ * Negative stock reduces the availability component as an additional risk factor.
  */
 export function healthScore(input: {
   netMargin: number;
   revenue: number;
   netCashFlow: number;
   outOfStock: number;
+  negativeStock?: number;
   productCount: number;
   receivables: number;
   payables: number;
@@ -126,8 +128,11 @@ export function healthScore(input: {
   const profitability = clamp((input.netMargin + 20) / 40, 0, 1) * 40;
   const activity = input.revenue > 0 ? 15 : 0;
   const cash = input.netCashFlow > 0 ? 20 : input.netCashFlow === 0 ? 10 : 0;
-  const availability =
+  const stockAvailability =
     input.productCount > 0 ? clamp(1 - input.outOfStock / input.productCount, 0, 1) * 15 : 15;
+  const negativeStockPenalty =
+    input.productCount > 0 ? clamp((input.negativeStock ?? 0) / input.productCount, 0, 1) * 5 : 0;
+  const availability = Math.max(0, stockAvailability - negativeStockPenalty);
   const liquidity = input.payables > 0 ? clamp(input.receivables / input.payables, 0, 1) * 10 : 10;
 
   return Math.round(profitability + activity + cash + availability + liquidity);
