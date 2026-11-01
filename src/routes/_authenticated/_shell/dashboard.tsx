@@ -36,12 +36,12 @@ import {
   saleNetRevenue,
   isPostedSale,
   inventoryValueOf,
-  healthScore,
+  healthScoreFromRecords,
   marginPercent,
 } from "@/lib/kpi";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KpiOrb } from "@/components/kpi-orb";
+import { BusinessHealthCard } from "@/components/business-health-card";
 import { StatCard } from "@/components/stat-card";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -92,7 +92,7 @@ function pctChange(current: number, previous: number): number | null {
 }
 
 function Dashboard() {
-  const { businessId, currency, role } = useBusiness();
+  const { businessId, currency, role, business } = useBusiness();
   const [range, setRange] = useState("30");
   const days = Number(range);
   const from = daysAgoISO(days);
@@ -100,34 +100,73 @@ function Dashboard() {
   // period-over-period comparison. Business calculations are unchanged.
   const prevFrom = daysAgoISO(days * 2);
   const today = todayISO();
+  const inventoryFrom = daysAgoISO(180);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dashboard", businessId, range],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, variants, ar, ap, cash, saleItems, customers, logs] =
-        await Promise.all([
-          db.from("sales").select("*").eq("business_id", businessId).gte("sale_date", prevFrom),
-          db
-            .from("expenses")
-            .select("*")
-            .eq("business_id", businessId)
-            .gte("expense_date", prevFrom),
-
-          db.from("products").select("*").eq("business_id", businessId),
-          db.from("product_variants").select("id,product_id,stock").eq("business_id", businessId),
-          db.from("accounts_receivable").select("*").eq("business_id", businessId),
-          db.from("accounts_payable").select("*").eq("business_id", businessId),
-          db.from("cash_transactions").select("*").eq("business_id", businessId),
-          db.from("sale_items").select("*").eq("business_id", businessId).limit(1000),
-          db.from("customers").select("*").eq("business_id", businessId),
-          db
-            .from("audit_logs")
-            .select("*")
-            .eq("business_id", businessId)
-            .order("created_at", { ascending: false })
-            .limit(8),
-        ]);
+      const [
+        sales,
+        expenses,
+        products,
+        variants,
+        ar,
+        ap,
+        cash,
+        saleItems,
+        healthSaleItems,
+        movements,
+        batches,
+        customers,
+        logs,
+      ] = await Promise.all([
+        db.from("sales").select("*").eq("business_id", businessId),
+        db.from("expenses").select("*").eq("business_id", businessId),
+        db.from("products").select("*").eq("business_id", businessId),
+        db
+          .from("product_variants")
+          .select("id,product_id,stock,cost_price,average_cost,status,created_at")
+          .eq("business_id", businessId),
+        db.from("accounts_receivable").select("*").eq("business_id", businessId),
+        db.from("accounts_payable").select("*").eq("business_id", businessId),
+        db.from("cash_transactions").select("*").eq("business_id", businessId),
+        db.from("sale_items").select("*").eq("business_id", businessId).limit(5000),
+        db
+          .from("sale_items")
+          .select("*,sales!inner(sale_date)")
+          .eq("business_id", businessId)
+          .gte("sales.sale_date", daysAgoISO(90))
+          .lte("sales.sale_date", today)
+          .limit(10000),
+        db
+          .from("inventory_movements")
+          .select("product_id,variant_id,type,movement_date,created_at")
+          .eq("business_id", businessId)
+          .gte("movement_date", inventoryFrom),
+        db
+          .from("batches")
+          .select("product_id,variant_id,remaining_quantity,unit_cost,expiry_date")
+          .eq("business_id", businessId),
+        db.from("customers").select("*").eq("business_id", businessId),
+        db
+          .from("audit_logs")
+          .select("*")
+          .eq("business_id", businessId)
+          .order("created_at", { ascending: false })
+          .limit(8),
+      ]);
+      if (sales.error) throw sales.error;
+      if (expenses.error) throw expenses.error;
+      if (cash.error) throw cash.error;
+      if (saleItems.error) throw saleItems.error;
+      if (healthSaleItems.error) throw healthSaleItems.error;
+      if (movements.error) throw movements.error;
+      if (batches.error) throw batches.error;
+      if (products.error) throw products.error;
+      if (variants.error) throw variants.error;
+      if (ar.error) throw ar.error;
+      if (ap.error) throw ap.error;
       return {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
@@ -137,6 +176,9 @@ function Dashboard() {
         ap: (ap.data ?? []) as Row[],
         cash: (cash.data ?? []) as Row[],
         saleItems: (saleItems.data ?? []) as Row[],
+        healthSaleItems: (healthSaleItems.data ?? []) as Row[],
+        movements: (movements.data ?? []) as Row[],
+        batches: (batches.data ?? []) as Row[],
         customers: (customers.data ?? []) as Row[],
         logs: (logs.data ?? []) as Row[],
       };
@@ -151,9 +193,13 @@ function Dashboard() {
     // The query fetches two windows; everything below the split uses the
     // current window only, so no existing calculation changes.
     const curSales = d.sales.filter((s) => String(s.sale_date) >= from && isPostedSale(s));
-    const prevSales = d.sales.filter((s) => String(s.sale_date) < from && isPostedSale(s));
+    const prevSales = d.sales.filter(
+      (s) => String(s.sale_date) >= prevFrom && String(s.sale_date) < from && isPostedSale(s),
+    );
     const curExpenses = d.expenses.filter((e) => String(e.expense_date) >= from);
-    const prevExpenses = d.expenses.filter((e) => String(e.expense_date) < from);
+    const prevExpenses = d.expenses.filter(
+      (e) => String(e.expense_date) >= prevFrom && String(e.expense_date) < from,
+    );
 
     const todayRows = curSales.filter((s) => s.sale_date === today);
     const todayExpenses = curExpenses.filter((e) => e.expense_date === today);
@@ -250,15 +296,18 @@ function Dashboard() {
     const expenseRatio = revenue > 0 ? (expenseTotal / revenue) * 100 : 0;
     const aov = period.aov;
 
-    const health = healthScore({
-      netMargin: margin,
-      revenue,
-      netCashFlow: cashIn - cashOut,
-      outOfStock: outOfStock.length,
-      negativeStock: negativeStock.length,
-      productCount: d.products.length,
-      receivables,
-      payables,
+    const health = healthScoreFromRecords({
+      businessType: business?.type,
+      sales: d.sales,
+      expenses: d.expenses,
+      cashTransactions: d.cash,
+      receivables: d.ar,
+      payables: d.ap,
+      products: d.products,
+      variants: d.variants,
+      saleItems: d.healthSaleItems,
+      inventoryMovements: d.movements,
+      batches: d.batches,
     });
 
     const revenueTrend = series.map((p) => p.sales);
@@ -298,7 +347,7 @@ function Dashboard() {
       health,
       logs: d.logs,
     };
-  }, [data, today, from]);
+  }, [business?.type, data, today, from, prevFrom]);
 
   if (isError) {
     return (
@@ -435,11 +484,7 @@ function Dashboard() {
             sub={`${formatNumber(m.lowStock.length)} low · ${formatNumber(m.outOfStock.length)} out`}
           />
         </div>
-        <Card className="surface-card overflow-hidden border-0">
-          <CardContent className="p-2">
-            <KpiOrb score={m.health} caption={`Expense ratio ${m.expenseRatio.toFixed(1)}%`} />
-          </CardContent>
-        </Card>
+        <BusinessHealthCard health={m.health} />
       </div>
 
       <Collapsible>

@@ -28,3 +28,4 @@
 - [ ] Remove import test items TV-\*/TV2-\* in beef n buns (needs privileged cleanup)
 - [ ] Offline POS hardening (IndexedDB queue, per-till idempotent sync, sync status panel)
 - [ ] Parallel multi-client document numbering stress test
+- [ ] Profile-based Business Health Score: local implementation now uses business-type margin targets, period-over-period growth, operating cash flow with financing/transfer exclusions, cash-plus-receivables liquidity, and sales-weighted inventory/dead-stock/expiry health. Dashboard and Analytics display labels and expandable component points; insufficient sales/expense data suppresses the score. Unit tests cover the requested profile, liquidity, cash-flow, financing, inventory-weight and insufficient-data cases. Tests, type-check, lint, and production build pass. Cash-flow financing exclusions currently rely on transaction category/description text because cash transactions have no formal operating/financing classification.

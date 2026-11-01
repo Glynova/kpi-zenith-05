@@ -5,9 +5,10 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
-import { salesMetrics, inventoryValueOf, healthScore, marginPercent } from "@/lib/kpi";
+import { salesMetrics, inventoryValueOf, healthScoreFromRecords, marginPercent } from "@/lib/kpi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BusinessHealthCard } from "@/components/business-health-card";
 
 export const Route = createFileRoute("/_authenticated/_shell/analytics")({
   head: () => ({
@@ -28,22 +29,69 @@ export const Route = createFileRoute("/_authenticated/_shell/analytics")({
 });
 
 function Analytics() {
-  const { businessId, currency } = useBusiness();
+  const { businessId, currency, business } = useBusiness();
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [sales, expenses, products, variants, customers, cash, ar, ap] = await Promise.all([
+      const inventoryFrom = new Date();
+      inventoryFrom.setUTCDate(inventoryFrom.getUTCDate() - 180);
+      const inventoryFromDate = inventoryFrom.toISOString().slice(0, 10);
+      const inventorySalesFrom = new Date();
+      inventorySalesFrom.setUTCDate(inventorySalesFrom.getUTCDate() - 90);
+      const inventorySalesFromDate = inventorySalesFrom.toISOString().slice(0, 10);
+      const [
+        sales,
+        expenses,
+        products,
+        variants,
+        customers,
+        cash,
+        ar,
+        ap,
+        saleItems,
+        movements,
+        batches,
+      ] = await Promise.all([
         db.from("sales").select("*").eq("business_id", businessId),
         db.from("expenses").select("*").eq("business_id", businessId),
         db.from("products").select("*").eq("business_id", businessId),
-        db.from("product_variants").select("id,product_id,stock").eq("business_id", businessId),
+        db
+          .from("product_variants")
+          .select("id,product_id,stock,cost_price,average_cost,status,created_at")
+          .eq("business_id", businessId),
         db.from("customers").select("*").eq("business_id", businessId),
         db.from("cash_transactions").select("*").eq("business_id", businessId),
         db.from("accounts_receivable").select("*").eq("business_id", businessId),
         db.from("accounts_payable").select("*").eq("business_id", businessId),
+        db
+          .from("sale_items")
+          .select("*,sales!inner(sale_date)")
+          .eq("business_id", businessId)
+          .gte("sales.sale_date", inventorySalesFromDate)
+          .lte("sales.sale_date", new Date().toISOString().slice(0, 10))
+          .limit(10000),
+        db
+          .from("inventory_movements")
+          .select("product_id,variant_id,type,movement_date,created_at")
+          .eq("business_id", businessId)
+          .gte("movement_date", inventoryFromDate),
+        db
+          .from("batches")
+          .select("product_id,variant_id,remaining_quantity,unit_cost,expiry_date")
+          .eq("business_id", businessId),
       ]);
+      if (sales.error) throw sales.error;
+      if (expenses.error) throw expenses.error;
+      if (cash.error) throw cash.error;
+      if (saleItems.error) throw saleItems.error;
+      if (movements.error) throw movements.error;
+      if (batches.error) throw batches.error;
+      if (products.error) throw products.error;
+      if (variants.error) throw variants.error;
+      if (ar.error) throw ar.error;
+      if (ap.error) throw ap.error;
       return {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
@@ -53,6 +101,9 @@ function Analytics() {
         cash: (cash.data ?? []) as Row[],
         ar: (ar.data ?? []) as Row[],
         ap: (ap.data ?? []) as Row[],
+        saleItems: (saleItems.data ?? []) as Row[],
+        movements: (movements.data ?? []) as Row[],
+        batches: (batches.data ?? []) as Row[],
       };
     },
   });
@@ -102,15 +153,18 @@ function Analytics() {
   const currentRatio = payables > 0 ? currentAssets / payables : null;
   const invested = expenseTotal + cogs;
   const roi = invested > 0 ? (netProfit / invested) * 100 : 0;
-  const health = healthScore({
-    netMargin: marginPercent(netProfit, revenue),
-    revenue,
-    netCashFlow: cashIn - cashOut,
-    outOfStock,
-    negativeStock,
-    productCount: data.products.length,
-    receivables,
-    payables,
+  const health = healthScoreFromRecords({
+    businessType: business?.type,
+    sales: data.sales,
+    expenses: data.expenses,
+    cashTransactions: data.cash,
+    receivables: data.ar,
+    payables: data.ap,
+    products: data.products,
+    variants: data.variants,
+    saleItems: data.saleItems,
+    inventoryMovements: data.movements,
+    batches: data.batches,
   });
 
   const kpis = [
@@ -128,7 +182,6 @@ function Analytics() {
     { label: "Customer Lifetime Value", value: formatCurrency(clv, currency) },
     { label: "Cash Flow Ratio", value: cashOut ? (cashIn / cashOut).toFixed(2) : "—" },
     { label: "Current Ratio", value: currentRatio === null ? "—" : currentRatio.toFixed(2) },
-    { label: "Business Health", value: `${health}/100` },
     { label: "ROI", value: formatPercent(roi) },
   ];
 
@@ -150,6 +203,7 @@ function Analytics() {
           </Card>
         ))}
       </div>
+      <BusinessHealthCard health={health} />
     </div>
   );
 }
