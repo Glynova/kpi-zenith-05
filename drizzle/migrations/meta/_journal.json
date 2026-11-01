@@ -351,6 +351,13 @@
       "when": 1793491479068,
       "tag": "0049_sale_header_totals_and_credit_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1793491571406,
+      "tag": "0050_credit_role_guard_scope_fix",
+      "breakpoints": true
     }
   ]
 }
