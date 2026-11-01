@@ -81,9 +81,11 @@ export const getBillingDiagnostics = createServerFn({ method: "GET" })
       .from("subscription_plans")
       .select("slug, paymongo_plan_id");
     const { supabaseAdmin: sa } = await import("@/integrations/supabase/client.server");
+    // Scoped to the caller's administered business — never a cross-business read.
     const { data: lastEvent } = await (sa as any)
       .from("subscription_events")
       .select("created_at")
+      .eq("business_id", data.businessId)
       .not("external_event_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(1)
