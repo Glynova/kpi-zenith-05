@@ -6949,6 +6949,10 @@ export type Database = {
         Returns: string
       }
       current_partner_id: { Args: never; Returns: string }
+      enforce_sale_header_totals: {
+        Args: { _sale_id: string }
+        Returns: undefined
+      }
       expire_subscriptions: {
         Args: never
         Returns: {
