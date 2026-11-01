@@ -10,6 +10,7 @@ import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { ADJUSTMENT_REASONS, MOVEMENT_GROUPS, movementSign } from "@/lib/inventory";
+import { toStockUnit, unitsFor, type UnitConversionRule } from "@/lib/units";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ function StockMovements() {
     queryKey: ["stock-movements", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [movements, products, variants, warehouses, balances] = await Promise.all([
+      const [movements, products, variants, warehouses, balances, conversions] = await Promise.all([
         db
           .from("inventory_movements")
           .select("*, approver:profiles!inventory_movements_approved_by_fkey(full_name,email)")
@@ -90,14 +91,17 @@ function StockMovements() {
           .eq("business_id", businessId),
         db.from("warehouses").select("id, name").eq("business_id", businessId),
         db.from("inventory_balances").select("*").eq("business_id", businessId),
+        db.from("unit_conversions").select("*").eq("business_id", businessId),
       ]);
       if (movements.error) throw movements.error;
+      if (conversions.error) throw conversions.error;
       return {
         movements: (movements.data ?? []) as Row[],
         products: (products.data ?? []) as Row[],
         variants: (variants.data ?? []) as Row[],
         warehouses: (warehouses.data ?? []) as Row[],
         balances: (balances.data ?? []) as Row[],
+        conversions: (conversions.data ?? []) as (Row & UnitConversionRule)[],
       };
     },
   });
@@ -188,9 +192,26 @@ function StockMovements() {
 
   const record = useMutation({
     mutationFn: async (values: Row) => {
-      const quantity = Number(values.quantity ?? 0);
+      const enteredQuantity = Number(values.quantity ?? 0);
       if (!values.product_id) throw new Error("Choose a product");
-      if (!(quantity > 0)) throw new Error("Quantity must be greater than zero");
+      if (!(enteredQuantity > 0)) throw new Error("Quantity must be greater than zero");
+      const product = productMap[values.product_id];
+      if (!product) throw new Error("Choose a valid product");
+      const rules = (data?.conversions ?? []).filter(
+        (rule) => rule.product_id == null || rule.product_id === values.product_id,
+      );
+      const enteredUnit = String(values.unit || product.unit || "");
+      const quantity = toStockUnit(
+        enteredQuantity,
+        enteredUnit,
+        String(product.unit ?? ""),
+        rules,
+        values.product_id,
+      );
+      if (quantity == null)
+        throw new Error(`${enteredUnit} cannot convert to the stock unit ${product.unit}`);
+      const costFactor = quantity / enteredQuantity;
+      const unitCost = (Number(values.unit_cost ?? 0) || 0) / costFactor;
       const payload: Row = {
         business_id: businessId,
         product_id: values.product_id,
@@ -198,8 +219,11 @@ function StockMovements() {
         type: values.type,
         quantity,
         base_quantity: quantity,
-        unit_cost: Number(values.unit_cost ?? 0) || 0,
-        total_cost: quantity * (Number(values.unit_cost ?? 0) || 0),
+        unit: product.unit,
+        entered_quantity: enteredQuantity,
+        entered_unit: enteredUnit,
+        unit_cost: unitCost,
+        total_cost: quantity * unitCost,
         reason: values.reason || null,
         reference: values.reference || null,
         reference_type: values.reference ? "manual" : null,
@@ -218,12 +242,12 @@ function StockMovements() {
   });
 
   function openMovement() {
-    setForm({ type: "purchase", quantity: 1, unit_cost: 0 });
+    setForm({ type: "purchase", quantity: 1, unit_cost: 0, unit: "" });
     setDialog("movement");
   }
 
   function openAdjustment() {
-    setForm({ type: "adjustment_out", quantity: 1, reason: "Counting error" });
+    setForm({ type: "adjustment_out", quantity: 1, reason: "Counting error", unit: "" });
     setDialog("adjustment");
   }
 
@@ -479,6 +503,10 @@ function StockMovements() {
                     >
                       {sign < 0 ? "−" : sign > 0 ? "+" : ""}
                       {formatNumber(qty, 2)}
+                      {product?.unit ? ` ${product.unit}` : ""}
+                      {m.entered_unit &&
+                        m.entered_unit !== product?.unit &&
+                        ` (${formatNumber(Number(m.entered_quantity ?? 0), 2)} ${m.entered_unit})`}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-right">
                       {formatCurrency(Number(m.unit_cost ?? 0), currency)}
@@ -525,6 +553,7 @@ function StockMovements() {
                   setForm({
                     ...form,
                     product_id: v,
+                    unit: productMap[v]?.unit ?? "",
                     unit_cost: Number(
                       productMap[v]?.average_cost || productMap[v]?.cost_price || 0,
                     ),
@@ -576,7 +605,7 @@ function StockMovements() {
 
             <div className="min-w-0">
               <Label className="mb-1.5 block text-xs">
-                Quantity {selectedProduct?.unit ? `(${selectedProduct.unit})` : ""}
+                Quantity {form.unit ? `(${form.unit})` : ""}
               </Label>
               <Input
                 type="number"
@@ -584,6 +613,30 @@ function StockMovements() {
                 value={form.quantity ?? ""}
                 onChange={(e) => setForm({ ...form, quantity: e.target.value })}
               />
+            </div>
+
+            <div className="min-w-0">
+              <Label className="mb-1.5 block text-xs">Unit</Label>
+              <Select
+                value={form.unit || undefined}
+                onValueChange={(unit) => setForm({ ...form, unit })}
+                disabled={!selectedProduct}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unitsFor(
+                    selectedProduct?.unit,
+                    data?.conversions ?? [],
+                    selectedProduct?.id,
+                  ).map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {feature("track_locations") && (
@@ -609,7 +662,9 @@ function StockMovements() {
 
             {feature("track_cost") && (
               <div className="min-w-0">
-                <Label className="mb-1.5 block text-xs">Unit cost</Label>
+                <Label className="mb-1.5 block text-xs">
+                  Unit cost {form.unit ? `per ${form.unit}` : ""}
+                </Label>
                 <Input
                   type="number"
                   min="0"

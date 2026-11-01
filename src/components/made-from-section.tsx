@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { db, type Row } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
-import { normalizeUnit, toStockUnit, unitsFor } from "@/lib/units";
+import { normalizeUnit, toStockUnit, unitsFor, type UnitConversionRule } from "@/lib/units";
 
 export type MadeFromLine = {
   key: string;
@@ -40,6 +40,7 @@ export type ComponentOption = {
   unit: string;
   cost: number;
   onHand: number;
+  conversionRules: UnitConversionRule[];
 };
 
 export function useComponentOptions(businessId: string | null) {
@@ -49,7 +50,7 @@ export function useComponentOptions(businessId: string | null) {
     refetchOnMount: "always",
     staleTime: 0,
     queryFn: async (): Promise<ComponentOption[]> => {
-      const [products, variants] = await Promise.all([
+      const [products, variants, conversions] = await Promise.all([
         db
           .from("products")
           .select("id,name,unit,cost_price,average_cost,stock,item_type,has_variants,status")
@@ -58,8 +59,13 @@ export function useComponentOptions(businessId: string | null) {
           .from("product_variants")
           .select("id,product_id,name,sku,cost_price,stock,status")
           .eq("business_id", businessId),
+        db.from("unit_conversions").select("*").eq("business_id", businessId),
       ]);
+      if (products.error) throw products.error;
+      if (variants.error) throw variants.error;
+      if (conversions.error) throw conversions.error;
       const vs = ((variants.data ?? []) as Row[]).filter((v) => v.status !== "archived");
+      const rules = (conversions.data ?? []) as (Row & UnitConversionRule)[];
       const out: ComponentOption[] = [];
       for (const p of (products.data ?? []) as Row[]) {
         if (p.item_type === "service") continue;
@@ -75,6 +81,11 @@ export function useComponentOptions(businessId: string | null) {
               unit: normalizeUnit(p.unit),
               cost: Number(v.cost_price) || base,
               onHand: Number(v.stock ?? 0),
+              conversionRules: rules.filter(
+                (r) =>
+                  (r.product_id == null || r.product_id === p.id) &&
+                  (r.variant_id == null || r.variant_id === v.id),
+              ),
             });
         } else
           out.push({
@@ -85,6 +96,7 @@ export function useComponentOptions(businessId: string | null) {
             unit: normalizeUnit(p.unit),
             cost: base,
             onHand: Number(p.stock ?? 0),
+            conversionRules: rules.filter((r) => r.product_id == null || r.product_id === p.id),
           });
       }
       return out.sort((a, b) => a.label.localeCompare(b.label));
@@ -98,7 +110,14 @@ const optionValue = (l: MadeFromLine) =>
 /** Stock-unit quantity per output batch, or null when the unit cannot convert. */
 export function stockQty(line: MadeFromLine, opt?: ComponentOption) {
   if (!opt) return null;
-  return toStockUnit(Number(line.quantity), line.unit || opt.unit, opt.unit);
+  return toStockUnit(
+    Number(line.quantity),
+    line.unit || opt.unit,
+    opt.unit,
+    opt.conversionRules,
+    opt.productId,
+    opt.variantId,
+  );
 }
 
 export function madeFromCost(lines: MadeFromLine[], options: ComponentOption[]) {
@@ -254,7 +273,12 @@ export function MadeFromSection({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {unitsFor(opt?.unit ?? unit).map((u) => (
+                    {unitsFor(
+                      opt?.unit ?? unit,
+                      opt?.conversionRules,
+                      opt?.productId,
+                      opt?.variantId,
+                    ).map((u) => (
                       <SelectItem key={u} value={u}>
                         {u}
                       </SelectItem>

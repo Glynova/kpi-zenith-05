@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatDate, formatNumber } from "@/lib/format";
+import { normalizeUnit, toStockUnit, unitsFor, type UnitConversionRule } from "@/lib/units";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,8 @@ type CountLine = {
   sku: string | null;
   expected: number;
   counted: string;
+  unit: string;
+  stock_unit: string;
   reason?: string;
 };
 
@@ -73,7 +76,7 @@ function StockCounts() {
     queryKey: ["stock-counts", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const [counts, items, products, warehouses, balances] = await Promise.all([
+      const [counts, items, products, warehouses, balances, conversions] = await Promise.all([
         db
           .from("stock_counts")
           .select("*")
@@ -81,17 +84,23 @@ function StockCounts() {
           .order("created_at", { ascending: false })
           .limit(100),
         db.from("stock_count_items").select("*").eq("business_id", businessId),
-        db.from("products").select("id, name, sku, stock, status").eq("business_id", businessId),
+        db
+          .from("products")
+          .select("id, name, sku, unit, stock, status")
+          .eq("business_id", businessId),
         db.from("warehouses").select("id, name").eq("business_id", businessId),
         db.from("inventory_balances").select("*").eq("business_id", businessId),
+        db.from("unit_conversions").select("*").eq("business_id", businessId),
       ]);
       if (counts.error) throw counts.error;
+      if (conversions.error) throw conversions.error;
       return {
         counts: (counts.data ?? []) as Row[],
         items: (items.data ?? []) as Row[],
         products: (products.data ?? []) as Row[],
         warehouses: (warehouses.data ?? []) as Row[],
         balances: (balances.data ?? []) as Row[],
+        conversions: (conversions.data ?? []) as (Row & UnitConversionRule)[],
       };
     },
   });
@@ -122,6 +131,8 @@ function StockCounts() {
         sku: p.sku ?? null,
         expected: expectedFor(p.id, location),
         counted: "",
+        unit: normalizeUnit(p.unit),
+        stock_unit: normalizeUnit(p.unit),
       }));
     setLines(next);
     setOpen(true);
@@ -131,11 +142,27 @@ function StockCounts() {
     mutationFn: async () => {
       const counted = lines.filter((l) => l.counted !== "" && !Number.isNaN(Number(l.counted)));
       if (!counted.length) throw new Error("Enter at least one physical count");
+      const converted = new Map<string, number>();
+      for (const line of counted) {
+        const rules = (data?.conversions ?? []).filter(
+          (rule) => rule.product_id == null || rule.product_id === line.product_id,
+        );
+        const quantity = toStockUnit(
+          Number(line.counted),
+          line.unit,
+          line.stock_unit,
+          rules,
+          line.product_id,
+        );
+        if (quantity == null)
+          throw new Error(`${line.unit} cannot convert to ${line.stock_unit} for ${line.name}`);
+        converted.set(line.product_id, quantity);
+      }
       if (blind) {
         setBlind(false);
         throw new Error("Counts entered. Now review differences and choose reasons.");
       }
-      const missing = counted.find((l) => Number(l.counted) !== l.expected && !l.reason);
+      const missing = counted.find((l) => converted.get(l.product_id) !== l.expected && !l.reason);
       if (missing) throw new Error(`Choose a reason for the difference on ${missing.name}`);
 
       const { data: count, error } = await db
@@ -157,15 +184,23 @@ function StockCounts() {
         stock_count_id: count.id,
         product_id: l.product_id,
         expected_quantity: l.expected,
-        counted_quantity: Number(l.counted),
+        counted_quantity: converted.get(l.product_id),
+        entered_counted_quantity: Number(l.counted),
+        entered_unit: l.unit,
       }));
       const { error: itemError } = await db.from("stock_count_items").insert(itemsPayload);
       if (itemError) throw itemError;
 
       const movements = counted
         .map((l) => {
-          const variance = Number(l.counted) - l.expected;
+          const countedStock = converted.get(l.product_id) ?? 0;
+          const variance = countedStock - l.expected;
           if (variance === 0) return null;
+          const rules = (data?.conversions ?? []).filter(
+            (rule) => rule.product_id == null || rule.product_id === l.product_id,
+          );
+          const expectedEntered =
+            toStockUnit(l.expected, l.stock_unit, l.unit, rules, l.product_id) ?? l.expected;
           return {
             business_id: businessId,
             product_id: l.product_id,
@@ -173,6 +208,8 @@ function StockCounts() {
             type: variance > 0 ? "adjustment_in" : "adjustment_out",
             quantity: Math.abs(variance),
             base_quantity: Math.abs(variance),
+            entered_quantity: Math.abs(Number(l.counted) - expectedEntered),
+            entered_unit: l.unit,
             reason: l.reason ? `Stock count: ${l.reason}` : "Stock count",
             reference: count.reference,
             reference_type: "stock_count",
@@ -200,7 +237,19 @@ function StockCounts() {
   });
 
   const varianceTotal = lines.reduce(
-    (a, l) => a + (l.counted === "" ? 0 : Number(l.counted) - l.expected),
+    (a, l) =>
+      a +
+      (l.counted === ""
+        ? 0
+        : (toStockUnit(
+            Number(l.counted),
+            l.unit,
+            l.stock_unit,
+            (data?.conversions ?? []).filter(
+              (rule) => rule.product_id == null || rule.product_id === l.product_id,
+            ),
+            l.product_id,
+          ) ?? l.expected) - l.expected),
     0,
   );
 
@@ -319,7 +368,14 @@ function StockCounts() {
                 </TableHeader>
                 <TableBody>
                   {lines.map((l, i) => {
-                    const variance = l.counted === "" ? null : Number(l.counted) - l.expected;
+                    const rules = (data?.conversions ?? []).filter(
+                      (rule) => rule.product_id == null || rule.product_id === l.product_id,
+                    );
+                    const stockCount =
+                      l.counted === ""
+                        ? null
+                        : toStockUnit(Number(l.counted), l.unit, l.stock_unit, rules, l.product_id);
+                    const varianceStock = stockCount == null ? null : stockCount - l.expected;
                     return (
                       <TableRow key={l.product_id}>
                         <TableCell className="whitespace-nowrap">{l.name}</TableCell>
@@ -328,33 +384,51 @@ function StockCounts() {
                         </TableCell>
                         {!blind && (
                           <TableCell className="text-right">
-                            {formatNumber(l.expected, 2)}
+                            {formatNumber(l.expected, 2)} {l.stock_unit}
                           </TableCell>
                         )}
                         <TableCell>
-                          <Input
-                            type="number"
-                            className="text-right"
-                            value={l.counted}
-                            onChange={(e) => {
-                              const next = [...lines];
-                              next[i] = { ...l, counted: e.target.value };
-                              setLines(next);
-                            }}
-                          />
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              className="min-w-20 text-right"
+                              value={l.counted}
+                              onChange={(e) => {
+                                const next = [...lines];
+                                next[i] = { ...l, counted: e.target.value };
+                                setLines(next);
+                              }}
+                            />
+                            <select
+                              className="h-9 max-w-24 rounded-md border border-input bg-background px-2 text-sm"
+                              aria-label={`Count unit for ${l.name}`}
+                              value={l.unit}
+                              onChange={(e) => {
+                                const next = [...lines];
+                                next[i] = { ...l, unit: e.target.value };
+                                setLines(next);
+                              }}
+                            >
+                              {unitsFor(l.stock_unit, rules, l.product_id).map((unit) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </TableCell>
                         {!blind && (
                           <TableCell
-                            className={`text-right font-medium ${variance && variance < 0 ? "text-destructive" : ""}`}
+                            className={`text-right font-medium ${varianceStock != null && varianceStock < 0 ? "text-destructive" : ""}`}
                           >
-                            {variance === null
+                            {varianceStock === null
                               ? "—"
-                              : `${variance > 0 ? "+" : ""}${formatNumber(variance, 2)}`}
+                              : `${varianceStock > 0 ? "+" : ""}${formatNumber(varianceStock, 2)} ${l.stock_unit}`}
                           </TableCell>
                         )}
                         {!blind && (
                           <TableCell>
-                            {variance ? (
+                            {varianceStock ? (
                               <select
                                 className="h-9 rounded-md border border-input bg-background px-2 text-sm"
                                 value={l.reason ?? ""}

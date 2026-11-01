@@ -1,5 +1,5 @@
 import { db, type Row } from "@/lib/db";
-import { normalizeUnit, toStockUnit } from "@/lib/units";
+import { normalizeUnit, toStockUnit, type UnitConversionRule } from "@/lib/units";
 import { ALL_KINDS, KIND_INFO, MADE_FROM, patchForKind, type ItemKind } from "@/lib/item-kinds";
 
 export type ImportResult = { ok: number; failed: number; messages: string[]; created: string[] };
@@ -54,27 +54,36 @@ export async function importProducts(businessId: string, rows: string[][]): Prom
   if (!header.includes("name")) throw new Error('The file needs a "Product Name" column');
   const res: ImportResult = { ok: 0, failed: 0, messages: [], created: [] };
 
-  const [{ data: cats }, { data: sups }, { data: whs }, { data: prods }, { data: vars }] =
-    await Promise.all([
-      db.from("categories").select("id,name").eq("business_id", businessId),
-      db.from("suppliers").select("id,name").eq("business_id", businessId),
-      db
-        .from("warehouses")
-        .select("id,name,is_default")
-        .eq("business_id", businessId)
-        .order("is_default", { ascending: false })
-        .order("created_at"),
-      db
-        .from("products")
-        .select("id,sku,unit,cost_price,variant_options")
-        .eq("business_id", businessId)
-        .not("sku", "is", null),
-      db
-        .from("product_variants")
-        .select("id,product_id,sku")
-        .eq("business_id", businessId)
-        .not("sku", "is", null),
-    ]);
+  const [
+    { data: cats },
+    { data: sups },
+    { data: whs },
+    { data: prods },
+    { data: vars },
+    { data: conversions, error: conversionError },
+  ] = await Promise.all([
+    db.from("categories").select("id,name").eq("business_id", businessId),
+    db.from("suppliers").select("id,name").eq("business_id", businessId),
+    db
+      .from("warehouses")
+      .select("id,name,is_default")
+      .eq("business_id", businessId)
+      .order("is_default", { ascending: false })
+      .order("created_at"),
+    db
+      .from("products")
+      .select("id,sku,unit,cost_price,variant_options")
+      .eq("business_id", businessId)
+      .not("sku", "is", null),
+    db
+      .from("product_variants")
+      .select("id,product_id,sku")
+      .eq("business_id", businessId)
+      .not("sku", "is", null),
+    db.from("unit_conversions").select("*").eq("business_id", businessId),
+  ]);
+  if (conversionError) throw conversionError;
+  const conversionRules = (conversions ?? []) as (Row & UnitConversionRule)[];
   const index = (list: Row[] | null) =>
     new Map((list ?? []).map((r) => [String(r.name).trim().toLowerCase(), String(r.id)]));
   const maps: Record<string, Map<string, string>> = {
@@ -395,7 +404,12 @@ export async function importProducts(businessId: string, rows: string[][]): Prom
         why ||= `component "${cSku}" needs a quantity above 0`;
       else {
         const entered = normalizeUnit(unitRaw || comp.unit);
-        const stockQty = toStockUnit(qty, entered, comp.unit);
+        const rules = conversionRules.filter(
+          (rule) =>
+            (rule.product_id == null || rule.product_id === comp.id) &&
+            (rule.variant_id == null || rule.variant_id === (variant?.id ?? null)),
+        );
+        const stockQty = toStockUnit(qty, entered, comp.unit, rules, comp.id, variant?.id ?? null);
         if (stockQty == null) why ||= `"${unitRaw}" can't convert to ${comp.unit} for "${cSku}"`;
         else
           lines.push({

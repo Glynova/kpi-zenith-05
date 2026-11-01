@@ -40,6 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
+import { toStockUnit, unitsFor, type UnitConversionRule } from "@/lib/units";
 
 const description =
   "Move stock between your own locations or send it to another business you belong to. Inter-business transfers are only added to the receiver once they confirm receipt.";
@@ -90,7 +91,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-type Line = { key: string; product_id?: string; quantity: string };
+type Line = { key: string; product_id?: string; quantity: string; unit: string };
 
 function TransfersPage() {
   const { businessId, business, canWrite, memberships, currency } = useBusiness();
@@ -103,7 +104,9 @@ function TransfersPage() {
   const [sourceWarehouse, setSourceWarehouse] = useState<string | null>(null);
   const [destWarehouse, setDestWarehouse] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
-  const [lines, setLines] = useState<Line[]>([{ key: crypto.randomUUID(), quantity: "1" }]);
+  const [lines, setLines] = useState<Line[]>([
+    { key: crypto.randomUUID(), quantity: "1", unit: "" },
+  ]);
   const [reviewId, setReviewId] = useState<string | null>(search.incoming ?? null);
 
   useEffect(() => {
@@ -139,6 +142,19 @@ function TransfersPage() {
           .eq("business_id", businessId)
           .limit(1000)
       ).data ?? []) as Row[],
+  });
+
+  const { data: conversionRules = [] } = useQuery({
+    queryKey: ["unit-conversions", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("unit_conversions")
+        .select("*")
+        .eq("business_id", businessId);
+      if (error) throw error;
+      return (data ?? []) as (Row & UnitConversionRule)[];
+    },
   });
 
   const { data: sourceLocations } = useQuery({
@@ -188,10 +204,22 @@ function TransfersPage() {
     return Number(p?.average_cost || p?.cost_price || 0);
   };
 
-  const estimatedValue = lines.reduce(
-    (sum, l) => sum + Number(l.quantity || 0) * costFor(l.product_id),
-    0,
-  );
+  const estimatedValue = lines.reduce((sum, l) => {
+    const product = (products ?? []).find((p) => p.id === l.product_id);
+    const rules = conversionRules.filter(
+      (rule) => rule.product_id == null || rule.product_id === l.product_id,
+    );
+    const qty = product
+      ? toStockUnit(
+          Number(l.quantity || 0),
+          l.unit || String(product.unit),
+          String(product.unit),
+          rules,
+          l.product_id,
+        )
+      : 0;
+    return sum + Number(qty ?? 0) * costFor(l.product_id);
+  }, 0);
 
   const { data: outgoing } = useQuery({
     queryKey: ["transfers-outgoing", businessId],
@@ -225,7 +253,7 @@ function TransfersPage() {
   const pendingIncoming = (incoming ?? []).filter((t) => t.status === "pending_receipt");
 
   const resetForm = () => {
-    setLines([{ key: crypto.randomUUID(), quantity: "1" }]);
+    setLines([{ key: crypto.randomUUID(), quantity: "1", unit: "" }]);
     setNotes("");
     setDestWarehouse(null);
   };
@@ -236,13 +264,33 @@ function TransfersPage() {
       if (!effectiveDestBusiness) throw new Error("Choose the destination business");
       if (!destWarehouse) throw new Error("Choose the destination location");
       const payload = lines.map((l) => {
-        const qty = Number(l.quantity);
+        const enteredQuantity = Number(l.quantity);
         if (!l.product_id) throw new Error("Choose a product on every line");
-        if (!qty || qty <= 0) throw new Error("Quantity must be greater than zero");
+        if (!enteredQuantity || enteredQuantity <= 0)
+          throw new Error("Quantity must be greater than zero");
+        const product = (products ?? []).find((p) => p.id === l.product_id);
+        if (!product) throw new Error("Choose a valid product on every line");
+        const rules = conversionRules.filter(
+          (rule) => rule.product_id == null || rule.product_id === l.product_id,
+        );
+        const enteredUnit = l.unit || String(product.unit ?? "");
+        const qty = toStockUnit(
+          enteredQuantity,
+          enteredUnit,
+          String(product.unit ?? ""),
+          rules,
+          l.product_id,
+        );
+        if (qty == null) throw new Error(`${enteredUnit} cannot convert to ${product.unit}`);
         const avail = availableFor(l.product_id) ?? 0;
         if (qty > avail)
           throw new Error(`Only ${formatNumber(avail, 2)} available at the source location`);
-        return { product_id: l.product_id, quantity: qty };
+        return {
+          product_id: l.product_id,
+          quantity: qty,
+          entered_quantity: enteredQuantity,
+          entered_unit: enteredUnit,
+        };
       });
 
       const { data, error } = await db.rpc("create_stock_transfer", {
@@ -418,7 +466,9 @@ function TransfersPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => setLines((l) => [...l, { key: crypto.randomUUID(), quantity: "1" }])}
+                onClick={() =>
+                  setLines((l) => [...l, { key: crypto.randomUUID(), quantity: "1", unit: "" }])
+                }
               >
                 <Plus className="size-4" /> Add line
               </Button>
@@ -426,10 +476,14 @@ function TransfersPage() {
             <CardContent className="space-y-4">
               {lines.map((line) => {
                 const avail = availableFor(line.product_id);
+                const product = (products ?? []).find((p) => p.id === line.product_id);
+                const allowedUnits = product
+                  ? unitsFor(product.unit, conversionRules, product.id)
+                  : [];
                 return (
                   <div
                     key={line.key}
-                    className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_140px_auto]"
+                    className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_140px_140px_auto]"
                   >
                     <div className="min-w-0">
                       <Label className="text-xs">Product</Label>
@@ -443,7 +497,17 @@ function TransfersPage() {
                           value={line.product_id}
                           onChange={(v) =>
                             setLines((ls) =>
-                              ls.map((l) => (l.key === line.key ? { ...l, product_id: v } : l)),
+                              ls.map((l) =>
+                                l.key === line.key
+                                  ? {
+                                      ...l,
+                                      product_id: v,
+                                      unit: String(
+                                        (products ?? []).find((p) => p.id === v)?.unit ?? "",
+                                      ),
+                                    }
+                                  : l,
+                              ),
                             )
                           }
                           placeholder="Search products"
@@ -456,7 +520,9 @@ function TransfersPage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <Label className="text-xs">Quantity</Label>
+                      <Label className="text-xs">
+                        Quantity ({line.unit || product?.unit || "unit"})
+                      </Label>
                       <Input
                         className="mt-1.5"
                         type="number"
@@ -472,6 +538,27 @@ function TransfersPage() {
                           )
                         }
                       />
+                    </div>
+                    <div className="min-w-0">
+                      <Label className="text-xs">Unit</Label>
+                      <Select
+                        value={line.unit || undefined}
+                        onValueChange={(unit) =>
+                          setLines((ls) => ls.map((l) => (l.key === line.key ? { ...l, unit } : l)))
+                        }
+                        disabled={!product}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Choose" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {allowedUnits.map((unit) => (
+                            <SelectItem key={unit} value={unit}>
+                              {unit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex items-end">
                       <Button

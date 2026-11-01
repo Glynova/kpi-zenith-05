@@ -7,7 +7,7 @@ import { ResourcePage, type Column, type Field } from "@/components/resource-pag
 import { ItemForm, newLine } from "@/components/item-form";
 import type { MadeFromLine } from "@/components/made-from-section";
 import { MADE_FROM, kindOf } from "@/lib/item-kinds";
-import { normalizeUnit, toStockUnit } from "@/lib/units";
+import { normalizeUnit, toStockUnit, type UnitConversionRule } from "@/lib/units";
 import { useProductVariants } from "@/components/product-variants-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -606,20 +606,38 @@ function ProductsPage() {
               "id",
               filled.map((l) => l.productId),
             );
+          const { data: conversions, error: conversionError } = await db
+            .from("unit_conversions")
+            .select("*")
+            .eq("business_id", businessId);
+          if (conversionError) throw conversionError;
           const unitOf = new Map(
             ((comps ?? []) as Row[]).map((c) => [c.id, normalizeUnit(c.unit)]),
           );
+          const conversionRules = (conversions ?? []) as (Row & UnitConversionRule)[];
           const { error } = await db.from("bundle_components").insert(
             filled.map((line) => {
               const stockUnit = unitOf.get(line.productId) ?? "pcs";
               const entered = line.unit || stockUnit;
+              const rules = conversionRules.filter(
+                (rule) =>
+                  (rule.product_id == null || rule.product_id === line.productId) &&
+                  (rule.variant_id == null || rule.variant_id === line.variantId),
+              );
               return {
                 business_id: businessId,
                 bundle_product_id: id,
                 component_product_id: line.productId,
                 variant_id: line.variantId,
                 quantity:
-                  toStockUnit(Number(line.quantity), entered, stockUnit) ?? Number(line.quantity),
+                  toStockUnit(
+                    Number(line.quantity),
+                    entered,
+                    stockUnit,
+                    rules,
+                    line.productId,
+                    line.variantId,
+                  ) ?? Number(line.quantity),
                 entered_quantity: Number(line.quantity),
                 entered_unit: entered,
                 waste_percent: Number(line.waste || 0),

@@ -379,6 +379,13 @@
       "when": 1793520002000,
       "tag": "0053_atomic_pos_sale",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1793520003000,
+      "tag": "0054_item_unit_conversions",
+      "breakpoints": true
     }
   ]
 }

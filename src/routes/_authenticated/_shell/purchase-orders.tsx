@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase, todayISO } from "@/lib/format";
+import { toStockUnit, unitsFor, type UnitConversionRule } from "@/lib/units";
 import { canApprovePurchaseOrders } from "@/lib/permissions";
 import {
   DEFAULT_PRICE_ALERT_PERCENT,
@@ -200,6 +201,19 @@ function PurchaseOrdersPage() {
     },
   });
 
+  const { data: conversionRules = [] } = useQuery({
+    queryKey: ["unit-conversions", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("unit_conversions")
+        .select("*")
+        .eq("business_id", businessId);
+      if (error) throw error;
+      return (data ?? []) as (Row & UnitConversionRule)[];
+    },
+  });
+
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers-lite", businessId],
     enabled: !!businessId,
@@ -276,16 +290,39 @@ function PurchaseOrdersPage() {
 
   function pickVariant(key: string, variantId: string) {
     const v = productVariants.find((x) => x.id === variantId);
-    const cost = Number(v?.cost_price ?? 0);
-    updateLine(
-      key,
-      cost > 0 ? { variant_id: variantId, unit_cost: cost } : { variant_id: variantId },
+    const line = items.find((item) => item.key === key);
+    const product = products.find((p) => p.id === line?.product_id);
+    const rules = conversionRules.filter(
+      (rule) =>
+        (rule.product_id == null || rule.product_id === line?.product_id) &&
+        (rule.variant_id == null || rule.variant_id === variantId),
     );
+    const cost = Number(v?.cost_price ?? 0);
+    updateLine(key, {
+      variant_id: variantId,
+      ...(cost > 0 ? { unit_cost: cost } : {}),
+      ...(line &&
+      product &&
+      toStockUnit(1, line.unit, String(product.unit ?? ""), rules, product.id, variantId) == null
+        ? { unit: String(product.unit ?? "") }
+        : {}),
+    });
   }
 
   function pickProduct(key: string, productId: string) {
     const product = products.find((p) => p.id === productId);
     const sp = catalog.find((c) => c.product_id === productId);
+    const availableUnits = unitsFor(
+      product?.unit,
+      conversionRules.filter((rule) => rule.product_id == null || rule.product_id === productId),
+      productId,
+      null,
+    );
+    const preferredUnit = sp?.purchase_unit ?? product?.purchase_unit;
+    const selectedUnit =
+      preferredUnit && availableUnits.includes(preferredUnit)
+        ? preferredUnit
+        : String(product?.unit ?? "");
     setItems((prev) =>
       prev.map((i) =>
         i.key === key
@@ -294,7 +331,7 @@ function PurchaseOrdersPage() {
               product_id: productId,
               variant_id: null,
               supplier_sku: sp?.supplier_sku ?? "",
-              unit: sp?.purchase_unit ?? product?.purchase_unit ?? product?.unit ?? "",
+              unit: selectedUnit,
               unit_cost: Number(sp?.unit_cost ?? product?.cost_price ?? 0),
               last_price: sp?.last_purchase_price != null ? Number(sp.last_purchase_price) : null,
               moq: Number(sp?.min_order_quantity ?? 0),
@@ -315,6 +352,26 @@ function PurchaseOrdersPage() {
       if (!valid.length) throw new Error("Add at least one line item");
       for (const i of valid) {
         if (variantsFor(i.product_id).length && !i.variant_id) throw new Error("Choose a variant");
+        const product = products.find((p) => p.id === i.product_id);
+        const rules = conversionRules.filter(
+          (rule) =>
+            (rule.product_id == null || rule.product_id === i.product_id) &&
+            (rule.variant_id == null || rule.variant_id === i.variant_id),
+        );
+        if (
+          !product ||
+          toStockUnit(
+            i.quantity,
+            i.unit,
+            String(product.unit ?? ""),
+            rules,
+            i.product_id,
+            i.variant_id,
+          ) == null
+        )
+          throw new Error(
+            `${i.unit || "Selected unit"} cannot convert to the stock unit for this item`,
+          );
       }
       if (!form.supplier_id) throw new Error("Choose a supplier");
 
@@ -357,6 +414,8 @@ function PurchaseOrdersPage() {
           supplier_sku: i.supplier_sku || null,
           unit: i.unit || null,
           quantity: i.quantity,
+          entered_quantity: i.quantity,
+          entered_unit: i.unit || null,
           received_quantity: 0,
           unit_cost: i.unit_cost,
           discount: i.discount,
@@ -919,6 +978,11 @@ function PurchaseOrdersPage() {
               const variance = priceVariance(item.unit_cost, item.last_price);
               const warn = variance !== null && Math.abs(variance) >= DEFAULT_PRICE_ALERT_PERCENT;
               const belowMoq = item.moq > 0 && item.quantity < item.moq;
+              const product = products.find((p) => p.id === item.product_id);
+              const availableUnits = product
+                ? unitsFor(product.unit, conversionRules, item.product_id, item.variant_id)
+                : [];
+              if (item.unit && !availableUnits.includes(item.unit)) availableUnits.push(item.unit);
               return (
                 <div key={item.key} className="space-y-2 rounded-lg border border-border p-3">
                   <div className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[minmax(0,2fr)_90px_110px_100px_100px_auto]">
@@ -969,6 +1033,25 @@ function PurchaseOrdersPage() {
                           </Select>
                         </div>
                       )}
+                      <div className="mt-2">
+                        <Label className="mb-1 block text-[11px] text-muted-foreground">Unit</Label>
+                        <Select
+                          value={item.unit || undefined}
+                          onValueChange={(unit) => updateLine(item.key, { unit })}
+                          disabled={!product}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableUnits.map((unit) => (
+                              <SelectItem key={unit} value={unit}>
+                                {unit}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div>
                       <Label className="mb-1 block text-[11px] text-muted-foreground">Qty</Label>

@@ -31,7 +31,14 @@ export function optionCost(option: Pick<AddonOption, "ingredients">, catalog: Co
       (x) => x.productId === i.productId && x.variantId === (i.variantId ?? null),
     );
     if (!c) continue;
-    const q = toStockUnit(Number(i.quantity), i.unit || c.unit, c.unit);
+    const q = toStockUnit(
+      Number(i.quantity),
+      i.unit || c.unit,
+      c.unit,
+      c.conversionRules,
+      c.productId,
+      c.variantId,
+    );
     if (q != null) total += q * c.cost;
   }
   return total;
@@ -76,7 +83,10 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
         if (!i.productId || !c) return toast.error(`Choose an ingredient for ${o.name}`);
         if (!(Number(i.quantity) > 0))
           return toast.error(`Quantity for ${o.name} must be above zero`);
-        if (toStockUnit(1, i.unit || c.unit, c.unit) == null)
+        if (
+          toStockUnit(1, i.unit || c.unit, c.unit, c.conversionRules, c.productId, c.variantId) ==
+          null
+        )
           return toast.error(`${i.unit} can't convert to ${c.unit} for ${c.label}`);
       }
     if (
@@ -142,7 +152,14 @@ export function AddonGroupsSection({ businessId, currency, selected, setSelected
                 option_id: optionId,
                 component_product_id: i.productId,
                 variant_id: i.variantId,
-                quantity: toStockUnit(Number(i.quantity), unit, c.unit),
+                quantity: toStockUnit(
+                  Number(i.quantity),
+                  unit,
+                  c.unit,
+                  c.conversionRules,
+                  c.productId,
+                  c.variantId,
+                ),
                 entered_quantity: Number(i.quantity),
                 entered_unit: unit,
               };
@@ -366,7 +383,12 @@ function GroupEditor({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {unitsFor(c?.unit ?? unit).map((u) => (
+                      {unitsFor(
+                        c?.unit ?? unit,
+                        c?.conversionRules,
+                        c?.productId,
+                        c?.variantId,
+                      ).map((u) => (
                         <SelectItem key={u} value={u}>
                           {u}
                         </SelectItem>
