@@ -1315,7 +1315,7 @@ function POSPage() {
             <Button variant="outline" onClick={() => setPayOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => checkout.mutate()} disabled={checkout.isPending}>
+            <Button onClick={() => checkout.mutate(undefined)} disabled={checkout.isPending}>
               {checkout.isPending ? "Completing…" : "Complete sale"}
             </Button>
           </DialogFooter>

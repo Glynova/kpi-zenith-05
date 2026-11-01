@@ -23,6 +23,7 @@ export type LineItem = {
   unit_price: number;
   unit_cost: number;
   discount: number;
+  tax_rate: number;
 };
 
 export function emptyLine(): LineItem {
@@ -35,6 +36,7 @@ export function emptyLine(): LineItem {
     unit_price: 0,
     unit_cost: 0,
     discount: 0,
+    tax_rate: 0,
   };
 }
 
@@ -56,6 +58,7 @@ export function LineItemsEditor({
   products,
   variants = [],
   currency,
+  defaultTaxRate = 0,
   priceKey = "selling_price",
   priceLabel = "Unit price",
   negativeStock,
@@ -66,6 +69,7 @@ export function LineItemsEditor({
   /** Active variants for the current business, used to resolve exact SKUs. */
   variants?: Row[];
   currency: string;
+  defaultTaxRate?: number;
   priceKey?: "selling_price" | "cost_price";
   priceLabel?: string;
   negativeStock?: {
@@ -90,6 +94,7 @@ export function LineItemsEditor({
       product_name: p?.name ?? "",
       unit_price: Number(p?.[priceKey] ?? 0),
       unit_cost: Number(p?.average_cost || p?.cost_price || 0),
+      tax_rate: Number(p?.tax_rate ?? defaultTaxRate),
     });
   }
 
@@ -102,6 +107,7 @@ export function LineItemsEditor({
       product_name: `${p?.name ?? ""} — ${v?.name ?? ""}`,
       unit_price: Number(v?.[priceKey] ?? p?.[priceKey] ?? 0),
       unit_cost: Number(v?.cost_price || p?.average_cost || p?.cost_price || 0),
+      tax_rate: Number(p?.tax_rate ?? defaultTaxRate),
     });
   }
 

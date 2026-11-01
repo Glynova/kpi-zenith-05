@@ -11,14 +11,8 @@ import { formatCurrency, formatDate, titleCase, todayISO } from "@/lib/format";
 import { printDocument } from "@/lib/print";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { ReturnDialog } from "@/components/return-dialog";
-import {
-  LineItemsEditor,
-  emptyLine,
-  itemsSubtotal,
-  lineTotal,
-  type LineItem,
-} from "@/components/line-items";
-import { createSale, recordPayment, completeSale } from "@/lib/sales";
+import { LineItemsEditor, emptyLine, type LineItem } from "@/components/line-items";
+import { createSale, orderTotals, completeSale } from "@/lib/sales";
 import { isPostedSale } from "@/lib/kpi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,11 +132,24 @@ function SalesPage() {
     },
   });
 
-  const subtotal = itemsSubtotal(items);
-  const discount = Number(form.discount ?? 0);
-  const taxRate = Number(form.tax_rate ?? business?.tax_rate ?? 0);
-  const tax = Math.max(0, ((subtotal - discount) * taxRate) / 100);
-  const total = Math.max(0, subtotal - discount + tax);
+  const orderDiscount = Number(form.discount ?? 0);
+  const totals = orderTotals(
+    items
+      .filter((item) => item.product_id && item.quantity > 0)
+      .map((item) => ({
+        key: item.key,
+        product_id: item.product_id!,
+        product_name: item.product_name,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unit_price),
+        unit_cost: Number(item.unit_cost),
+        discount: Number(item.discount || 0),
+        discount_type: "amount" as const,
+        tax_rate: Number(item.tax_rate ?? business?.tax_rate ?? 0),
+      })),
+    { orderDiscount, orderDiscountType: "amount" },
+  );
+  const { subtotal, discount, tax, total } = totals;
   const paid = form.payment_status === "paid" ? total : Number(form.paid ?? 0);
 
   const save = useMutation({
@@ -157,8 +164,9 @@ function SalesPage() {
           throw new Error(`Choose a variant for ${i.product_name || "the selected product"}`);
       }
 
-      // Same server posting path as POS: draft → payments → complete_sale(),
-      // which deducts finished stock or made-to-order components atomically.
+      const paidNow = form.payment_status === "paid" ? total : Math.min(paid, Number(total));
+      // Create the draft, its lines and initial payment atomically, then post
+      // through complete_sale(), which updates stock and accounting.
       const sale = await createSale({
         businessId: businessId!,
         documentType: "sale",
@@ -170,9 +178,18 @@ function SalesPage() {
         paymentMethod: form.payment_method ?? "cash",
         notes: form.notes || null,
         status: "draft",
-        orderDiscount: discount,
+        orderDiscount,
         orderDiscountType: "amount",
         createdBy: userId,
+        payments:
+          paidNow > 0.001
+            ? [
+                {
+                  method: form.payment_method ?? "cash",
+                  amount: paidNow,
+                },
+              ]
+            : [],
         lines: valid.map((i) => ({
           key: i.key,
           product_id: i.product_id!,
@@ -182,20 +199,9 @@ function SalesPage() {
           unit_price: Number(i.unit_price),
           unit_cost: Number(i.unit_cost),
           discount: Number(i.discount || 0),
-          tax_rate: taxRate,
+          tax_rate: Number(i.tax_rate ?? business?.tax_rate ?? 0),
         })),
       });
-      const paidNow =
-        form.payment_status === "paid" ? Number(sale.total) : Math.min(paid, Number(sale.total));
-      if (paidNow > 0.001) {
-        await recordPayment({
-          businessId: businessId!,
-          saleId: sale.id,
-          method: form.payment_method ?? "cash",
-          amount: paidNow,
-          createdBy: userId,
-        });
-      }
       await completeSale(sale.id);
       return sale;
     },
@@ -544,6 +550,7 @@ function SalesPage() {
             products={products}
             variants={productVariants}
             currency={currency}
+            defaultTaxRate={Number(business?.tax_rate ?? 0)}
             negativeStock={{
               enabled: !!settings.allow_negative_stock,
               allowedRoles: (settings.negative_stock_allowed_roles ?? [

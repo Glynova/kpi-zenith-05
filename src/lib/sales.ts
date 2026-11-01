@@ -169,6 +169,8 @@ export type CartLine = {
   tax_rate: number;
   notes?: string | null;
   condition?: string | null;
+  batch_id?: string | null;
+  serial_ids?: string[] | null;
   available?: number;
   stock_tracked?: boolean;
   negative_stock_mode?: "inherit" | "allow" | "block";
@@ -193,7 +195,7 @@ export function lineTotals(line: CartLine, taxInclusive: boolean): LineTotals {
       : Math.min(Math.max(raw, 0), gross),
   );
   const after = round2(gross - discount);
-  const rate = Number(line.tax_rate || 0) / 100;
+  const rate = Math.max(Number(line.tax_rate || 0), 0) / 100;
   if (taxInclusive) {
     const net = round2(after / (1 + rate));
     return { gross, discount, net, tax: round2(after - net), total: after };
@@ -237,6 +239,7 @@ export function orderTotals(
     cost += Number(l.unit_cost || 0) * Number(l.quantity || 0);
   }
   subtotal = round2(subtotal);
+  itemDiscount = round2(itemDiscount);
   const rawOrder = Number(opts.orderDiscount || 0);
   const orderDiscount = round2(
     opts.orderDiscountType === "percent"
@@ -249,11 +252,12 @@ export function orderTotals(
   const scaledTax = round2(tax * scale);
   const shipping = round2(Number(opts.shipping || 0));
   const otherCharges = round2(Number(opts.otherCharges || 0));
+  const discount = round2(itemDiscount + orderDiscount);
   return {
     subtotal,
-    itemDiscount: round2(itemDiscount),
+    itemDiscount,
     orderDiscount,
-    discount: round2(itemDiscount + orderDiscount),
+    discount,
     tax: scaledTax,
     shipping,
     otherCharges,
@@ -364,10 +368,17 @@ export type SaleDraft = {
   originalSaleId?: string | null;
   returnReason?: string | null;
   createdBy?: string | null;
+  payments?: Array<{
+    method: string;
+    amount: number;
+    tendered?: number | null;
+    reference?: string | null;
+    notes?: string | null;
+  }>;
   lines: CartLine[];
 };
 
-/** Creates a sales document plus its items. Never touches inventory. */
+/** Atomically creates a sales document, its items, and initial payments. */
 export async function createSale(draft: SaleDraft) {
   const lines = draft.lines.filter((l) => l.product_id && Number(l.quantity) > 0);
   if (!lines.length) throw new Error("Add at least one item");
@@ -383,107 +394,106 @@ export async function createSale(draft: SaleDraft) {
   const number =
     draft.number ?? (await nextDocNumber(draft.businessId, DOC_PREFIX[draft.documentType]));
 
-  const { data: sale, error } = await db
-    .from("sales")
-    .insert({
-      business_id: draft.businessId,
-      document_type: draft.documentType,
-      sale_number: number,
-      customer_id: draft.customerId || null,
-      location_id: draft.locationId || null,
-      register_id: draft.registerId || null,
-      channel: draft.channel ?? (draft.documentType === "pos_sale" ? "pos" : "manual"),
-      source: draft.source ?? null,
-      currency: draft.currency ?? null,
-      exchange_rate: draft.exchangeRate ?? 1,
-      tax_inclusive: !!draft.taxInclusive,
-      sale_type: draft.documentType,
-      status: draft.status ?? "draft",
-      payment_method: draft.paymentMethod ?? "cash",
-      payment_status: "unpaid",
-      sale_date: draft.saleDate ?? new Date().toISOString().slice(0, 10),
-      due_date: draft.dueDate ?? null,
-      expected_date: draft.expectedDate ?? null,
-      expires_on: draft.expiresOn ?? null,
-      payment_terms: draft.paymentTerms ?? null,
-      salesperson_id: draft.salespersonId ?? null,
-      subtotal: totals.subtotal,
-      discount: totals.discount,
-      discount_type: draft.orderDiscountType ?? "amount",
-      discount_value: draft.orderDiscount ?? 0,
-      tax: totals.tax,
-      shipping: totals.shipping,
-      other_charges: totals.otherCharges,
-      total: totals.total,
-      paid: 0,
-      cost_total: 0,
-      base_total: round2(totals.total * (draft.exchangeRate || 1)),
-      notes: draft.notes ?? null,
-      shipping_address: draft.shippingAddress ?? null,
-      billing_address: draft.billingAddress ?? null,
-      shipping_method: draft.shippingMethod ?? null,
-      delivery_status: draft.shippingMethod ? "pending" : null,
-      quote_id: draft.quoteId ?? null,
-      sales_order_id: draft.salesOrderId ?? null,
-      original_sale_id: draft.originalSaleId ?? null,
-      return_reason: draft.returnReason ?? null,
-      created_by: draft.createdBy ?? null,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
+  const header = {
+    business_id: draft.businessId,
+    document_type: draft.documentType,
+    sale_number: number,
+    customer_id: draft.customerId || null,
+    location_id: draft.locationId || null,
+    register_id: draft.registerId || null,
+    channel: draft.channel ?? (draft.documentType === "pos_sale" ? "pos" : "manual"),
+    source: draft.source ?? null,
+    currency: draft.currency ?? null,
+    exchange_rate: draft.exchangeRate ?? 1,
+    tax_inclusive: !!draft.taxInclusive,
+    sale_type: draft.documentType,
+    status: draft.status ?? "draft",
+    payment_method: draft.paymentMethod ?? "cash",
+    payment_status: "unpaid",
+    sale_date: draft.saleDate ?? new Date().toISOString().slice(0, 10),
+    due_date: draft.dueDate ?? null,
+    expected_date: draft.expectedDate ?? null,
+    expires_on: draft.expiresOn ?? null,
+    payment_terms: draft.paymentTerms ?? null,
+    salesperson_id: draft.salespersonId ?? null,
+    subtotal: totals.subtotal,
+    discount: totals.discount,
+    discount_type: draft.orderDiscountType ?? "amount",
+    discount_value: draft.orderDiscount ?? 0,
+    tax: totals.tax,
+    shipping: totals.shipping,
+    other_charges: totals.otherCharges,
+    total: totals.total,
+    paid: 0,
+    cost_total: 0,
+    base_total: round2(totals.total * (draft.exchangeRate || 1)),
+    notes: draft.notes ?? null,
+    shipping_address: draft.shippingAddress ?? null,
+    billing_address: draft.billingAddress ?? null,
+    shipping_method: draft.shippingMethod ?? null,
+    delivery_status: draft.shippingMethod ? "pending" : null,
+    quote_id: draft.quoteId ?? null,
+    sales_order_id: draft.salesOrderId ?? null,
+    original_sale_id: draft.originalSaleId ?? null,
+    return_reason: draft.returnReason ?? null,
+    created_by: draft.createdBy ?? null,
+  };
 
   const inclusive = !!draft.taxInclusive;
-  const { data: insertedItems, error: itemsError } = await db
-    .from("sale_items")
-    .insert(
-      lines.map((l) => {
-        const t = lineTotals(l, inclusive);
-        return {
-          business_id: draft.businessId,
-          sale_id: sale.id,
-          product_id: l.product_id,
-          variant_id: l.variant_id || null,
-          product_name: l.product_name,
-          sku: l.sku ?? null,
-          unit: l.unit ?? null,
-          quantity: l.quantity,
-          unit_price: l.unit_price,
-          unit_cost: l.unit_cost ?? 0,
-          discount: t.discount,
-          discount_type: l.discount_type ?? "amount",
-          tax_rate: l.tax_rate ?? 0,
-          tax: t.tax,
-          total: t.total,
-          condition: l.condition ?? null,
-          notes: l.notes ?? null,
-        };
-      }),
-    )
-    .select("id");
-  if (itemsError) {
-    await db.from("sales").delete().eq("id", sale.id);
-    throw itemsError;
+  const itemPayload = lines.map((line) => {
+    const totals = lineTotals(line, inclusive);
+    return {
+      product_id: line.product_id,
+      variant_id: line.variant_id ?? null,
+      product_name: line.product_name,
+      sku: line.sku ?? null,
+      unit: line.unit ?? null,
+      batch_id: line.batch_id ?? null,
+      serial_ids: line.serial_ids ?? null,
+      quantity: line.quantity,
+      unit_price: line.unit_price,
+      unit_cost: line.unit_cost ?? 0,
+      discount: Number(line.discount || 0),
+      discount_type: line.discount_type ?? "amount",
+      tax_rate: line.tax_rate ?? 0,
+      tax: totals.tax,
+      total: totals.total,
+      condition: line.condition ?? null,
+      notes: line.notes ?? null,
+      addons: (line.addons ?? []).map((addon) => ({
+        option_id: addon.option_id,
+        group_name: addon.group_name,
+        option_name: addon.option_name,
+        extra_price: addon.extra_price,
+        extra_cost: addon.extra_cost,
+      })),
+    };
+  });
+  const paymentPayload = (draft.payments ?? [])
+    .filter((payment) => Number(payment.amount) > 0)
+    .map((payment) => ({
+      method: payment.method,
+      amount: round2(Number(payment.amount)),
+      tendered: payment.tendered ?? null,
+      reference: payment.reference ?? null,
+      notes: payment.notes ?? null,
+    }));
+
+  const { data: saleId, error } = await db.rpc("create_sale", {
+    header,
+    items: itemPayload,
+    payments: paymentPayload,
+  });
+  if (error) throw error;
+  if (typeof saleId !== "string" || !saleId) {
+    throw new Error("The sale was created without returning its id");
   }
-  // Selected add-ons keep their price and cost at the time of sale.
-  const addonRows = lines.flatMap((l, i) =>
-    (l.addons ?? []).map((a) => ({
-      business_id: draft.businessId,
-      sale_item_id: (insertedItems as Row[])[i].id,
-      option_id: a.option_id,
-      group_name: a.group_name,
-      option_name: a.option_name,
-      extra_price: a.extra_price,
-      extra_cost: a.extra_cost,
-    })),
-  );
-  if (addonRows.length) {
-    const { error } = await db.from("sale_item_addons").insert(addonRows);
-    if (error) {
-      await db.from("sales").delete().eq("id", sale.id);
-      throw error;
-    }
-  }
+  const { data: sale, error: fetchError } = await db
+    .from("sales")
+    .select("*")
+    .eq("id", saleId)
+    .single();
+  if (fetchError) throw fetchError;
   return sale as Row;
 }
 

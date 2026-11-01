@@ -393,6 +393,13 @@
       "when": 1793520004000,
       "tag": "0055_pos_header_totals_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1793520005000,
+      "tag": "0056_sale_totals_formula_alignment",
+      "breakpoints": true
     }
   ]
 }

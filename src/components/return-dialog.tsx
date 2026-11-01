@@ -16,7 +16,14 @@ import { toast } from "sonner";
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency } from "@/lib/format";
-import { nextDocNumber, postSalesReturn, round2, RETURN_CONDITIONS } from "@/lib/sales";
+import {
+  createSale,
+  orderTotals,
+  postSalesReturn,
+  round2,
+  RETURN_CONDITIONS,
+  type CartLine,
+} from "@/lib/sales";
 import { titleCase } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -61,6 +68,26 @@ type ReturnLine = {
 const sameIdentity = (a: Row, productId: unknown, variantId: unknown) =>
   String(a.product_id) === String(productId) &&
   String(a.variant_id ?? "") === String(variantId ?? "");
+
+function toReturnCartLine(line: ReturnLine): CartLine {
+  const originalQuantity = Number(line.item.quantity ?? 0);
+  const returnedDiscount =
+    originalQuantity > 0
+      ? round2((Number(line.item.discount ?? 0) * line.quantity) / originalQuantity)
+      : 0;
+  return {
+    key: String(line.item.id),
+    product_id: String(line.item.product_id),
+    variant_id: line.item.variant_id == null ? null : String(line.item.variant_id),
+    product_name: String(line.item.product_name ?? ""),
+    quantity: line.quantity,
+    unit_price: Number(line.item.unit_price ?? 0),
+    unit_cost: Number(line.item.unit_cost ?? 0),
+    discount: returnedDiscount,
+    discount_type: "amount",
+    tax_rate: Number(line.item.tax_rate ?? 0),
+  };
+}
 
 export function ReturnDialog({
   sale,
@@ -148,19 +175,47 @@ export function ReturnDialog({
     };
   }, [sale?.id, businessId]);
 
-  const totals = useMemo(() => {
-    let subtotal = 0;
-    let tax = 0;
-    for (const l of lines) {
-      if (!(l.quantity > 0)) continue;
-      const net = round2(l.quantity * Number(l.item.unit_price ?? 0));
-      subtotal += net;
-      tax += round2((net * Number(l.item.tax_rate ?? 0)) / 100);
+  const returnCartLines = useMemo(
+    () => lines.filter((line) => line.quantity > 0).map(toReturnCartLine),
+    [lines],
+  );
+  const returnDiscount = useMemo(() => {
+    if (!sale) return { amount: 0, type: "amount" as const };
+
+    const originalTotals = orderTotals(
+      lines.map((line) => toReturnCartLine({ ...line, quantity: Number(line.item.quantity ?? 0) })),
+      { taxInclusive: !!sale.tax_inclusive },
+    );
+    const returnedTotals = orderTotals(returnCartLines, {
+      taxInclusive: !!sale.tax_inclusive,
+    });
+    const originalAfterItemDiscount = Math.max(originalTotals.subtotal, 0);
+    const returnedAfterItemDiscount = Math.max(returnedTotals.subtotal, 0);
+    const originalOrderDiscount = Math.max(
+      round2(Number(sale.discount ?? 0) - originalTotals.itemDiscount),
+      0,
+    );
+
+    if (sale.discount_type === "percent") {
+      return { amount: Number(sale.discount_value ?? 0), type: "percent" as const };
     }
-    subtotal = round2(subtotal);
-    tax = round2(tax);
-    return { subtotal, tax, total: round2(subtotal + tax) };
-  }, [lines]);
+    return {
+      amount:
+        originalAfterItemDiscount > 0
+          ? round2((originalOrderDiscount * returnedAfterItemDiscount) / originalAfterItemDiscount)
+          : 0,
+      type: "amount" as const,
+    };
+  }, [lines, returnCartLines, sale]);
+  const totals = useMemo(
+    () =>
+      orderTotals(returnCartLines, {
+        taxInclusive: !!sale?.tax_inclusive,
+        orderDiscount: returnDiscount.amount,
+        orderDiscountType: returnDiscount.type,
+      }),
+    [returnCartLines, returnDiscount, sale?.tax_inclusive],
+  );
 
   function setLine(index: number, patch: Partial<ReturnLine>) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
@@ -183,68 +238,31 @@ export function ReturnDialog({
       }
       if (!reason.trim()) throw new Error("A return reason is required");
 
-      const number = await nextDocNumber(businessId!, "RET");
-      const { data: ret, error } = await db
-        .from("sales")
-        .insert({
-          business_id: businessId,
-          document_type: "return",
-          sale_type: "return",
-          sale_number: number,
-          original_sale_id: sale.id,
-          customer_id: sale.customer_id ?? null,
-          location_id: sale.location_id ?? null,
-          currency: sale.currency ?? null,
-          tax_inclusive: !!sale.tax_inclusive,
-          status: "draft",
-          payment_method: sale.payment_method ?? "cash",
-          payment_status: "unpaid",
-          sale_date: sale.sale_date,
-          subtotal: totals.subtotal,
-          discount: 0,
-          tax: totals.tax,
-          shipping: 0,
-          other_charges: 0,
-          total: totals.total,
-          paid: 0,
-          cost_total: 0,
-          return_reason: reason.trim(),
-          created_by: userId,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-
-      const { error: itemsError } = await db.from("sale_items").insert(
-        picked.map((l) => ({
-          business_id: businessId,
-          sale_id: ret.id,
-          // Exact sellable identity carried over from the original line.
-          product_id: l.item.product_id,
-          variant_id: l.item.variant_id ?? null,
-          product_name: l.item.product_name,
-          sku: l.item.sku ?? null,
-          unit: l.item.unit ?? null,
-          batch_id: l.batchId || null,
-          serial_ids: l.serialIds.length ? l.serialIds : null,
-          quantity: l.quantity,
-          unit_price: l.item.unit_price,
-          unit_cost: l.item.unit_cost ?? 0,
-          discount: 0,
-          tax_rate: l.item.tax_rate ?? 0,
-          tax: round2(
-            (l.quantity * Number(l.item.unit_price ?? 0) * Number(l.item.tax_rate ?? 0)) / 100,
-          ),
-          total: round2(
-            l.quantity * Number(l.item.unit_price ?? 0) * (1 + Number(l.item.tax_rate ?? 0) / 100),
-          ),
-          condition: l.condition,
+      const ret = await createSale({
+        businessId: businessId!,
+        documentType: "return",
+        customerId: sale.customer_id ?? null,
+        locationId: sale.location_id ?? null,
+        currency: sale.currency ?? undefined,
+        taxInclusive: !!sale.tax_inclusive,
+        saleDate: sale.sale_date,
+        paymentMethod: sale.payment_method ?? "cash",
+        status: "draft",
+        orderDiscount: returnDiscount.amount,
+        orderDiscountType: returnDiscount.type,
+        originalSaleId: sale.id,
+        returnReason: reason.trim(),
+        createdBy: userId,
+        payments: [],
+        lines: picked.map((line) => ({
+          ...toReturnCartLine(line),
+          sku: line.item.sku ?? null,
+          unit: line.item.unit ?? null,
+          batch_id: line.batchId || null,
+          serial_ids: line.serialIds.length ? line.serialIds : null,
+          condition: line.condition,
         })),
-      );
-      if (itemsError) {
-        await db.from("sales").delete().eq("id", ret.id);
-        throw itemsError;
-      }
+      });
 
       await postSalesReturn(ret.id);
       return ret;
