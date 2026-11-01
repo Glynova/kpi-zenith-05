@@ -31,6 +31,7 @@ import { PageHeader } from "@/components/page-header";
 import { ImageThumb } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -51,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 type PayLine = { method: string; amount: number; tendered?: number };
 
@@ -108,6 +110,9 @@ function POSPage() {
   const [orderDiscount, setOrderDiscount] = useState(0);
   const [orderDiscountType, setOrderDiscountType] = useState<"amount" | "percent">("amount");
   const [payOpen, setPayOpen] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [managerPin, setManagerPin] = useState("");
+  const [approvalPending, setApprovalPending] = useState<OfflineSale | null>(null);
   const [heldOpen, setHeldOpen] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [variantFor, setVariantFor] = useState<Row | null>(null);
@@ -436,6 +441,8 @@ function POSPage() {
           discount_type: "amount",
           tax_rate: Number(product.tax_rate ?? defaultTaxRate),
           available: stock,
+          stock_tracked: stocked && !!settings.track_quantity,
+          negative_stock_mode: product.negative_stock_mode ?? "inherit",
         },
       ]);
     }
@@ -596,7 +603,7 @@ function POSPage() {
   const paidTotal = round2(payments.reduce((s, p) => s + Number(p.amount || 0), 0));
   const balance = round2(totals.total - paidTotal);
 
-  async function postSale(o: OfflineSale) {
+  async function postSale(o: OfflineSale, pin: string | null = null) {
     return createAndCompletePosSale({
       saleId: o.id,
       businessId: businessId!,
@@ -611,6 +618,7 @@ function POSPage() {
       lines: o.lines,
       payments: o.payments,
       offline: o.offline,
+      pin,
     });
   }
 
@@ -650,42 +658,92 @@ function POSPage() {
   }, [online, businessId]);
 
   const checkout = useMutation({
-    mutationFn: async () => {
-      if (!cart.length) throw new Error("Cart is empty");
-      const valid = payments.filter((p) => Number(p.amount) > 0);
-      if (paidTotal > totals.total + 0.009) throw new Error("Payments exceed the sale total");
-      if (balance > 0.009 && !customerId && !walkIn?.id)
-        throw new Error("Select a customer for the unpaid balance");
+    mutationFn: async (pin?: string) => {
+      let payload = approvalPending;
+      if (!payload) {
+        if (!cart.length) throw new Error("Cart is empty");
+        const valid = payments.filter((p) => Number(p.amount) > 0);
+        if (paidTotal > totals.total + 0.009) throw new Error("Payments exceed the sale total");
+        if (balance > 0.009 && !customerId && !walkIn?.id)
+          throw new Error("Select a customer for the unpaid balance");
 
-      const payload: OfflineSale = {
-        id: crypto.randomUUID(),
-        customerId: customerId || walkIn?.id || null,
-        locationId: locationId || null,
-        registerId: register?.id ?? null,
-        saleDate: todayISO(),
-        orderDiscount,
-        orderDiscountType,
-        lines: cart,
-        payments: valid,
-      };
+        payload = {
+          id: crypto.randomUUID(),
+          customerId: customerId || walkIn?.id || null,
+          locationId: locationId || null,
+          registerId: register?.id ?? null,
+          saleDate: todayISO(),
+          orderDiscount,
+          orderDiscountType,
+          lines: cart,
+          payments: valid,
+        };
+      }
       if (!navigator.onLine) {
         saveQueue(businessId!, [...loadQueue(businessId!), payload]);
         setQueued(loadQueue(businessId!).length);
         return { offline: true as const };
       }
-      const sale = await postSale(payload);
+      if (
+        !pin &&
+        settings.negative_stock_requires_approval &&
+        allowedNegativeRoles.includes(role ?? "") &&
+        payload.lines.some((line) => {
+          if (!line.stock_tracked || Number(line.quantity) <= Number(line.available ?? 0)) {
+            return false;
+          }
+          const canGoNegative =
+            line.negative_stock_mode === "allow" ||
+            (line.negative_stock_mode !== "block" && allowNegative);
+          const resultingNegativeQty = Number(line.quantity) - Number(line.available ?? 0);
+          return (
+            canGoNegative &&
+            (settings.max_negative_qty == null ||
+              resultingNegativeQty <= Number(settings.max_negative_qty))
+          );
+        })
+      ) {
+        setApprovalPending(payload);
+        setManagerPin("");
+        setPinDialogOpen(true);
+        return { approvalRequired: true as const };
+      }
+      let sale: Row;
+      try {
+        sale = await postSale(payload, pin ?? null);
+      } catch (error) {
+        const message =
+          error && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : String(error);
+        if (!pin && message.toLowerCase().includes("manager approval required")) {
+          setApprovalPending(payload);
+          setManagerPin("");
+          setPinDialogOpen(true);
+          return { approvalRequired: true as const };
+        }
+        throw error;
+      }
 
       const { data: fresh } = await db.from("sales").select("*").eq("id", sale.id).single();
       const { data: items } = await db.from("sale_items").select("*").eq("sale_id", sale.id);
-      return { sale: (fresh ?? sale) as Row, items: (items ?? []) as Row[], payments: valid };
+      return {
+        sale: (fresh ?? sale) as Row,
+        items: (items ?? []) as Row[],
+        payments: payload.payments,
+      };
     },
     onSuccess: (res) => {
+      if ("approvalRequired" in res) return;
       if ("offline" in res) {
         toast.success("Saved on this device. It will be sent when the internet is back.");
         setCart([]);
         setPayments([{ method: "cash", amount: 0, tendered: 0 }]);
         setOrderDiscount(0);
         setPayOpen(false);
+        setPinDialogOpen(false);
+        setManagerPin("");
+        setApprovalPending(null);
         return;
       }
       const { sale, items, payments: paid } = res;
@@ -1259,6 +1317,58 @@ function POSPage() {
             </Button>
             <Button onClick={() => checkout.mutate()} disabled={checkout.isPending}>
               {checkout.isPending ? "Completing…" : "Complete sale"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={pinDialogOpen}
+        onOpenChange={(open) => {
+          setPinDialogOpen(open);
+          if (!open) {
+            setManagerPin("");
+            setApprovalPending(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Manager approval required</DialogTitle>
+            <DialogDescription>
+              This sale will make an item’s stock negative. Enter an enrolled manager PIN to approve
+              and complete the sale.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center py-2">
+            <InputOTP
+              maxLength={6}
+              pattern={REGEXP_ONLY_DIGITS}
+              value={managerPin}
+              onChange={setManagerPin}
+              disabled={checkout.isPending}
+              aria-label="Six-digit manager PIN"
+            >
+              <InputOTPGroup>
+                {Array.from({ length: 6 }, (_, index) => (
+                  <InputOTPSlot key={index} index={index} />
+                ))}
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPinDialogOpen(false)}
+              disabled={checkout.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => checkout.mutate(managerPin)}
+              disabled={managerPin.length !== 6 || checkout.isPending}
+            >
+              {checkout.isPending ? "Verifying…" : "Approve & complete sale"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -170,6 +170,8 @@ export type CartLine = {
   notes?: string | null;
   condition?: string | null;
   available?: number;
+  stock_tracked?: boolean;
+  negative_stock_mode?: "inherit" | "allow" | "block";
   addons?: ChosenAddon[];
 };
 
@@ -526,6 +528,7 @@ export async function createAndCompletePosSale(input: {
   lines: CartLine[];
   payments: Array<{ method: string; amount: number; tendered?: number | null }>;
   offline?: boolean;
+  pin?: string | null;
 }) {
   const lines = input.lines.filter((line) => line.product_id && Number(line.quantity) > 0);
   if (!lines.length) throw new Error("Add at least one item");
@@ -591,20 +594,12 @@ export async function createAndCompletePosSale(input: {
       tendered: payment.tendered ?? null,
     }));
 
-  const submit = (pin: string | null) =>
-    db.rpc("create_complete_pos_sale", {
-      _sale: salePayload,
-      _items: itemPayload,
-      _payments: paymentPayload,
-      _pin: pin,
-    });
-
-  let { data, error } = await submit(null);
-  if (error?.message?.toLowerCase().includes("manager approval required")) {
-    const pin = window.prompt("Manager approval is required. Enter an enrolled manager PIN.");
-    if (pin === null) throw error;
-    ({ data, error } = await submit(pin));
-  }
+  const { data, error } = await db.rpc("create_complete_pos_sale", {
+    _sale: salePayload,
+    _items: itemPayload,
+    _payments: paymentPayload,
+    _pin: input.pin ?? null,
+  });
   if (error) throw error;
   return data as Row;
 }

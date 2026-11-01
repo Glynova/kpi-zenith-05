@@ -21,15 +21,19 @@ DECLARE
   payment jsonb;
   sale_item_id uuid;
   approval_result jsonb;
+  final_paid numeric;
+  final_refunds numeric;
 BEGIN
   IF auth.uid() IS NULL THEN
     RAISE EXCEPTION 'Sign in before completing a POS sale';
   END IF;
   IF jsonb_typeof(_sale) IS DISTINCT FROM 'object'
      OR jsonb_typeof(_items) IS DISTINCT FROM 'array'
-     OR jsonb_array_length(_items) = 0
      OR (_payments IS NOT NULL AND jsonb_typeof(_payments) IS DISTINCT FROM 'array') THEN
     RAISE EXCEPTION 'Invalid POS sale payload';
+  END IF;
+  IF jsonb_array_length(_items) = 0 THEN
+    RAISE EXCEPTION 'A POS sale must contain at least one item';
   END IF;
 
   v_business_id := NULLIF(_sale->>'business_id', '')::uuid;
@@ -179,6 +183,21 @@ BEGIN
          updated_at = now()
    WHERE id = v_sale_id;
 
+  IF EXISTS (
+    SELECT 1
+      FROM jsonb_array_elements(COALESCE(_payments, '[]'::jsonb)) AS payments(value)
+     WHERE COALESCE(NULLIF(payments.value->>'amount', '')::numeric, 0) <= 0
+        OR COALESCE(NULLIF(payments.value->>'tendered', '')::numeric, 0) < 0
+  ) THEN
+    RAISE EXCEPTION 'Payment amounts must be positive and tendered amounts cannot be negative';
+  END IF;
+  IF (
+    SELECT COALESCE(SUM(NULLIF(payments.value->>'amount', '')::numeric), 0)
+      FROM jsonb_array_elements(COALESCE(_payments, '[]'::jsonb)) AS payments(value)
+  ) > COALESCE(NULLIF(_sale->>'total', '')::numeric, 0) + 0.009 THEN
+    RAISE EXCEPTION 'Payments exceed the sale total';
+  END IF;
+
   PERFORM public.validate_sale_tax_for_items(
     v_sale_id,
     v_business_id,
@@ -225,8 +244,71 @@ BEGIN
   -- Any validation, approval, or posting error rolls back every row above.
   PERFORM public.complete_sale(v_sale_id);
 
+  SELECT COALESCE(SUM(CASE WHEN is_refund THEN -amount ELSE amount END), 0),
+         COALESCE(SUM(CASE WHEN is_refund THEN amount ELSE 0 END), 0)
+    INTO final_paid, final_refunds
+    FROM public.sale_payments
+   WHERE sale_id = v_sale_id;
+  UPDATE public.sales
+     SET paid = final_paid,
+         payment_status = CASE
+           WHEN final_refunds > 0 AND final_paid <= 0.009 THEN 'refunded'
+           WHEN final_refunds > 0 THEN 'partially_refunded'
+           WHEN final_paid <= 0.009 THEN 'unpaid'
+           WHEN final_paid + 0.009 >= total THEN 'paid'
+           ELSE 'partially_paid'
+         END,
+         updated_at = now()
+   WHERE id = v_sale_id;
+
   SELECT * INTO sale_row FROM public.sales WHERE id = v_sale_id;
   RETURN to_jsonb(sale_row);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.sync_sale_payments()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  sid uuid;
+  net numeric;
+  refunds numeric;
+  sale_row public.sales%ROWTYPE;
+  payment_state text;
+BEGIN
+  sid := COALESCE(NEW.sale_id, OLD.sale_id);
+  SELECT COALESCE(SUM(CASE WHEN is_refund THEN -amount ELSE amount END), 0),
+         COALESCE(SUM(CASE WHEN is_refund THEN amount ELSE 0 END), 0)
+    INTO net, refunds
+    FROM public.sale_payments
+   WHERE sale_id = sid;
+  SELECT * INTO sale_row FROM public.sales WHERE id = sid;
+
+  IF sale_row.document_type = 'pos_sale' AND NOT sale_row.inventory_posted THEN
+    UPDATE public.sales SET paid = net, updated_at = now() WHERE id = sid;
+  ELSE
+    IF sale_row.status = 'voided' THEN payment_state := 'voided';
+    ELSIF refunds > 0 AND net <= 0.009 THEN payment_state := 'refunded';
+    ELSIF refunds > 0 THEN payment_state := 'partially_refunded';
+    ELSIF net <= 0.009 THEN payment_state := 'unpaid';
+    ELSIF net + 0.009 >= sale_row.total THEN payment_state := 'paid';
+    ELSE payment_state := 'partially_paid';
+    END IF;
+
+    UPDATE public.sales
+       SET paid = net, payment_status = payment_state, updated_at = now()
+     WHERE id = sid;
+  END IF;
+
+  UPDATE public.accounts_receivable
+     SET paid = LEAST(net, amount),
+         status = CASE WHEN net + 0.009 >= amount THEN 'paid' ELSE 'open' END,
+         updated_at = now()
+   WHERE sale_id = sid;
+  RETURN COALESCE(NEW, OLD);
 END;
 $$;
 
@@ -234,5 +316,6 @@ REVOKE ALL ON FUNCTION public.create_complete_pos_sale(jsonb, jsonb, jsonb, text
   FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.create_complete_pos_sale(jsonb, jsonb, jsonb, text)
   TO authenticated;
+REVOKE ALL ON FUNCTION public.sync_sale_payments() FROM PUBLIC, anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
