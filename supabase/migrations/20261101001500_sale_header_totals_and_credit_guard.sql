@@ -65,15 +65,14 @@ END; $$;
 
 DROP TRIGGER IF EXISTS sale_header_totals_trg ON public.sales;
 CREATE TRIGGER sale_header_totals_trg BEFORE INSERT OR UPDATE ON public.sales
-  FOR EACH ROW WHEN (EXISTS (SELECT 1 FROM public.sale_items WHERE sale_id = NEW.id))
-  EXECUTE FUNCTION public.trg_enforce_sale_header_totals();
+  FOR EACH ROW EXECUTE FUNCTION public.trg_enforce_sale_header_totals();
 
 -- Deferred check so a sale and its batch of items (written in separate requests
 -- by the app) are validated against each other once both are visible.
 CREATE OR REPLACE FUNCTION public.trg_enforce_sale_header_totals_item()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 BEGIN
-  PERFORM public.enforce_sale_header_totals(NEW.sale_id);
+  PERFORM public.enforce_sale_header_totals(COALESCE(NEW.sale_id, OLD.sale_id));
   RETURN NEW;
 END; $$;
 
