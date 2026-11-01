@@ -512,6 +512,103 @@ export async function recordPayment(input: {
   if (error) throw error;
 }
 
+export async function createAndCompletePosSale(input: {
+  saleId: string;
+  businessId: string;
+  customerId?: string | null;
+  locationId?: string | null;
+  registerId?: string | null;
+  currency: string;
+  taxInclusive: boolean;
+  saleDate: string;
+  orderDiscount: number;
+  orderDiscountType: "amount" | "percent";
+  lines: CartLine[];
+  payments: Array<{ method: string; amount: number; tendered?: number | null }>;
+  offline?: boolean;
+}) {
+  const lines = input.lines.filter((line) => line.product_id && Number(line.quantity) > 0);
+  if (!lines.length) throw new Error("Add at least one item");
+
+  const totals = orderTotals(lines, {
+    taxInclusive: input.taxInclusive,
+    orderDiscount: input.orderDiscount,
+    orderDiscountType: input.orderDiscountType,
+  });
+  const paymentMethod = input.payments[0]?.method ?? "cash";
+  const salePayload = {
+    id: input.saleId,
+    business_id: input.businessId,
+    customer_id: input.customerId ?? null,
+    location_id: input.locationId ?? null,
+    register_id: input.registerId ?? null,
+    source: input.offline ? "pos_offline" : "pos",
+    currency: input.currency,
+    exchange_rate: 1,
+    tax_inclusive: input.taxInclusive,
+    sale_date: input.saleDate,
+    payment_method: paymentMethod,
+    discount_type: input.orderDiscountType,
+    discount_value: input.orderDiscount,
+    subtotal: totals.subtotal,
+    discount: totals.discount,
+    tax: totals.tax,
+    total: totals.total,
+    base_total: totals.total,
+  };
+  const itemPayload = lines.map((line) => {
+    const lineAmount = lineTotals(line, input.taxInclusive);
+    return {
+      product_id: line.product_id,
+      variant_id: line.variant_id ?? null,
+      product_name: line.product_name,
+      sku: line.sku ?? null,
+      unit: line.unit ?? null,
+      quantity: line.quantity,
+      unit_price: line.unit_price,
+      unit_cost: line.unit_cost ?? 0,
+      discount: lineAmount.discount,
+      discount_type: line.discount_type ?? "amount",
+      tax_rate: line.tax_rate,
+      tax: lineAmount.tax,
+      total: lineAmount.total,
+      condition: line.condition ?? null,
+      notes: line.notes ?? null,
+      addons: (line.addons ?? []).map((addon) => ({
+        option_id: addon.option_id,
+        group_name: addon.group_name,
+        option_name: addon.option_name,
+        extra_price: addon.extra_price,
+        extra_cost: addon.extra_cost,
+      })),
+    };
+  });
+  const paymentPayload = input.payments
+    .filter((payment) => Number(payment.amount) > 0)
+    .map((payment) => ({
+      method: payment.method,
+      amount: round2(Number(payment.amount)),
+      tendered: payment.tendered ?? null,
+    }));
+
+  const submit = (pin: string | null) =>
+    db.rpc("create_complete_pos_sale", {
+      _sale: salePayload,
+      _items: itemPayload,
+      _payments: paymentPayload,
+      _pin: pin,
+    });
+
+  let { data, error } = await submit(null);
+  if (error?.message?.toLowerCase().includes("manager approval required")) {
+    const pin = window.prompt("Manager approval is required. Enter an enrolled manager PIN.");
+    if (pin === null) throw error;
+    ({ data, error } = await submit(pin));
+  }
+  if (error) throw error;
+  return data as Row;
+}
+
 /** Posts inventory, COGS, receivables and cash for a sale. Idempotent server-side. */
 export async function completeSale(saleId: string) {
   const { error } = await db.rpc("complete_sale", { _sale_id: saleId });

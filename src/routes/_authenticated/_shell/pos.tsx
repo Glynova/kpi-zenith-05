@@ -10,11 +10,9 @@ import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, todayISO } from "@/lib/format";
 import { printReceipt } from "@/lib/receipt";
 import {
-  completeSale,
-  createSale,
+  createAndCompletePosSale,
   fetchAvailability,
   orderTotals,
-  recordPayment,
   resolvePrice,
   stockLabel,
   round2,
@@ -599,37 +597,21 @@ function POSPage() {
   const balance = round2(totals.total - paidTotal);
 
   async function postSale(o: OfflineSale) {
-    const sale = await createSale({
+    return createAndCompletePosSale({
+      saleId: o.id,
       businessId: businessId!,
-      documentType: "pos_sale",
       customerId: o.customerId,
       locationId: o.locationId,
       registerId: o.registerId,
-      channel: "pos",
-      source: o.offline ? "pos_offline" : "pos",
       currency,
       taxInclusive,
       saleDate: o.saleDate,
-      status: "draft",
       orderDiscount: o.orderDiscount,
       orderDiscountType: o.orderDiscountType,
-      salespersonId: userId,
-      createdBy: userId,
       lines: o.lines,
+      payments: o.payments,
+      offline: o.offline,
     });
-    for (const p of o.payments) {
-      await recordPayment({
-        businessId: businessId!,
-        saleId: sale.id,
-        registerId: o.registerId,
-        method: p.method,
-        amount: Number(p.amount),
-        tendered: p.tendered ?? null,
-        createdBy: userId,
-      });
-    }
-    await completeSale(sale.id);
-    return sale;
   }
 
   const [queued, setQueued] = useState(0);

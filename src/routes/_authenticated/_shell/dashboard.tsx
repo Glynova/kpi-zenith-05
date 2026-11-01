@@ -34,6 +34,7 @@ import { formatCurrency, formatNumber, formatDate, daysAgoISO, todayISO } from "
 import {
   salesMetrics,
   saleNetRevenue,
+  isPostedSale,
   inventoryValueOf,
   healthScore,
   marginPercent,
@@ -149,8 +150,8 @@ function Dashboard() {
 
     // The query fetches two windows; everything below the split uses the
     // current window only, so no existing calculation changes.
-    const curSales = d.sales.filter((s) => String(s.sale_date) >= from);
-    const prevSales = d.sales.filter((s) => String(s.sale_date) < from);
+    const curSales = d.sales.filter((s) => String(s.sale_date) >= from && isPostedSale(s));
+    const prevSales = d.sales.filter((s) => String(s.sale_date) < from && isPostedSale(s));
     const curExpenses = d.expenses.filter((e) => String(e.expense_date) >= from);
     const prevExpenses = d.expenses.filter((e) => String(e.expense_date) < from);
 

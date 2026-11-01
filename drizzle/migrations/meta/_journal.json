@@ -365,6 +365,20 @@
       "when": 1793520000000,
       "tag": "0051_negative_stock_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1793520001000,
+      "tag": "0052_product_tax_rate_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1793520002000,
+      "tag": "0053_atomic_pos_sale",
+      "breakpoints": true
     }
   ]
 }

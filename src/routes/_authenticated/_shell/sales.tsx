@@ -19,6 +19,7 @@ import {
   type LineItem,
 } from "@/components/line-items";
 import { createSale, recordPayment, completeSale } from "@/lib/sales";
+import { isPostedSale } from "@/lib/kpi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -292,7 +293,9 @@ function SalesPage() {
   }
 
   const rows = useMemo(() => {
-    const list = salesQuery.data ?? [];
+    const list = (salesQuery.data ?? []).filter(
+      (row) => row.document_type !== "pos_sale" || isPostedSale(row),
+    );
     const q = search.trim().toLowerCase();
     if (!q) return list;
     return list.filter((r) =>

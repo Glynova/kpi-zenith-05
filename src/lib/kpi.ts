@@ -21,6 +21,12 @@ const NON_REVENUE_DOCS = new Set(["quote", "sales_order"]);
 export function isPostedSale(sale: Row): boolean {
   if (NON_REVENUE_DOCS.has(String(sale.document_type ?? "sale"))) return false;
   if (EXCLUDED_STATUSES.has(String(sale.status ?? ""))) return false;
+  if (
+    sale.document_type === "pos_sale" &&
+    (sale.inventory_posted !== true || sale.status !== "completed")
+  ) {
+    return false;
+  }
   // inventory_posted is set by complete_sale()/post_sales_return(); rows that
   // predate it fall back to their status.
   if (sale.inventory_posted === false && sale.status !== "completed") return false;
