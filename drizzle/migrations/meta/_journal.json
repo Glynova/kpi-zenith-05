@@ -386,6 +386,13 @@
       "when": 1793520003000,
       "tag": "0054_item_unit_conversions",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1793520004000,
+      "tag": "0055_pos_header_totals_defaults",
+      "breakpoints": true
     }
   ]
 }
