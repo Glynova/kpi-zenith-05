@@ -90,12 +90,31 @@ function SalesPage() {
     queryFn: async () => {
       const { data } = await db
         .from("products")
-        .select("id,name,selling_price,cost_price,average_cost,tax_rate,stock,negative_stock_mode")
+        .select(
+          "id,name,selling_price,cost_price,average_cost,tax_rate,default_tax_type,stock,negative_stock_mode",
+        )
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];
     },
   });
+
+  const complianceQuery = useQuery({
+    queryKey: ["compliance", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("business_compliance")
+        .select("jurisdiction,vat_registration_type")
+        .eq("business_id", businessId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as Row | null;
+    },
+  });
+  const taxEnabled =
+    complianceQuery.data?.jurisdiction !== "PH" ||
+    complianceQuery.data?.vat_registration_type === "vat";
 
   const { data: productVariants = [] } = useQuery({
     queryKey: ["variants-lite", businessId],
@@ -116,7 +135,7 @@ function SalesPage() {
     queryFn: async () => {
       const { data } = await db
         .from("customers")
-        .select("id,name,email,phone")
+        .select("id,name,email,phone,address,tax_id,type")
         .eq("business_id", businessId)
         .order("name");
       return (data ?? []) as Row[];
@@ -145,7 +164,8 @@ function SalesPage() {
         unit_cost: Number(item.unit_cost),
         discount: Number(item.discount || 0),
         discount_type: "amount" as const,
-        tax_rate: Number(item.tax_rate ?? business?.tax_rate ?? 0),
+        tax_rate: taxEnabled ? Number(item.tax_rate ?? business?.tax_rate ?? 0) : 0,
+        tax_type: item.tax_type,
       })),
     { orderDiscount, orderDiscountType: "amount" },
   );
@@ -156,12 +176,22 @@ function SalesPage() {
     mutationFn: async () => {
       const valid = items.filter((i) => i.product_id && i.quantity > 0);
       if (!valid.length) throw new Error("Add at least one line item");
+      if (!complianceQuery.data)
+        throw new Error("Load the business tax registration before saving");
       for (const i of valid) {
         const needsVariant = productVariants.some(
           (v) => v.product_id === i.product_id && v.status !== "archived",
         );
         if (needsVariant && !i.variant_id)
           throw new Error(`Choose a variant for ${i.product_name || "the selected product"}`);
+      }
+      const buyer = customers.find((customer) => customer.id === form.customer_id);
+      if (
+        complianceQuery.data.jurisdiction === "PH" &&
+        ["business", "company", "wholesale", "corporate"].includes(String(buyer?.type)) &&
+        !String(buyer?.tax_id ?? "").trim()
+      ) {
+        throw new Error("A business buyer TIN is required");
       }
 
       const paidNow = form.payment_status === "paid" ? total : Math.min(paid, Number(total));
@@ -170,7 +200,6 @@ function SalesPage() {
       const sale = await createSale({
         businessId: businessId!,
         documentType: "sale",
-        number: form.sale_number || undefined,
         customerId: form.customer_id || null,
         locationId: form.location_id || null,
         channel: "manual",
@@ -199,7 +228,8 @@ function SalesPage() {
           unit_price: Number(i.unit_price),
           unit_cost: Number(i.unit_cost),
           discount: Number(i.discount || 0),
-          tax_rate: Number(i.tax_rate ?? business?.tax_rate ?? 0),
+          tax_rate: taxEnabled ? Number(i.tax_rate ?? business?.tax_rate ?? 0) : 0,
+          tax_type: i.tax_type,
         })),
       });
       await completeSale(sale.id);
@@ -225,12 +255,17 @@ function SalesPage() {
         if (error) throw error;
         return;
       }
-      const { error } = await db.from("sales").delete().eq("id", row.id);
+      const { error } = await db.rpc("cancel_draft_sale", {
+        _sale_id: row.id,
+        _reason: voidReason,
+      });
       if (error) throw error;
     },
     onSuccess: (_d, row) => {
       toast.success(
-        isPosted(row) ? "Sale voided. The original is kept with a reversal." : "Sale deleted",
+        isPosted(row)
+          ? "Sale voided. The original is kept with a reversal."
+          : "Draft sale cancelled",
       );
       setVoidReason("");
       queryClient.invalidateQueries({ queryKey: ["sales", businessId] });
@@ -271,21 +306,26 @@ function SalesPage() {
   });
 
   async function printSale(sale: Row) {
-    const { data } = await db.from("sale_items").select("*").eq("sale_id", sale.id);
-    const customer = customers.find((c) => c.id === sale.customer_id) ?? null;
-    printDocument({
-      title: "Receipt",
-      business,
-      doc: sale,
-      party: customer,
-      items: data ?? [],
-      currency,
-    });
+    try {
+      const { data, error } = await db.from("sale_items").select("*").eq("sale_id", sale.id);
+      if (error) throw error;
+      const customer = customers.find((c) => c.id === sale.customer_id) ?? null;
+      const opened = await printDocument({
+        title: "Receipt",
+        business,
+        doc: sale,
+        party: customer,
+        items: data ?? [],
+        currency,
+      });
+      if (!opened) toast.error("Allow pop-ups to print the sale");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log or print the sale");
+    }
   }
 
   function openCreate() {
     setForm({
-      sale_number: "",
       sale_type: "walk_in",
       payment_method: "cash",
       payment_status: "paid",
@@ -551,6 +591,8 @@ function SalesPage() {
             variants={productVariants}
             currency={currency}
             defaultTaxRate={Number(business?.tax_rate ?? 0)}
+            taxEnabled={taxEnabled}
+            canOverrideTaxType={["owner", "admin", "manager"].includes(String(role))}
             negativeStock={{
               enabled: !!settings.allow_negative_stock,
               allowedRoles: (settings.negative_stock_allowed_roles ?? [
@@ -689,28 +731,32 @@ function SalesPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {isPosted(deleting) ? `Void sale ${deleting?.sale_number}?` : "Delete this draft?"}
+              {isPosted(deleting)
+                ? `Void sale ${deleting?.sale_number}?`
+                : `Cancel draft ${deleting?.sale_number}?`}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {isPosted(deleting)
                 ? "Posted sales are never deleted. Voiding keeps the original, puts the stock back at its original cost and records a reversal in the audit trail. Only owners, admins and managers can void."
-                : "This draft has not been posted, so it can be removed."}
+                : "The draft will be retained with the user, time and reason for cancellation."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {isPosted(deleting) && (
-            <Textarea
-              placeholder="Reason for voiding (required)"
-              value={voidReason}
-              onChange={(e) => setVoidReason(e.target.value)}
-            />
-          )}
+          <Textarea
+            placeholder={
+              isPosted(deleting)
+                ? "Reason for voiding (required)"
+                : "Reason for cancelling (required)"
+            }
+            value={voidReason}
+            onChange={(e) => setVoidReason(e.target.value)}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              disabled={isPosted(deleting) && voidReason.trim().length < 3}
+              disabled={voidReason.trim().length < 3 || remove.isPending}
               onClick={() => deleting && remove.mutate(deleting)}
             >
-              {isPosted(deleting) ? "Void sale" : "Delete"}
+              {isPosted(deleting) ? "Void sale" : "Cancel draft"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

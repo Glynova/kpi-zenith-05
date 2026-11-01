@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Download, Search } from "lucide-react";
 
 import { db, type Row } from "@/lib/db";
+import { logDocumentEvent } from "@/lib/audit";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_shell/reports")({
   head: () => ({
@@ -409,8 +411,18 @@ function Reports() {
     },
   ];
 
-  function exportRows(name: string, rows: Row[]) {
+  async function exportRows(name: string, rows: Row[]) {
     if (!rows.length) return;
+    if (!businessId) return;
+    try {
+      await logDocumentEvent(businessId, "EXPORT", "reports", name, {
+        row_count: rows.length,
+        format: "csv",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log the export");
+      return;
+    }
     const keys = Object.keys(rows[0]);
     const csv = [keys.join(","), ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join(
       "\n",

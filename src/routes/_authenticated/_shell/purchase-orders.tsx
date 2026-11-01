@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Search,
-  Trash2,
   Eye,
   PackageCheck,
   Printer,
@@ -15,6 +14,7 @@ import {
   Copy,
   Ban,
   Undo2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -124,6 +124,7 @@ function PurchaseOrdersPage() {
   const [open, setOpen] = useState(false);
   const [viewing, setViewing] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState<Row | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
   const [receiving, setReceiving] = useState<Row | null>(null);
   const [returning, setReturning] = useState<Row | null>(null);
   const [items, setItems] = useState<PoLine[]>([emptyLine()]);
@@ -427,13 +428,6 @@ function PurchaseOrdersPage() {
       );
       if (itemsError) throw itemsError;
 
-      await db.rpc("log_audit_event", {
-        _business_id: businessId,
-        _action: "po_created",
-        _module: "purchasing",
-        _record_id: po.po_number,
-        _new_value: { total: grandTotal, supplier_id: form.supplier_id },
-      });
       return po;
     },
     onSuccess: () => {
@@ -455,14 +449,6 @@ function PurchaseOrdersPage() {
       if (status === "closed") patch.closed_at = new Date().toISOString();
       const { error } = await db.from("purchase_orders").update(patch).eq("id", po.id);
       if (error) throw error;
-      await db.rpc("log_audit_event", {
-        _business_id: businessId,
-        _action: `po_${status}`,
-        _module: "purchasing",
-        _record_id: po.po_number,
-        _old_value: { status: po.status },
-        _new_value: { status },
-      });
       return status;
     },
     onSuccess: (status) => {
@@ -528,37 +514,49 @@ function PurchaseOrdersPage() {
     onError: (e: any) => toast.error(e.message ?? "Could not duplicate"),
   });
 
-  const remove = useMutation({
+  const cancelOrder = useMutation({
     mutationFn: async (row: Row) => {
-      const { error } = await db.from("purchase_orders").delete().eq("id", row.id);
+      const { error } = await db.rpc("cancel_purchase_order", {
+        _purchase_order_id: row.id,
+        _reason: cancelReason,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Purchase order deleted");
+      toast.success("Purchase order cancelled and retained in history");
       queryClient.invalidateQueries({ queryKey: ["purchase-orders", businessId] });
       setDeleting(null);
+      setCancelReason("");
     },
-    onError: (e: any) => toast.error(e.message ?? "Delete failed"),
+    onError: (e: any) => toast.error(e.message ?? "Could not cancel purchase order"),
   });
 
   async function printPo(po: Row) {
-    const { data } = await db
-      .from("purchase_order_items")
-      .select("*, products(name)")
-      .eq("purchase_order_id", po.id);
-    printDocument({
-      title: "Purchase Order",
-      business,
-      doc: po,
-      party: suppliers.find((s) => s.id === po.supplier_id) ?? null,
-      items: (data ?? []).map((i: Row) => ({
-        product_name: i.products?.name ?? "Item",
-        quantity: i.quantity,
-        unit_price: i.unit_cost,
-        total: i.total,
-      })),
-      currency,
-    });
+    try {
+      const { data, error } = await db
+        .from("purchase_order_items")
+        .select("*, products(name)")
+        .eq("purchase_order_id", po.id);
+      if (error) throw error;
+      const opened = await printDocument({
+        title: "Purchase Order",
+        business,
+        doc: po,
+        party: suppliers.find((s) => s.id === po.supplier_id) ?? null,
+        items: (data ?? []).map((i: Row) => ({
+          product_name: i.products?.name ?? "Item",
+          quantity: i.quantity,
+          unit_price: i.unit_cost,
+          total: i.total,
+        })),
+        currency,
+      });
+      if (!opened) toast.error("Allow pop-ups to print the purchase order");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not log or print the purchase order",
+      );
+    }
   }
 
   async function openCreate() {
@@ -776,21 +774,14 @@ function PurchaseOrdersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setStatus.mutate({ po: row, status: "cancelled" })}
+                            onClick={() => {
+                              setCancelReason("");
+                              setDeleting(row);
+                            }}
                             title="Cancel order"
                             aria-label="Cancel"
                           >
                             <Ban className="size-4 text-destructive" />
-                          </Button>
-                        )}
-                        {canWrite && row.status === "draft" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleting(row)}
-                            aria-label="Delete"
-                          >
-                            <Trash2 className="size-4 text-destructive" />
                           </Button>
                         )}
                       </TableCell>
@@ -1312,16 +1303,24 @@ function PurchaseOrdersPage() {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this draft order?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel purchase order {deleting?.po_number}?</AlertDialogTitle>
             <AlertDialogDescription>
-              Only draft orders can be deleted. Orders with receipts must be cancelled or closed so
-              history stays intact.
+              The order will remain in the audit history. Orders with received goods must be
+              reversed through a supplier return instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Textarea
+            placeholder="Reason for cancellation (required)"
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleting && remove.mutate(deleting)}>
-              Delete
+            <AlertDialogAction
+              disabled={cancelReason.trim().length < 3 || cancelOrder.isPending}
+              onClick={() => deleting && cancelOrder.mutate(deleting)}
+            >
+              Cancel order
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

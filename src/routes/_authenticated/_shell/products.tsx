@@ -140,6 +140,13 @@ const fields: Field[] = [
     default: 0,
   },
   {
+    key: "default_tax_type",
+    label: "Default tax type",
+    type: "select",
+    options: ["VAT", "VAT_EXEMPT", "ZERO_RATED"],
+    default: "VAT",
+  },
+  {
     key: "standard_cost",
     label: "Standard cost",
     type: "number",

@@ -371,6 +371,7 @@ function UnitsPage() {
       <ResourcePage
         illustration="inventory"
         table="units_of_measure"
+        allowDelete
         title="Units of Measure"
         description={description}
         columns={unitColumns}
@@ -380,6 +381,7 @@ function UnitsPage() {
       />
       <ResourcePage
         table="unit_conversions"
+        allowDelete
         title="Unit Conversions"
         description="Examples: 1 kg = 1000 g, 1 L = 1000 ml, 1 case = 24 pcs, 1 dozen = 12 pcs."
         columns={convColumns}

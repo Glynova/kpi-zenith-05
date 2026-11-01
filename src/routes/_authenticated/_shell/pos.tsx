@@ -16,6 +16,8 @@ import {
   resolvePrice,
   stockLabel,
   round2,
+  validateStatutoryDiscount,
+  type StatutoryDiscountRule,
   type CartLine,
 } from "@/lib/sales";
 import {
@@ -71,6 +73,11 @@ type OfflineSale = {
   saleDate: string;
   orderDiscount: number;
   orderDiscountType: any;
+  statutoryDiscountType: string | null;
+  statutoryBuyerName: string | null;
+  statutoryBuyerId: string | null;
+  statutoryBuyerTin: string | null;
+  statutoryItemsEligible: boolean;
   lines: CartLine[];
   payments: any[];
   offline?: boolean;
@@ -90,6 +97,19 @@ function saveQueue(b: string, q: OfflineSale[]) {
 function POSPage() {
   const { businessId, business, currency, canWrite, userId, settings, role } = useBusiness();
   const queryClient = useQueryClient();
+  const complianceQuery = useQuery({
+    queryKey: ["compliance", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("business_compliance")
+        .select("jurisdiction,vat_registration_type,statutory_discount_rules")
+        .eq("business_id", businessId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as Row | null;
+    },
+  });
 
   const [locationId, setLocationId] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -109,6 +129,11 @@ function POSPage() {
   const [customerId, setCustomerId] = useState<string>("");
   const [orderDiscount, setOrderDiscount] = useState(0);
   const [orderDiscountType, setOrderDiscountType] = useState<"amount" | "percent">("amount");
+  const [statutoryDiscountType, setStatutoryDiscountType] = useState("");
+  const [statutoryBuyerName, setStatutoryBuyerName] = useState("");
+  const [statutoryBuyerId, setStatutoryBuyerId] = useState("");
+  const [statutoryBuyerTin, setStatutoryBuyerTin] = useState("");
+  const [statutoryItemsEligible, setStatutoryItemsEligible] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [managerPin, setManagerPin] = useState("");
@@ -124,7 +149,11 @@ function POSPage() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const taxInclusive = !!settings.tax_inclusive;
-  const defaultTaxRate = Number(settings.tax_rate ?? 0);
+  const isPhilippines = complianceQuery.data?.jurisdiction === "PH";
+  const taxEnabled =
+    complianceQuery.data?.jurisdiction !== "PH" ||
+    complianceQuery.data?.vat_registration_type === "vat";
+  const defaultTaxRate = taxEnabled ? Number(settings.tax_rate ?? 0) : 0;
   const allowNegative = !!settings.allow_negative_stock;
   const allowedNegativeRoles = (settings.negative_stock_allowed_roles ?? [
     "owner",
@@ -179,7 +208,7 @@ function POSPage() {
       const { data, error } = await db
         .from("products")
         .select(
-          "id,name,sku,barcode,selling_price,cost_price,tax_rate,image_url,category_id,reorder_level,has_variants,inventory_model,track_stock,negative_stock_mode,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
+          "id,name,sku,barcode,selling_price,cost_price,tax_rate,default_tax_type,image_url,category_id,reorder_level,has_variants,inventory_model,track_stock,negative_stock_mode,unit,status,product_variants(id,name,sku,barcode,selling_price,cost_price,status)",
         )
         .eq("business_id", businessId)
         .neq("status", "discontinued")
@@ -249,7 +278,7 @@ function POSPage() {
     queryFn: async () => {
       const { data } = await db
         .from("customers")
-        .select("id,name,type,price_tier,credit_limit,balance,is_walk_in,status")
+        .select("id,name,type,tax_id,address,price_tier,credit_limit,balance,is_walk_in,status")
         .eq("business_id", businessId)
         .neq("status", "blocked")
         .order("name");
@@ -439,7 +468,11 @@ function POSPage() {
           addons: chosen,
           discount: 0,
           discount_type: "amount",
-          tax_rate: Number(product.tax_rate ?? defaultTaxRate),
+          tax_type: product.default_tax_type ?? "VAT",
+          tax_rate:
+            taxEnabled && (product.default_tax_type ?? "VAT") === "VAT"
+              ? Number(product.tax_rate ?? defaultTaxRate)
+              : 0,
           available: stock,
           stock_tracked: stocked && !!settings.track_quantity,
           negative_stock_mode: product.negative_stock_mode ?? "inherit",
@@ -567,7 +600,15 @@ function POSPage() {
         customer_id: customerId || walkIn?.id || null,
         label: `${cart.length} item(s) · ${formatCurrency(totals.total, currency)}`,
         cart: cart as any,
-        meta: { orderDiscount, orderDiscountType },
+        meta: {
+          orderDiscount,
+          orderDiscountType,
+          statutoryDiscountType,
+          statutoryBuyerName,
+          statutoryBuyerId,
+          statutoryBuyerTin,
+          statutoryItemsEligible,
+        },
         held_by: userId,
       });
       if (error) throw error;
@@ -575,6 +616,10 @@ function POSPage() {
     onSuccess: () => {
       setCart([]);
       setOrderDiscount(0);
+      setStatutoryDiscountType("");
+      setStatutoryBuyerName("");
+      setStatutoryBuyerId("");
+      setStatutoryBuyerTin("");
       toast.success("Order held");
       queryClient.invalidateQueries({ queryKey: ["held-orders", businessId] });
     },
@@ -594,6 +639,11 @@ function POSPage() {
       setCustomerId(order.customer_id ?? "");
       setOrderDiscount(Number(order.meta?.orderDiscount ?? 0));
       setOrderDiscountType(order.meta?.orderDiscountType ?? "amount");
+      setStatutoryDiscountType(order.meta?.statutoryDiscountType ?? "");
+      setStatutoryBuyerName(order.meta?.statutoryBuyerName ?? "");
+      setStatutoryBuyerId(order.meta?.statutoryBuyerId ?? "");
+      setStatutoryBuyerTin(order.meta?.statutoryBuyerTin ?? "");
+      setStatutoryItemsEligible(!!order.meta?.statutoryItemsEligible);
       setHeldOpen(false);
       queryClient.invalidateQueries({ queryKey: ["held-orders", businessId] });
     },
@@ -615,6 +665,11 @@ function POSPage() {
       saleDate: o.saleDate,
       orderDiscount: o.orderDiscount,
       orderDiscountType: o.orderDiscountType,
+      statutoryDiscountType: o.statutoryDiscountType,
+      statutoryBuyerName: o.statutoryBuyerName,
+      statutoryBuyerId: o.statutoryBuyerId,
+      statutoryBuyerTin: o.statutoryBuyerTin,
+      statutoryEligibilityConfirmed: o.statutoryItemsEligible,
       lines: o.lines,
       payments: o.payments,
       offline: o.offline,
@@ -662,6 +717,34 @@ function POSPage() {
       let payload = approvalPending;
       if (!payload) {
         if (!cart.length) throw new Error("Cart is empty");
+        if (!complianceQuery.data)
+          throw new Error("Load the business tax registration before checkout");
+        if (
+          isPhilippines &&
+          ["business", "company", "wholesale", "corporate"].includes(String(customer?.type)) &&
+          !String(customer?.tax_id ?? "").trim()
+        ) {
+          throw new Error("A business buyer TIN is required");
+        }
+        if (statutoryDiscountType && !isPhilippines) {
+          throw new Error("Statutory discount rules are available only for Philippines businesses");
+        }
+        if (statutoryDiscountType) {
+          const rule = complianceQuery.data.statutory_discount_rules?.[statutoryDiscountType] as
+            StatutoryDiscountRule | undefined;
+          const validationError = validateStatutoryDiscount({
+            type: statutoryDiscountType,
+            buyerName: statutoryBuyerName,
+            buyerId: statutoryBuyerId,
+            buyerTin: statutoryBuyerTin,
+            rule,
+            orderDiscount,
+            orderDiscountType,
+            eligibleConfirmed: statutoryItemsEligible,
+            lines: cart,
+          });
+          if (validationError) throw new Error(validationError);
+        }
         const valid = payments.filter((p) => Number(p.amount) > 0);
         if (paidTotal > totals.total + 0.009) throw new Error("Payments exceed the sale total");
         if (balance > 0.009 && !customerId && !walkIn?.id)
@@ -675,6 +758,11 @@ function POSPage() {
           saleDate: todayISO(),
           orderDiscount,
           orderDiscountType,
+          statutoryDiscountType: statutoryDiscountType || null,
+          statutoryBuyerName: statutoryBuyerName.trim() || null,
+          statutoryBuyerId: statutoryBuyerId.trim() || null,
+          statutoryBuyerTin: statutoryBuyerTin.trim() || null,
+          statutoryItemsEligible,
           lines: cart,
           payments: valid,
         };
@@ -733,13 +821,23 @@ function POSPage() {
         payments: payload.payments,
       };
     },
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       if ("approvalRequired" in res) return;
       if ("offline" in res) {
         toast.success("Saved on this device. It will be sent when the internet is back.");
         setCart([]);
         setPayments([{ method: "cash", amount: 0, tendered: 0 }]);
         setOrderDiscount(0);
+        setStatutoryDiscountType("");
+        setStatutoryBuyerName("");
+        setStatutoryBuyerId("");
+        setStatutoryBuyerTin("");
+        setStatutoryItemsEligible(false);
+        setStatutoryDiscountType("");
+        setStatutoryBuyerName("");
+        setStatutoryBuyerId("");
+        setStatutoryBuyerTin("");
+        setStatutoryItemsEligible(false);
         setPayOpen(false);
         setPinDialogOpen(false);
         setManagerPin("");
@@ -747,21 +845,30 @@ function POSPage() {
         return;
       }
       const { sale, items, payments: paid } = res;
-      printReceipt({
-        business,
-        sale,
-        items,
-        payments: paid as any,
-        customer,
-        cashier: null,
-        currency,
-        taxName: settings.tax_name ?? "Tax",
-        receiptSettings: settings.extra?.receipt_print,
-      });
+      try {
+        const opened = await printReceipt({
+          business,
+          sale,
+          items,
+          payments: paid as any,
+          customer,
+          cashier: null,
+          currency,
+          taxName: settings.tax_name ?? "Tax",
+          receiptSettings: settings.extra?.receipt_print,
+        });
+        if (!opened) toast.error("Allow pop-ups to print the receipt");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not log or print the receipt");
+      }
       toast.success(`Sale ${sale.sale_number} completed`);
       setCart([]);
       setPayments([{ method: "cash", amount: 0, tendered: 0 }]);
       setOrderDiscount(0);
+      setStatutoryDiscountType("");
+      setStatutoryBuyerName("");
+      setStatutoryBuyerId("");
+      setStatutoryBuyerTin("");
       setPayOpen(false);
       queryClient.invalidateQueries({ queryKey: ["pos-availability"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
@@ -976,6 +1083,42 @@ function POSPage() {
                         )}
                       </span>
                     </div>
+                    {["owner", "admin", "manager"].includes(String(role)) && (
+                      <div className="mt-2">
+                        <Label className="mb-1 block text-[11px] text-muted-foreground">
+                          Tax type
+                        </Label>
+                        <Select
+                          value={l.tax_type ?? "VAT"}
+                          onValueChange={(taxType) => {
+                            const product = products.find((p) => p.id === l.product_id);
+                            setCart((current) =>
+                              current.map((line) =>
+                                line.key === l.key
+                                  ? {
+                                      ...line,
+                                      tax_type: taxType as CartLine["tax_type"],
+                                      tax_rate:
+                                        taxType === "VAT" && taxEnabled
+                                          ? Number(product?.tax_rate ?? defaultTaxRate)
+                                          : 0,
+                                    }
+                                  : line,
+                              ),
+                            );
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="VAT">VATable</SelectItem>
+                            <SelectItem value="VAT_EXEMPT">VAT-exempt</SelectItem>
+                            <SelectItem value="ZERO_RATED">Zero-rated</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     {l.available != null && l.available - l.quantity < 0 && (
                       <p role="status" className="mt-2 text-xs font-medium text-destructive">
                         This sale will result in negative stock (−
@@ -1153,7 +1296,6 @@ function POSPage() {
           <div className="flex flex-wrap gap-2">
             {[
               { label: "Staff 10%", v: 10 },
-              { label: "Senior / PWD 20%", v: 20 },
               { label: "Promo 5%", v: 5 },
               { label: "Clear", v: 0 },
             ].map((p) => (
@@ -1171,6 +1313,91 @@ function POSPage() {
               </Button>
             ))}
           </div>
+          {isPhilippines && (
+            <div className="space-y-2">
+              <Label>Statutory discount category</Label>
+              <Select
+                value={statutoryDiscountType || "none"}
+                onValueChange={(value) => {
+                  const next = value === "none" ? "" : value;
+                  setStatutoryDiscountType(next);
+                  if (!next) {
+                    setStatutoryBuyerName("");
+                    setStatutoryBuyerId("");
+                    setStatutoryBuyerTin("");
+                    setStatutoryItemsEligible(false);
+                    return;
+                  }
+                  const configured = complianceQuery.data?.statutory_discount_rules?.[next];
+                  if (
+                    configured &&
+                    Number(configured.rate) > 0 &&
+                    configured.vat_treatment !== "manual_review"
+                  ) {
+                    setOrderDiscountType("percent");
+                    setOrderDiscount(Number(configured.rate));
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="senior_citizen">Senior Citizen</SelectItem>
+                  <SelectItem value="pwd">Person with Disability (PWD)</SelectItem>
+                  <SelectItem value="athlete">Athlete</SelectItem>
+                  <SelectItem value="solo_parent">Solo Parent</SelectItem>
+                  <SelectItem value="other">Other statutory discount</SelectItem>
+                </SelectContent>
+              </Select>
+              {statutoryDiscountType && (
+                <>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Input
+                      aria-label="Statutory buyer name"
+                      placeholder="Buyer name (required)"
+                      value={statutoryBuyerName}
+                      onChange={(event) => setStatutoryBuyerName(event.target.value)}
+                    />
+                    <Input
+                      aria-label="Statutory buyer ID number"
+                      placeholder="ID number (required)"
+                      value={statutoryBuyerId}
+                      onChange={(event) => setStatutoryBuyerId(event.target.value)}
+                    />
+                    <Input
+                      aria-label="Statutory buyer TIN"
+                      placeholder={
+                        complianceQuery.data?.statutory_discount_rules?.[statutoryDiscountType]
+                          ?.require_tin === false
+                          ? "TIN (if applicable)"
+                          : "TIN (required)"
+                      }
+                      value={statutoryBuyerTin}
+                      onChange={(event) => setStatutoryBuyerTin(event.target.value)}
+                    />
+                  </div>
+                  <label className="flex items-start gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={statutoryItemsEligible}
+                      onChange={(event) => setStatutoryItemsEligible(event.target.checked)}
+                      className="mt-0.5"
+                    />
+                    <span>
+                      I confirm that every item in this sale qualifies for the selected statutory
+                      discount and configured VAT treatment.
+                    </span>
+                  </label>
+                  <p className="text-xs text-warning">
+                    Confirm the approved discount rate and VAT treatment in the business compliance
+                    configuration before checkout.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Type</Label>

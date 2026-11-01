@@ -24,6 +24,7 @@ export type LineItem = {
   unit_cost: number;
   discount: number;
   tax_rate: number;
+  tax_type: "VAT" | "VAT_EXEMPT" | "ZERO_RATED";
 };
 
 export function emptyLine(): LineItem {
@@ -37,6 +38,7 @@ export function emptyLine(): LineItem {
     unit_cost: 0,
     discount: 0,
     tax_rate: 0,
+    tax_type: "VAT",
   };
 }
 
@@ -59,6 +61,8 @@ export function LineItemsEditor({
   variants = [],
   currency,
   defaultTaxRate = 0,
+  taxEnabled = true,
+  canOverrideTaxType = false,
   priceKey = "selling_price",
   priceLabel = "Unit price",
   negativeStock,
@@ -70,6 +74,8 @@ export function LineItemsEditor({
   variants?: Row[];
   currency: string;
   defaultTaxRate?: number;
+  taxEnabled?: boolean;
+  canOverrideTaxType?: boolean;
   priceKey?: "selling_price" | "cost_price";
   priceLabel?: string;
   negativeStock?: {
@@ -94,7 +100,11 @@ export function LineItemsEditor({
       product_name: p?.name ?? "",
       unit_price: Number(p?.[priceKey] ?? 0),
       unit_cost: Number(p?.average_cost || p?.cost_price || 0),
-      tax_rate: Number(p?.tax_rate ?? defaultTaxRate),
+      tax_type: p?.default_tax_type ?? "VAT",
+      tax_rate:
+        taxEnabled && (p?.default_tax_type ?? "VAT") === "VAT"
+          ? Number(p?.tax_rate ?? defaultTaxRate)
+          : 0,
     });
   }
 
@@ -107,7 +117,11 @@ export function LineItemsEditor({
       product_name: `${p?.name ?? ""} — ${v?.name ?? ""}`,
       unit_price: Number(v?.[priceKey] ?? p?.[priceKey] ?? 0),
       unit_cost: Number(v?.cost_price || p?.average_cost || p?.cost_price || 0),
-      tax_rate: Number(p?.tax_rate ?? defaultTaxRate),
+      tax_type: p?.default_tax_type ?? "VAT",
+      tax_rate:
+        taxEnabled && (p?.default_tax_type ?? "VAT") === "VAT"
+          ? Number(p?.tax_rate ?? defaultTaxRate)
+          : 0,
     });
   }
 
@@ -137,6 +151,7 @@ export function LineItemsEditor({
           const variant = variants.find((v) => v.id === item.variant_id);
           const available = variant ? Number(variant.stock) : Number(product?.stock);
           const resultingStock = available - item.quantity;
+          const effectiveRate = taxEnabled ? Number(product?.tax_rate ?? defaultTaxRate) : 0;
           const negative = item.product_id && item.quantity > 0 && resultingStock < 0;
           const productAllowsNegative =
             product?.negative_stock_mode === "allow" ||
@@ -183,6 +198,29 @@ export function LineItemsEditor({
                             {v.sku ? ` · ${v.sku}` : ""}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {canOverrideTaxType && (
+                  <div className="mt-2">
+                    <Label className="mb-1 block text-[11px] text-muted-foreground">Tax type</Label>
+                    <Select
+                      value={item.tax_type}
+                      onValueChange={(taxType) =>
+                        update(item.key, {
+                          tax_type: taxType as LineItem["tax_type"],
+                          tax_rate: taxType === "VAT" ? effectiveRate : 0,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="VAT">VATable</SelectItem>
+                        <SelectItem value="VAT_EXEMPT">VAT-exempt</SelectItem>
+                        <SelectItem value="ZERO_RATED">Zero-rated</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

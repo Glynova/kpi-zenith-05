@@ -7,6 +7,7 @@ import { Download, Plus, Scale, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
+import { logDocumentEvent } from "@/lib/audit";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { ADJUSTMENT_REASONS, MOVEMENT_GROUPS, movementSign } from "@/lib/inventory";
@@ -251,7 +252,17 @@ function StockMovements() {
     setDialog("adjustment");
   }
 
-  function exportCsv() {
+  async function exportCsv() {
+    if (!businessId) return;
+    try {
+      await logDocumentEvent(businessId, "EXPORT", "inventory", "stock-movements", {
+        row_count: rows.length,
+        format: "csv",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log the export");
+      return;
+    }
     const header =
       "Date,Product,SKU,Location,Movement,Quantity,Unit cost,Total value,Reason,Reference";
     const body = rows

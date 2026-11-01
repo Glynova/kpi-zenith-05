@@ -5,12 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 
 import { db, type Row } from "@/lib/db";
+import { logDocumentEvent } from "@/lib/audit";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, todayISO } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -69,7 +71,17 @@ function AgingPage() {
     ]),
   );
 
-  function exportCsv() {
+  async function exportCsv() {
+    if (!businessId) return;
+    try {
+      await logDocumentEvent(businessId, "EXPORT", "accounts_receivable", `ar-aging-${asOf}`, {
+        row_count: data.length,
+        format: "csv",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log the export");
+      return;
+    }
     const head = ["Customer", ...BUCKETS.map((b) => b[1]), "Total"];
     const rows = data.map((r) => [r.customer_name, ...BUCKETS.map((b) => r[b[0]]), r.total]);
     const csv = [head, ...rows].map((r) => r.map((v) => csvCell(v)).join(",")).join("\n");

@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   AlertTriangle,
@@ -16,6 +17,12 @@ import { StatCard } from "@/components/portal-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { adminOverview } from "@/lib/platform-admin.functions";
 import { peso } from "@/lib/partner-format";
+import { db, type Row } from "@/lib/db";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -85,6 +92,77 @@ function AdminOverview() {
           icon={Coins}
         />
       </div>
+      <SoftwareProviderSettings />
     </div>
+  );
+}
+
+function SoftwareProviderSettings() {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<Row>({});
+  const settings = useQuery({
+    queryKey: ["platform-software-provider"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "software_provider")
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.value ?? {}) as Row;
+    },
+  });
+  useEffect(() => setForm(settings.data ?? {}), [settings.data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await db.from("platform_settings").upsert({
+        key: "software_provider",
+        value: {
+          name: String(form.name ?? "").trim(),
+          address: String(form.address ?? "").trim(),
+          tin: String(form.tin ?? "").trim(),
+          accreditation_details: String(form.accreditation_details ?? "").trim(),
+        },
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["platform-software-provider"] });
+      toast.success("Software provider details saved");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">CAS software provider details</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        {[
+          ["name", "Provider name"],
+          ["address", "Provider address"],
+          ["tin", "Provider TIN"],
+          ["accreditation_details", "Accreditation details"],
+        ].map(([key, label]) => (
+          <div key={key}>
+            <Label htmlFor={`provider-${key}`}>{label}</Label>
+            <Input
+              id={`provider-${key}`}
+              className="mt-1.5"
+              value={form[key] ?? ""}
+              onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+              disabled={settings.isLoading}
+            />
+          </div>
+        ))}
+        <div className="sm:col-span-2">
+          <Button onClick={() => save.mutate()} disabled={settings.isLoading || save.isPending}>
+            {save.isPending ? "Saving..." : "Save provider details"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { orderTotals, type CartLine } from "./sales";
+import {
+  orderTotals,
+  validateStatutoryDiscount,
+  type CartLine,
+  type StatutoryDiscountRule,
+} from "./sales";
 
 function line(
   quantity: number,
@@ -19,6 +24,7 @@ function line(
     discount,
     discount_type,
     tax_rate,
+    tax_type: "VAT",
   };
 }
 
@@ -66,6 +72,15 @@ describe("sale totals", () => {
     });
   });
 
+  it("keeps VAT-exempt and zero-rated lines out of VAT while retaining their sale value", () => {
+    expect(
+      orderTotals([
+        { ...line(1, 100, 12), tax_type: "VAT_EXEMPT" },
+        { ...line(1, 50, 12), tax_type: "ZERO_RATED" },
+      ]),
+    ).toMatchObject({ subtotal: 150, tax: 0, total: 150 });
+  });
+
   it("does not add embedded tax a second time for inclusive prices", () => {
     expect(orderTotals([line(1, 112, 12)], { taxInclusive: true })).toMatchObject({
       subtotal: 100,
@@ -88,5 +103,45 @@ describe("sale totals", () => {
         orderDiscountType: "amount",
       }),
     ).toMatchObject({ subtotal: 100, discount: 10, tax: 10.8, total: 100.8 });
+  });
+
+  it("validates configured statutory discount evidence and eligible tax treatment", () => {
+    const rule: StatutoryDiscountRule = {
+      rate: 20,
+      vat_treatment: "eligible_items_exempt",
+    };
+    const base = {
+      type: "senior_citizen",
+      buyerName: "Buyer Name",
+      buyerId: "ID-123",
+      buyerTin: "123-456-789",
+      rule,
+      orderDiscount: 20,
+      orderDiscountType: "percent" as const,
+      eligibleConfirmed: true,
+      lines: [{ ...line(1, 100, 12), tax_type: "VAT_EXEMPT" as const }],
+    };
+    expect(validateStatutoryDiscount(base)).toBeNull();
+    expect(validateStatutoryDiscount({ ...base, buyerId: "" })).toContain("ID number");
+    expect(validateStatutoryDiscount({ ...base, buyerTin: "" })).toContain("TIN");
+    expect(
+      validateStatutoryDiscount({
+        ...base,
+        rule: { ...rule, require_tin: false },
+        buyerTin: "",
+      }),
+    ).toBeNull();
+    expect(
+      validateStatutoryDiscount({
+        ...base,
+        lines: [line(1, 100, 12)],
+      }),
+    ).toContain("VAT-exempt");
+    expect(
+      validateStatutoryDiscount({
+        ...base,
+        rule: { ...rule, vat_treatment: "manual_review" },
+      }),
+    ).toContain("Configure and verify");
   });
 });

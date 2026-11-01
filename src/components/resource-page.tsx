@@ -6,6 +6,7 @@ import { Plus, Search, Pencil, Trash2, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
+import { logDocumentEvent } from "@/lib/audit";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatDate, formatNumber, titleCase } from "@/lib/format";
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -105,6 +106,7 @@ type Props = {
   searchKeys?: string[];
   orderBy?: string;
   readOnly?: boolean;
+  allowDelete?: boolean;
   /** Extra buttons rendered at the end of each row. */
   rowActions?: (row: Row) => ReactNode;
   /** Extra buttons rendered in the page header. */
@@ -145,6 +147,7 @@ export function ResourcePage({
   searchKeys = ["name"],
   orderBy = "created_at",
   readOnly = false,
+  allowDelete = false,
   rowActions,
   toolbar,
   enableImport = true,
@@ -184,6 +187,7 @@ export function ResourcePage({
   const [step, setStep] = useState(0);
 
   const editable = canWrite && !readOnly;
+  const deletable = editable && allowDelete;
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["resource", table, businessId],
@@ -325,7 +329,17 @@ export function ResourcePage({
     save.mutate(transformPayload ? transformPayload(payload, { form, setForm, editing }) : payload);
   }
 
-  function exportCsv() {
+  async function exportCsv() {
+    if (!businessId) return;
+    try {
+      await logDocumentEvent(businessId, "EXPORT", table, `${rows.length} records`, {
+        row_count: rows.length,
+        format: "csv",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log the export");
+      return;
+    }
     const header = columns.map((c) => c.label).join(",");
     const body = rows.map((row) => columns.map((c) => csvCell(row[c.key])).join(",")).join("\n");
     const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
@@ -651,15 +665,17 @@ export function ResourcePage({
                             >
                               <Pencil className="size-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Delete ${singularTitle.toLowerCase()}`}
-                              className="size-9"
-                              onClick={() => setDeleteRow(row)}
-                            >
-                              <Trash2 className="size-4 text-destructive" />
-                            </Button>
+                            {deletable && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Delete ${singularTitle.toLowerCase()}`}
+                                className="size-9"
+                                onClick={() => setDeleteRow(row)}
+                              >
+                                <Trash2 className="size-4 text-destructive" />
+                              </Button>
+                            )}
                           </>
                         )}
                       </div>

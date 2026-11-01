@@ -32,6 +32,7 @@ export function CategoriesPanel() {
     <ResourcePage
       illustration="inventory"
       table="categories"
+      allowDelete
       title="Categories"
       description="Organise your catalog into reportable groups."
       columns={categoryColumns}

@@ -167,6 +167,7 @@ export type CartLine = {
   discount: number;
   discount_type?: "amount" | "percent";
   tax_rate: number;
+  tax_type?: "VAT" | "VAT_EXEMPT" | "ZERO_RATED";
   notes?: string | null;
   condition?: string | null;
   batch_id?: string | null;
@@ -195,7 +196,8 @@ export function lineTotals(line: CartLine, taxInclusive: boolean): LineTotals {
       : Math.min(Math.max(raw, 0), gross),
   );
   const after = round2(gross - discount);
-  const rate = Math.max(Number(line.tax_rate || 0), 0) / 100;
+  const rate =
+    line.tax_type && line.tax_type !== "VAT" ? 0 : Math.max(Number(line.tax_rate || 0), 0) / 100;
   if (taxInclusive) {
     const net = round2(after / (1 + rate));
     return { gross, discount, net, tax: round2(after - net), total: after };
@@ -274,6 +276,48 @@ export function paymentStatusFor(total: number, paid: number, refunded = 0) {
   return "partially_paid";
 }
 
+export type StatutoryDiscountRule = {
+  rate: number;
+  vat_treatment: string;
+  require_tin?: boolean;
+};
+
+export function validateStatutoryDiscount(input: {
+  type: string | null | undefined;
+  buyerName: string;
+  buyerId: string;
+  buyerTin: string;
+  rule: StatutoryDiscountRule | null | undefined;
+  orderDiscount: number;
+  orderDiscountType: "amount" | "percent";
+  eligibleConfirmed: boolean;
+  lines: CartLine[];
+}): string | null {
+  if (!input.type) return null;
+  if (!input.buyerName.trim() || !input.buyerId.trim()) {
+    return "Statutory discounts require the buyer name and ID number";
+  }
+  if (input.rule?.require_tin !== false && !input.buyerTin.trim()) {
+    return "This statutory discount requires the buyer TIN";
+  }
+  if (!input.rule || input.rule.rate <= 0 || input.rule.vat_treatment === "manual_review") {
+    return "Configure and verify this statutory discount rate and VAT treatment first";
+  }
+  if (input.orderDiscountType !== "percent" || input.orderDiscount !== input.rule.rate) {
+    return "The applied statutory discount must match the configured percentage";
+  }
+  if (!input.eligibleConfirmed) {
+    return "Confirm the sale items qualify for this statutory discount";
+  }
+  if (
+    input.rule.vat_treatment === "eligible_items_exempt" &&
+    input.lines.some((line) => line.tax_type !== "VAT_EXEMPT")
+  ) {
+    return "All eligible items must use the configured VAT-exempt tax type";
+  }
+  return null;
+}
+
 export function grossProfit(revenue: number, cogs: number) {
   const profit = round2(Number(revenue || 0) - Number(cogs || 0));
   const margin = Number(revenue || 0) > 0 ? (profit / Number(revenue)) * 100 : 0;
@@ -338,7 +382,6 @@ export async function nextDocNumber(businessId: string, prefix: string) {
 export type SaleDraft = {
   businessId: string;
   documentType: DocumentType;
-  number?: string;
   customerId?: string | null;
   locationId?: string | null;
   registerId?: string | null;
@@ -367,6 +410,12 @@ export type SaleDraft = {
   salesOrderId?: string | null;
   originalSaleId?: string | null;
   returnReason?: string | null;
+  statutoryDiscountType?: string | null;
+  statutoryBuyerName?: string | null;
+  statutoryBuyerId?: string | null;
+  statutoryBuyerTin?: string | null;
+  statutoryDiscountAmount?: number;
+  statutoryEligibilityConfirmed?: boolean;
   createdBy?: string | null;
   payments?: Array<{
     method: string;
@@ -391,13 +440,9 @@ export async function createSale(draft: SaleDraft) {
     otherCharges: draft.otherCharges,
   });
 
-  const number =
-    draft.number ?? (await nextDocNumber(draft.businessId, DOC_PREFIX[draft.documentType]));
-
   const header = {
     business_id: draft.businessId,
     document_type: draft.documentType,
-    sale_number: number,
     customer_id: draft.customerId || null,
     location_id: draft.locationId || null,
     register_id: draft.registerId || null,
@@ -436,6 +481,12 @@ export async function createSale(draft: SaleDraft) {
     sales_order_id: draft.salesOrderId ?? null,
     original_sale_id: draft.originalSaleId ?? null,
     return_reason: draft.returnReason ?? null,
+    statutory_discount_type: draft.statutoryDiscountType ?? null,
+    statutory_buyer_name: draft.statutoryBuyerName ?? null,
+    statutory_buyer_id: draft.statutoryBuyerId ?? null,
+    statutory_buyer_tin: draft.statutoryBuyerTin ?? null,
+    statutory_discount_amount: draft.statutoryDiscountAmount ?? 0,
+    statutory_eligibility_confirmed: draft.statutoryEligibilityConfirmed ?? false,
     created_by: draft.createdBy ?? null,
   };
 
@@ -456,6 +507,7 @@ export async function createSale(draft: SaleDraft) {
       discount: Number(line.discount || 0),
       discount_type: line.discount_type ?? "amount",
       tax_rate: line.tax_rate ?? 0,
+      tax_type: line.tax_type ?? "VAT",
       tax: totals.tax,
       total: totals.total,
       condition: line.condition ?? null,
@@ -535,6 +587,11 @@ export async function createAndCompletePosSale(input: {
   saleDate: string;
   orderDiscount: number;
   orderDiscountType: "amount" | "percent";
+  statutoryDiscountType?: string | null;
+  statutoryBuyerName?: string | null;
+  statutoryBuyerId?: string | null;
+  statutoryBuyerTin?: string | null;
+  statutoryEligibilityConfirmed?: boolean;
   lines: CartLine[];
   payments: Array<{ method: string; amount: number; tendered?: number | null }>;
   offline?: boolean;
@@ -563,6 +620,12 @@ export async function createAndCompletePosSale(input: {
     payment_method: paymentMethod,
     discount_type: input.orderDiscountType,
     discount_value: input.orderDiscount,
+    statutory_discount_type: input.statutoryDiscountType ?? null,
+    statutory_buyer_name: input.statutoryBuyerName ?? null,
+    statutory_buyer_id: input.statutoryBuyerId ?? null,
+    statutory_buyer_tin: input.statutoryBuyerTin ?? null,
+    statutory_discount_amount: input.statutoryDiscountType ? totals.orderDiscount : 0,
+    statutory_eligibility_confirmed: input.statutoryEligibilityConfirmed ?? false,
     subtotal: totals.subtotal,
     discount: totals.discount,
     tax: totals.tax,
@@ -583,6 +646,7 @@ export async function createAndCompletePosSale(input: {
       discount: lineAmount.discount,
       discount_type: line.discount_type ?? "amount",
       tax_rate: line.tax_rate,
+      tax_type: line.tax_type ?? "VAT",
       tax: lineAmount.tax,
       total: lineAmount.total,
       condition: line.condition ?? null,
@@ -737,6 +801,7 @@ export async function convertQuoteToOrder(quote: Row, items: Row[], createdBy?: 
     discount: Number(i.discount ?? 0),
     discount_type: "amount",
     tax_rate: Number(i.tax_rate ?? 0),
+    tax_type: i.tax_type ?? "VAT",
   }));
   const order = await createSale({
     businessId: quote.business_id,

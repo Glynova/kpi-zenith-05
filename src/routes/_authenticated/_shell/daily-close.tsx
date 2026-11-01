@@ -102,6 +102,9 @@ function DailyClosePage() {
 
   const p = closed ?? preview.data ?? {};
   const pays = Object.entries((p.payment_totals ?? {}) as Record<string, number>);
+  const statutoryDiscounts = Object.entries(
+    (p.statutory_discounts ?? {}) as Record<string, number>,
+  );
 
   return (
     <div className="space-y-6">
@@ -153,6 +156,14 @@ function DailyClosePage() {
             <div key={k} className="flex justify-between border-b border-border/50 py-1">
               <span className="text-muted-foreground">{label}</span>
               <span className="tabular-nums">{formatCurrency(p[k], currency)}</span>
+            </div>
+          ))}
+          {statutoryDiscounts.map(([type, amount]) => (
+            <div key={type} className="flex justify-between border-b border-border/50 py-1">
+              <span className="text-muted-foreground">
+                {titleCase(type.replace(/_/g, " "))} statutory discounts
+              </span>
+              <span className="tabular-nums">{formatCurrency(amount, currency)}</span>
             </div>
           ))}
           {pays.map(([m, v]) => (

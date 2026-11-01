@@ -86,6 +86,7 @@ function toReturnCartLine(line: ReturnLine): CartLine {
     discount: returnedDiscount,
     discount_type: "amount",
     tax_rate: Number(line.item.tax_rate ?? 0),
+    tax_type: line.item.tax_type ?? "VAT",
   };
 }
 
