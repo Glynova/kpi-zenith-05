@@ -59,7 +59,7 @@ function Analytics() {
         db.from("products").select("*").eq("business_id", businessId),
         db
           .from("product_variants")
-          .select("id,product_id,stock,cost_price,average_cost,status,created_at")
+          .select("id,product_id,stock,cost_price,status,created_at")
           .eq("business_id", businessId),
         db.from("customers").select("*").eq("business_id", businessId),
         db.from("cash_transactions").select("*").eq("business_id", businessId),

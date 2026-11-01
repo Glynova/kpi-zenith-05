@@ -106,6 +106,25 @@ function Dashboard() {
     queryKey: ["dashboard", businessId, range],
     enabled: !!businessId,
     queryFn: async () => {
+      const loadRows = async (
+        name: string,
+        query: PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>,
+      ) => {
+        try {
+          const result = await query;
+          if (result.error) {
+            console.error(`[Dashboard] Failed to load ${name}`, result.error);
+            return { rows: [] as Row[], error: result.error.message };
+          }
+          return { rows: (result.data ?? []) as Row[], error: null as string | null };
+        } catch (loadError) {
+          console.error(`[Dashboard] Failed to load ${name}`, loadError);
+          return {
+            rows: [] as Row[],
+            error: loadError instanceof Error ? loadError.message : String(loadError),
+          };
+        }
+      };
       const [
         sales,
         expenses,
@@ -121,66 +140,94 @@ function Dashboard() {
         customers,
         logs,
       ] = await Promise.all([
-        db.from("sales").select("*").eq("business_id", businessId),
-        db.from("expenses").select("*").eq("business_id", businessId),
-        db.from("products").select("*").eq("business_id", businessId),
-        db
-          .from("product_variants")
-          .select("id,product_id,stock,cost_price,average_cost,status,created_at")
-          .eq("business_id", businessId),
-        db.from("accounts_receivable").select("*").eq("business_id", businessId),
-        db.from("accounts_payable").select("*").eq("business_id", businessId),
-        db.from("cash_transactions").select("*").eq("business_id", businessId),
-        db.from("sale_items").select("*").eq("business_id", businessId).limit(5000),
-        db
-          .from("sale_items")
-          .select("*,sales!inner(sale_date)")
-          .eq("business_id", businessId)
-          .gte("sales.sale_date", daysAgoISO(90))
-          .lte("sales.sale_date", today)
-          .limit(10000),
-        db
-          .from("inventory_movements")
-          .select("product_id,variant_id,type,movement_date,created_at")
-          .eq("business_id", businessId)
-          .gte("movement_date", inventoryFrom),
-        db
-          .from("batches")
-          .select("product_id,variant_id,remaining_quantity,unit_cost,expiry_date")
-          .eq("business_id", businessId),
-        db.from("customers").select("*").eq("business_id", businessId),
-        db
-          .from("audit_logs")
-          .select("*")
-          .eq("business_id", businessId)
-          .order("created_at", { ascending: false })
-          .limit(8),
+        loadRows("sales", db.from("sales").select("*").eq("business_id", businessId)),
+        loadRows("expenses", db.from("expenses").select("*").eq("business_id", businessId)),
+        loadRows("products", db.from("products").select("*").eq("business_id", businessId)),
+        loadRows(
+          "product variants",
+          db
+            .from("product_variants")
+            .select("id,product_id,stock,cost_price,status,created_at")
+            .eq("business_id", businessId),
+        ),
+        loadRows(
+          "receivables",
+          db.from("accounts_receivable").select("*").eq("business_id", businessId),
+        ),
+        loadRows("payables", db.from("accounts_payable").select("*").eq("business_id", businessId)),
+        loadRows(
+          "cash transactions",
+          db.from("cash_transactions").select("*").eq("business_id", businessId),
+        ),
+        loadRows(
+          "sale items",
+          db.from("sale_items").select("*").eq("business_id", businessId).limit(5000),
+        ),
+        loadRows(
+          "health score sale items",
+          db
+            .from("sale_items")
+            .select("*,sales!inner(sale_date)")
+            .eq("business_id", businessId)
+            .gte("sales.sale_date", daysAgoISO(90))
+            .lte("sales.sale_date", today)
+            .limit(10000),
+        ),
+        loadRows(
+          "inventory movements",
+          db
+            .from("inventory_movements")
+            .select("product_id,variant_id,type,movement_date,created_at")
+            .eq("business_id", businessId)
+            .gte("movement_date", inventoryFrom),
+        ),
+        loadRows(
+          "batches",
+          db
+            .from("batches")
+            .select("product_id,variant_id,remaining_quantity,unit_cost,expiry_date")
+            .eq("business_id", businessId),
+        ),
+        loadRows("customers", db.from("customers").select("*").eq("business_id", businessId)),
+        loadRows(
+          "audit activity",
+          db
+            .from("audit_logs")
+            .select("*")
+            .eq("business_id", businessId)
+            .order("created_at", { ascending: false })
+            .limit(8),
+        ),
       ]);
-      if (sales.error) throw sales.error;
-      if (expenses.error) throw expenses.error;
-      if (cash.error) throw cash.error;
-      if (saleItems.error) throw saleItems.error;
-      if (healthSaleItems.error) throw healthSaleItems.error;
-      if (movements.error) throw movements.error;
-      if (batches.error) throw batches.error;
-      if (products.error) throw products.error;
-      if (variants.error) throw variants.error;
-      if (ar.error) throw ar.error;
-      if (ap.error) throw ap.error;
       return {
-        sales: (sales.data ?? []) as Row[],
-        expenses: (expenses.data ?? []) as Row[],
-        products: (products.data ?? []) as Row[],
-        variants: (variants.data ?? []) as Row[],
-        ar: (ar.data ?? []) as Row[],
-        ap: (ap.data ?? []) as Row[],
-        cash: (cash.data ?? []) as Row[],
-        saleItems: (saleItems.data ?? []) as Row[],
-        healthSaleItems: (healthSaleItems.data ?? []) as Row[],
-        movements: (movements.data ?? []) as Row[],
-        batches: (batches.data ?? []) as Row[],
-        customers: (customers.data ?? []) as Row[],
-        logs: (logs.data ?? []) as Row[],
+        sales: sales.rows,
+        expenses: expenses.rows,
+        products: products.rows,
+        variants: variants.rows,
+        ar: ar.rows,
+        ap: ap.rows,
+        cash: cash.rows,
+        saleItems: saleItems.rows,
+        healthSaleItems: healthSaleItems.rows,
+        movements: movements.rows,
+        batches: batches.rows,
+        customers: customers.rows,
+        logs: logs.rows,
+        errors: {
+          sales: sales.error,
+          expenses: expenses.error,
+          products: products.error,
+          variants: variants.error,
+          receivables: ar.error,
+          payables: ap.error,
+          cash: cash.error,
+          saleItems: saleItems.error,
+          healthSaleItems: healthSaleItems.error,
+          movements: movements.error,
+          batches: batches.error,
+          customers: customers.error,
+          logs: logs.error,
+        },
       };
     },
   });
@@ -309,6 +356,18 @@ function Dashboard() {
       inventoryMovements: d.movements,
       batches: d.batches,
     });
+    const healthError = [
+      "sales",
+      "expenses",
+      "cash",
+      "receivables",
+      "payables",
+      "products",
+      "variants",
+      "healthSaleItems",
+      "movements",
+      "batches",
+    ].some((key) => d.errors[key as keyof typeof d.errors]);
 
     const revenueTrend = series.map((p) => p.sales);
     const expenseTrend = series.map((p) => p.expenses);
@@ -345,6 +404,8 @@ function Dashboard() {
       expenseRatio,
       aov,
       health,
+      healthError,
+      errors: d.errors,
       logs: d.logs,
     };
   }, [business?.type, data, today, from, prevFrom]);
@@ -438,7 +499,7 @@ function Dashboard() {
         </Card>
       )}
 
-      {!hasActivity && (
+      {!hasActivity && !Object.values(m.errors).some(Boolean) && (
         <Card className="surface-card border-0">
           <CardContent className="space-y-2 p-8 text-center">
             <Activity className="mx-auto size-8 text-muted-foreground" />
@@ -460,6 +521,7 @@ function Dashboard() {
             icon={TrendingUp}
             delta={m.revenueDelta}
             series={m.revenueTrend}
+            error={!!m.errors.sales}
           />
           <StatCard
             label="Net Profit (period)"
@@ -469,6 +531,7 @@ function Dashboard() {
             tone={m.netProfit >= 0 ? "success" : "destructive"}
             delta={m.profitDelta}
             series={m.profitTrend}
+            error={!!(m.errors.sales || m.errors.expenses)}
           />
           <StatCard
             label="Cash On Hand"
@@ -476,15 +539,17 @@ function Dashboard() {
             icon={Wallet}
             tone="gold"
             sub={`${formatNumber(m.orders)} orders this period`}
+            error={!!m.errors.cash}
           />
           <StatCard
             label="Inventory Value"
             value={formatCurrency(m.inventoryValue, currency)}
             icon={Boxes}
             sub={`${formatNumber(m.lowStock.length)} low · ${formatNumber(m.outOfStock.length)} out`}
+            error={!!m.errors.products}
           />
         </div>
-        <BusinessHealthCard health={m.health} />
+        <BusinessHealthCard health={m.health} error={m.healthError} />
       </div>
 
       <Collapsible>
@@ -501,17 +566,20 @@ function Dashboard() {
               value={formatCurrency(m.todaySales, currency)}
               icon={TrendingUp}
               tone="success"
+              error={!!m.errors.sales}
             />
             <StatCard
               label="Today's Expenses"
               value={formatCurrency(m.todayExpenses, currency)}
               icon={TrendingDown}
               tone="warning"
+              error={!!m.errors.expenses}
             />
             <StatCard
               label="Today's Profit"
               value={formatCurrency(m.todayProfit, currency)}
               icon={Activity}
+              error={!!(m.errors.sales || m.errors.expenses)}
             />
             <StatCard
               label="Expenses (period)"
@@ -521,36 +589,42 @@ function Dashboard() {
               delta={m.expenseDelta}
               invertDelta
               series={m.expenseTrend}
+              error={!!m.errors.expenses}
             />
             <StatCard
               label="Orders (period)"
               value={formatNumber(m.orders)}
               icon={Activity}
               delta={m.ordersDelta}
+              error={!!m.errors.sales}
             />
             <StatCard
               label="Outstanding Receivables"
               value={formatCurrency(m.receivables, currency)}
               icon={ArrowDownLeft}
               tone="warning"
+              error={!!m.errors.receivables}
             />
             <StatCard
               label="Outstanding Payables"
               value={formatCurrency(m.payables, currency)}
               icon={ArrowUpRight}
               tone="warning"
+              error={!!m.errors.payables}
             />
             <StatCard
               label="Low Stock Items"
               value={formatNumber(m.lowStock.length)}
               icon={AlertTriangle}
               tone="warning"
+              error={!!m.errors.products}
             />
             <StatCard
               label="Out Of Stock"
               value={formatNumber(m.outOfStock.length)}
               icon={PackageX}
               tone="destructive"
+              error={!!m.errors.products}
             />
           </div>
         </CollapsibleContent>
@@ -562,7 +636,11 @@ function Dashboard() {
             <CardTitle className="text-base">Sales vs Expenses</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            {m.series.length === 0 ? (
+            {m.errors.sales || m.errors.expenses ? (
+              <p className="text-sm text-destructive" role="status">
+                Could not load
+              </p>
+            ) : m.series.length === 0 ? (
               <p className="text-sm text-muted-foreground">No transactions in this period yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -603,7 +681,11 @@ function Dashboard() {
             <CardTitle className="text-base">Expense Mix</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            {m.expenseMix.length === 0 ? (
+            {m.errors.expenses ? (
+              <p className="text-sm text-destructive" role="status">
+                Could not load
+              </p>
+            ) : m.expenseMix.length === 0 ? (
               <p className="text-sm text-muted-foreground">No expenses recorded.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -639,7 +721,11 @@ function Dashboard() {
             <CardTitle className="text-base">Best Selling Products</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            {m.bestSellers.length === 0 ? (
+            {m.errors.saleItems ? (
+              <p className="text-sm text-destructive" role="status">
+                Could not load
+              </p>
+            ) : m.bestSellers.length === 0 ? (
               <p className="text-sm text-muted-foreground">No sales recorded.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -666,7 +752,11 @@ function Dashboard() {
             <CardTitle className="text-base">Top Customers</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {m.topCustomers.length === 0 ? (
+            {m.errors.sales || m.errors.customers ? (
+              <p className="text-sm text-destructive" role="status">
+                Could not load
+              </p>
+            ) : m.topCustomers.length === 0 ? (
               <p className="text-sm text-muted-foreground">No customer sales yet.</p>
             ) : (
               m.topCustomers.map((c) => (
@@ -684,7 +774,11 @@ function Dashboard() {
             <CardTitle className="text-base">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {m.logs.length === 0 ? (
+            {m.errors.logs ? (
+              <p className="text-sm text-destructive" role="status">
+                Could not load
+              </p>
+            ) : m.logs.length === 0 ? (
               <p className="text-sm text-muted-foreground">No activity logged yet.</p>
             ) : (
               m.logs.map((l) => (

@@ -28,6 +28,7 @@ export function StatCard({
   deltaLabel,
   series,
   invertDelta = false,
+  error = false,
   className,
 }: {
   label: string;
@@ -41,10 +42,11 @@ export function StatCard({
   series?: number[];
   /** When true, a decrease is treated as good (e.g. expenses). */
   invertDelta?: boolean;
+  error?: boolean;
   className?: string;
 }) {
   const t = TONE[tone];
-  const hasDelta = typeof delta === "number" && Number.isFinite(delta);
+  const hasDelta = !error && typeof delta === "number" && Number.isFinite(delta);
   const up = hasDelta && (delta as number) > 0.05;
   const down = hasDelta && (delta as number) < -0.05;
   const good = invertDelta ? down : up;
@@ -66,11 +68,16 @@ export function StatCard({
           value.length > 12 ? "text-2xl" : "text-4xl",
         )}
       >
-        {value}
+        {error ? "—" : value}
       </p>
 
       <div className="mt-2 flex items-end justify-between gap-3">
         <div className="min-w-0">
+          {error ? (
+            <p className="mt-1 truncate text-sm text-destructive" role="status">
+              Could not load
+            </p>
+          ) : null}
           {hasDelta && (
             <span
               className={cn(
@@ -86,11 +93,11 @@ export function StatCard({
               {Math.abs(delta as number).toFixed(1)}%
             </span>
           )}
-          {(sub || deltaLabel) && (
+          {!error && (sub || deltaLabel) && (
             <p className="mt-1 truncate text-sm text-muted-foreground">{sub ?? deltaLabel}</p>
           )}
         </div>
-        {series && series.length > 1 && (
+        {!error && series && series.length > 1 && (
           <Sparkline
             data={series}
             className="h-8 w-20 shrink-0 opacity-90"

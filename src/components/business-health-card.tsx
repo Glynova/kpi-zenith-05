@@ -5,7 +5,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 
-export function BusinessHealthCard({ health }: { health: BusinessHealthResult }) {
+export function BusinessHealthCard({
+  health,
+  error = false,
+}: {
+  health: BusinessHealthResult;
+  error?: boolean;
+}) {
+  if (error) {
+    return (
+      <Card className="surface-card border-0">
+        <CardHeader>
+          <CardTitle className="text-base">Business Health</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive" role="status">
+            Could not load
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (health.state === "insufficient_data") {
     return (
       <Card className="surface-card border-0">

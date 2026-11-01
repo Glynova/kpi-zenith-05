@@ -507,7 +507,7 @@ export type HealthInventoryItem = {
   productId: string;
   variantId: string | null;
   stock: number;
-  inventoryValue: number;
+  inventoryValue: number | null;
   createdAt?: string | null;
   lastMovementDate?: string | null;
   expiryRiskValue?: number;
@@ -535,8 +535,12 @@ export function inventoryHealthMetrics(
     if (item.stock > 0) inStockValue += value;
     if (item.stock < 0) negativeValue += value;
   }
-  const inventoryValue = items.reduce((sum, item) => sum + Math.max(item.inventoryValue, 0), 0);
+  const inventoryValue = items.reduce(
+    (sum, item) => (item.inventoryValue === null ? sum : sum + Math.max(item.inventoryValue, 0)),
+    0,
+  );
   const deadValue = items.reduce((sum, item) => {
+    if (item.inventoryValue === null) return sum;
     const lastActivity = item.lastMovementDate ?? item.createdAt;
     if (!lastActivity) return sum + Math.max(item.inventoryValue, 0);
     const daysSinceMovement = (asOf.getTime() - new Date(lastActivity).getTime()) / 86_400_000;
@@ -666,29 +670,27 @@ export function healthScoreFromRecords(input: {
   const productsWithVariants = new Set(input.variants.map((variant) => String(variant.product_id)));
   const items: HealthInventoryItem[] = input.products
     .filter((product) => !productsWithVariants.has(String(product.id)))
-    .map((product) => ({
-      productId: String(product.id),
-      variantId: null,
-      stock: Number(product.stock ?? 0),
-      inventoryValue:
-        Number(product.stock ?? 0) * Number(product.average_cost || product.cost_price || 0),
-      createdAt: product.created_at ?? null,
-    }));
+    .map((product) => {
+      const unitCost = [product.average_cost, product.cost_price]
+        .map((value) => Number(value))
+        .find((value) => Number.isFinite(value) && value > 0);
+      return {
+        productId: String(product.id),
+        variantId: null,
+        stock: Number(product.stock ?? 0),
+        inventoryValue: unitCost === undefined ? null : Number(product.stock ?? 0) * unitCost,
+        createdAt: product.created_at ?? null,
+      };
+    });
   for (const variant of input.variants) {
-    const product = input.products.find((candidate) => candidate.id === variant.product_id);
     items.push({
       productId: String(variant.product_id),
       variantId: String(variant.id),
       stock: Number(variant.stock ?? 0),
       inventoryValue:
-        Number(variant.stock ?? 0) *
-        Number(
-          variant.average_cost ||
-            variant.cost_price ||
-            product?.average_cost ||
-            product?.cost_price ||
-            0,
-        ),
+        Number(variant.cost_price) > 0
+          ? Number(variant.stock ?? 0) * Number(variant.cost_price)
+          : null,
       createdAt: variant.created_at ?? null,
     });
   }

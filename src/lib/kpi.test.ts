@@ -99,6 +99,61 @@ describe("profile-based business health", () => {
     expect(component(result, "cash_flow").points).toBe(10);
   });
 
+  it("does not value a variant with unknown cost using the parent product cost", () => {
+    const asOf = new Date("2026-11-02T12:00:00.000Z");
+    const result = healthScoreFromRecords({
+      businessType: "retail",
+      sales: [
+        {
+          id: "sale-1",
+          document_type: "sale",
+          status: "completed",
+          sale_date: "2026-11-01",
+          total: 11,
+          tax: 0,
+          shipping: 0,
+          other_charges: 0,
+          cost_total: 0,
+        },
+      ],
+      expenses: [{ expense_date: "2026-11-01", amount: 1 }],
+      cashTransactions: [],
+      receivables: [],
+      payables: [],
+      products: [
+        {
+          id: "product-1",
+          stock: 2,
+          average_cost: 100,
+          cost_price: 100,
+          created_at: "2025-01-01",
+        },
+      ],
+      variants: [
+        {
+          id: "variant-1",
+          product_id: "product-1",
+          stock: 2,
+          cost_price: 0,
+          created_at: "2025-01-01",
+        },
+      ],
+      saleItems: [
+        {
+          sale_id: "sale-1",
+          product_id: "product-1",
+          variant_id: "variant-1",
+          total: 10,
+        },
+      ],
+      inventoryMovements: [],
+      batches: [],
+      asOf,
+    });
+
+    expect(component(result, "inventory_health").points).toBe(15);
+  });
+
   it("returns insufficient_data without a score when sales or period expenses are missing", () => {
     const result = healthScore({
       ...baseInput,
