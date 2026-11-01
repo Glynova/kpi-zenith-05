@@ -8,9 +8,11 @@ import { Progress } from "@/components/ui/progress";
 export function BusinessHealthCard({
   health,
   error = false,
+  periodLabel,
 }: {
   health: BusinessHealthResult;
   error?: boolean;
+  periodLabel?: string;
 }) {
   if (error) {
     return (
@@ -35,6 +37,9 @@ export function BusinessHealthCard({
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="font-medium">{health.label}</p>
+          {periodLabel ? (
+            <p className="text-xs text-muted-foreground">Score period: {periodLabel}</p>
+          ) : null}
           {health.notes.map((note) => (
             <p key={note} className="text-sm text-muted-foreground">
               {note}
@@ -56,6 +61,9 @@ export function BusinessHealthCard({
           <div>
             <p className="font-display text-3xl font-semibold tabular-nums">{score}/100</p>
             <p className="text-sm text-muted-foreground">{health.label}</p>
+            {periodLabel ? (
+              <p className="mt-1 text-xs text-muted-foreground">Score period: {periodLabel}</p>
+            ) : null}
           </div>
           <div
             className="grid size-16 place-items-center rounded-full border-4 text-sm font-semibold"

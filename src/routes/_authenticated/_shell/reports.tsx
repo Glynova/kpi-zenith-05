@@ -2,14 +2,16 @@ import { useState } from "react";
 import { csvCell } from "@/lib/csv";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Download, Search } from "lucide-react";
+import { Download, Printer, Search } from "lucide-react";
 
 import { db, type Row } from "@/lib/db";
-import { logDocumentEvent } from "@/lib/audit";
+import { logDocumentEvent, logPrintEvent } from "@/lib/audit";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
 import { salesMetrics, inventoryValueOf, marginPercent } from "@/lib/kpi";
+import { useBusinessDateRange } from "@/lib/date-range";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +37,21 @@ export const Route = createFileRoute("/_authenticated/_shell/reports")({
 });
 
 function Reports() {
-  const { businessId, currency } = useBusiness();
+  const { businessId, currency, business } = useBusiness();
   const [filter, setFilter] = useState("");
+  const timezone = String(business?.timezone ?? "Asia/Manila");
+  const { selection, range, setSelection, isResolvingAllTime, rangeError } = useBusinessDateRange(
+    businessId,
+    timezone,
+  );
+  const aggregateRange = range.bucket === "month" || range.preset === "all";
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["reports", businessId],
-    enabled: !!businessId,
+  const { data, isLoading, isFetching, isError, error } = useQuery({
+    queryKey: ["reports", businessId, range.fromDate, range.toDate, range.bucket],
+    enabled: !!businessId && !isResolvingAllTime && !rangeError,
+    placeholderData: (previous) => previous,
     queryFn: async () => {
+      const emptyRows = () => db.from("sales").select("id").eq("business_id", businessId).limit(0);
       const [
         sales,
         expenses,
@@ -54,43 +64,106 @@ function Reports() {
         poItems,
         returnItems,
         movements,
+        summaryResult,
       ] = await Promise.all([
-        db.from("sales").select("*").eq("business_id", businessId),
-        db.from("expenses").select("*").eq("business_id", businessId),
+        aggregateRange
+          ? emptyRows()
+          : db
+              .from("sales")
+              .select("*")
+              .eq("business_id", businessId)
+              .gte("sale_date", range.fromDate)
+              .lte("sale_date", range.toDate),
+        aggregateRange
+          ? db.from("expenses").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("expenses")
+              .select("*")
+              .eq("business_id", businessId)
+              .gte("expense_date", range.fromDate)
+              .lte("expense_date", range.toDate),
         db.from("products").select("*").eq("business_id", businessId),
-        db.from("payroll").select("*").eq("business_id", businessId),
+        aggregateRange
+          ? db.from("payroll").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("payroll")
+              .select("*")
+              .eq("business_id", businessId)
+              .gte("period_end", range.fromDate)
+              .lte("period_end", range.toDate),
         db.from("accounts_receivable").select("*").eq("business_id", businessId),
         db.from("accounts_payable").select("*").eq("business_id", businessId),
-        db
-          .from("sale_items")
-          .select(
-            "product_id,variant_id,product_name,sku,quantity,returned_quantity,unit_price,unit_cost,discount,total,sales(document_type,status,inventory_posted)",
-          )
-          .eq("business_id", businessId),
+        aggregateRange
+          ? db.from("sale_items").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("sale_items")
+              .select(
+                "product_id,variant_id,product_name,sku,quantity,returned_quantity,unit_price,unit_cost,discount,total,sales!inner(document_type,status,inventory_posted,sale_date)",
+              )
+              .eq("business_id", businessId)
+              .gte("sales.sale_date", range.fromDate)
+              .lte("sales.sale_date", range.toDate),
         db
           .from("product_variants")
           .select("id,product_id,name,sku,barcode,stock,cost_price,selling_price,status")
           .eq("business_id", businessId),
-        db
-          .from("purchase_order_items")
-          .select(
-            "product_id,variant_id,quantity,received_quantity,unit_cost,purchase_orders(status,order_date)",
-          )
-          .eq("business_id", businessId),
-        db
-          .from("purchase_return_items")
-          .select("product_id,variant_id,quantity,unit_cost,purchase_returns(status)")
-          .eq("business_id", businessId),
-        db
-          .from("inventory_movements")
-          .select(
-            "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date,caused_negative_stock,approved_by,approver:profiles!inventory_movements_approved_by_fkey(full_name,email)",
-          )
-          .eq("business_id", businessId)
-          .order("movement_date", { ascending: false })
-          .limit(5000),
+        aggregateRange
+          ? db.from("purchase_order_items").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("purchase_order_items")
+              .select(
+                "product_id,variant_id,quantity,received_quantity,unit_cost,purchase_orders!inner(status,order_date)",
+              )
+              .eq("business_id", businessId)
+              .gte("purchase_orders.order_date", range.fromDate)
+              .lte("purchase_orders.order_date", range.toDate),
+        aggregateRange
+          ? db.from("purchase_return_items").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("purchase_return_items")
+              .select(
+                "product_id,variant_id,quantity,unit_cost,purchase_returns!inner(status,return_date)",
+              )
+              .eq("business_id", businessId)
+              .gte("purchase_returns.return_date", range.fromDate)
+              .lte("purchase_returns.return_date", range.toDate),
+        aggregateRange
+          ? db.from("inventory_movements").select("id").eq("business_id", businessId).limit(0)
+          : db
+              .from("inventory_movements")
+              .select(
+                "product_id,variant_id,warehouse_id,batch_number,type,quantity,unit_cost,total_cost,reference,reference_type,movement_date,caused_negative_stock,approved_by,approver:profiles!inventory_movements_approved_by_fkey(full_name,email)",
+              )
+              .eq("business_id", businessId)
+              .gte("movement_date", range.fromDate)
+              .lte("movement_date", range.toDate)
+              .order("movement_date", { ascending: false })
+              .limit(5000),
+        aggregateRange
+          ? db.rpc("get_business_period_aggregate", {
+              _business_id: businessId,
+              _from: range.from,
+              _to: range.to,
+              _timezone: timezone,
+              _bucket: range.bucket,
+            })
+          : Promise.resolve({ data: null, error: null }),
       ]);
-      if (movements.error) throw movements.error;
+      const failed = [
+        sales,
+        expenses,
+        products,
+        payroll,
+        ar,
+        ap,
+        saleItems,
+        variants,
+        poItems,
+        returnItems,
+        movements,
+      ].find((result) => result.error);
+      if (failed?.error) throw failed.error;
+      if (summaryResult.error) throw summaryResult.error;
       return {
         sales: (sales.data ?? []) as Row[],
         expenses: (expenses.data ?? []) as Row[],
@@ -103,11 +176,22 @@ function Reports() {
         poItems: (poItems.data ?? []) as Row[],
         returnItems: (returnItems.data ?? []) as Row[],
         movements: (movements.data ?? []) as Row[],
+        summary: (summaryResult.data ?? null) as Row | null,
       };
     },
   });
 
-  if (isLoading || !data) {
+  if (rangeError || isError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Reports" description="Could not load reports for this date range." />
+        <p className="text-sm text-destructive" role="status">
+          {rangeError?.message ?? (error instanceof Error ? error.message : "Could not load reports.")}
+        </p>
+      </div>
+    );
+  }
+  if (isLoading || isResolvingAllTime || !data) {
     return (
       <div className="space-y-6">
         <PageHeader title="Reports" description="Loading your reporting data..." />
@@ -118,9 +202,13 @@ function Reports() {
 
   const sum = (rows: Row[], key: string) => rows.reduce((a, r) => a + Number(r[key] ?? 0), 0);
   const m = salesMetrics(data.sales);
-  const revenue = m.revenue;
-  const cogs = m.cogs;
-  const expenseTotal = sum(data.expenses, "amount");
+  const aggregateSales = data.summary?.sales as Row | undefined;
+  const aggregateExpenses = data.summary?.expenses as Row | undefined;
+  const revenue = aggregateRange ? Number(aggregateSales?.revenue ?? 0) : m.revenue;
+  const cogs = aggregateRange ? Number(aggregateSales?.cogs ?? 0) : m.cogs;
+  const expenseTotal = aggregateRange
+    ? Number(aggregateExpenses?.total ?? 0)
+    : sum(data.expenses, "amount");
   /**
    * Inventory value is variant-aware: when a product carries variants the value
    * comes from the variant rows only, so a parent and its variants are never
@@ -187,6 +275,21 @@ function Reports() {
     row.cogs = Number(row.cogs) + netQty * cost;
     row.gross_profit = Number(row.revenue) - Number(row.cogs);
     itemStats.set(key, row);
+  }
+  if (aggregateRange) {
+    itemStats.clear();
+    for (const aggregate of (data.summary?.item_report_rows ?? []) as Row[]) {
+      const key = `${aggregate.product_id}::${aggregate.variant_id ?? ""}`;
+      const revenueValue = Number(aggregate.revenue ?? 0);
+      const cogsValue = Number(aggregate.cogs ?? 0);
+      itemStats.set(key, {
+        ...aggregate,
+        quantity_sold: Number(aggregate.quantity ?? 0),
+        revenue: revenueValue,
+        cogs: cogsValue,
+        gross_profit: revenueValue - cogsValue,
+      });
+    }
   }
   /**
    * A single free-text filter narrows every item-level report to one exact
@@ -312,13 +415,35 @@ function Reports() {
   const purchaseRows = Array.from(purchaseStats.values())
     .filter((r) => matches(r.item, r.variant, r.sku, r.barcode))
     .sort((a, b) => Number(b.purchase_value) - Number(a.purchase_value)) as Row[];
+  if (aggregateRange) {
+    purchaseRows.splice(
+      0,
+      purchaseRows.length,
+      ...((data.summary?.purchase_report_rows ?? []) as Row[]).map((row) => ({
+        ...row,
+        ...identityLabel(row.product_id, row.variant_id),
+        quantity_received: Number(row.quantity_received ?? 0),
+        quantity_returned: Number(row.quantity_returned ?? 0),
+        purchase_value: Number(row.purchase_value ?? 0),
+      })),
+    );
+    purchaseRows.sort((a, b) => Number(b.purchase_value) - Number(a.purchase_value));
+  }
   const purchaseValue = purchaseRows.reduce((a, r) => a + Number(r.purchase_value), 0);
 
   /**
    * Stock movement ledger straight from inventory_movements — the single record
    * of every posted in/out, already keyed on the exact product + variant.
    */
-  const movementRows = data.movements
+  const movementRows = aggregateRange
+    ? ((data.summary?.movement_report_rows ?? []) as Row[]).map((mv) => ({
+        ...mv,
+        ...identityLabel(mv.product_id, mv.variant_id),
+        quantity: Number(mv.quantity ?? 0),
+        unit_cost: Number(mv.unit_cost ?? 0),
+        total_cost: Number(mv.total_cost ?? 0),
+      }))
+    : data.movements
     .map((mv) => {
       const label = identityLabel(mv.product_id, mv.variant_id);
       return {
@@ -339,19 +464,25 @@ function Reports() {
   const reports = [
     {
       title: "Sales Report",
-      rows: data.sales,
+      rows: aggregateRange
+        ? ((data.summary?.sales_report_rows ?? []) as Row[])
+        : data.sales,
       value: formatCurrency(revenue, currency),
-      note: `${m.orders} posted transactions`,
+      note: `${aggregateRange ? Number(aggregateSales?.count ?? 0) : m.orders} posted transactions`,
     },
     {
       title: "Expense Report",
-      rows: data.expenses,
+      rows: aggregateRange
+        ? ((data.summary?.expense_report_rows ?? []) as Row[])
+        : data.expenses,
       value: formatCurrency(expenseTotal, currency),
-      note: `${data.expenses.length} entries`,
+      note: `${aggregateRange ? Number(aggregateExpenses?.count ?? 0) : data.expenses.length} entries`,
     },
     {
       title: "Profit Report",
-      rows: data.sales,
+      rows: aggregateRange
+        ? ((data.summary?.sales_report_rows ?? []) as Row[])
+        : data.sales,
       value: formatCurrency(revenue - cogs - expenseTotal, currency),
       note: `Gross ${formatCurrency(revenue - cogs, currency)}`,
     },
@@ -359,31 +490,38 @@ function Reports() {
       title: "Inventory Report",
       rows: data.products,
       value: formatCurrency(inventoryValue, currency),
-      note: `${formatNumber(data.products.length)} products`,
+      note: `${formatNumber(data.products.length)} products · as of today`,
     },
     {
       title: "Negative Stock Report",
       rows: negativeStockRows,
       value: `${formatNumber(negativeStockRows.length)} items`,
-      note: "Current negative balances, last sale date and approver",
+      note: "Current negative balances, last sale date and approver · as of today",
     },
     {
       title: "Payroll Report",
-      rows: data.payroll,
-      value: formatCurrency(sum(data.payroll, "net_pay"), currency),
-      note: `${data.payroll.length} pay runs`,
+      rows: aggregateRange
+        ? ((data.summary?.payroll_report_rows ?? []) as Row[])
+        : data.payroll,
+      value: formatCurrency(
+        aggregateRange
+          ? sum((data.summary?.payroll_report_rows ?? []) as Row[], "net_pay")
+          : sum(data.payroll, "net_pay"),
+        currency,
+      ),
+      note: `${aggregateRange ? ((data.summary?.payroll_report_rows ?? []) as Row[]).length : data.payroll.length} pay runs`,
     },
     {
       title: "Receivable Report",
       rows: data.ar,
       value: formatCurrency(sum(data.ar, "amount") - sum(data.ar, "paid"), currency),
-      note: `${data.ar.length} open items`,
+      note: `${data.ar.length} open items · as of today`,
     },
     {
       title: "Payable Report",
       rows: data.ap,
       value: formatCurrency(sum(data.ap, "amount") - sum(data.ap, "paid"), currency),
-      note: `${data.ap.length} open items`,
+      note: `${data.ap.length} open items · as of today`,
     },
     {
       title: "Item & Variant Sales Report",
@@ -395,7 +533,7 @@ function Reports() {
       title: "Variant Stock Report",
       rows: variantStockRows,
       value: formatCurrency(variantStockValue, currency),
-      note: `${formatNumber(variantStockRows.length)} variants tracked`,
+      note: `${formatNumber(variantStockRows.length)} variants tracked · as of today`,
     },
     {
       title: "Purchasing by Variant",
@@ -407,9 +545,9 @@ function Reports() {
       title: "Stock Movement Report",
       rows: movementRows,
       value: formatCurrency(movementValue, currency),
-      note: `${formatNumber(movementRows.length)} movements`,
+      note: `${formatNumber(movementRows.length)} movement groups`,
     },
-  ];
+  ].map((report) => ({ ...report, title: `${report.title} — ${range.label}` }));
 
   async function exportRows(name: string, rows: Row[]) {
     if (!rows.length) return;
@@ -418,15 +556,20 @@ function Reports() {
       await logDocumentEvent(businessId, "EXPORT", "reports", name, {
         row_count: rows.length,
         format: "csv",
+        range: range.label,
+        from: range.from,
+        to: range.to,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not log the export");
       return;
     }
-    const keys = Object.keys(rows[0]);
-    const csv = [keys.join(","), ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(","))].join(
-      "\n",
-    );
+    const exportRowsWithRange = rows.map((row) => ({ report_range: range.label, ...row }));
+    const keys = Object.keys(exportRowsWithRange[0]);
+    const csv = [
+      keys.join(","),
+      ...exportRowsWithRange.map((r) => keys.map((k) => csvCell(r[k])).join(",")),
+    ].join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
@@ -435,12 +578,36 @@ function Reports() {
     URL.revokeObjectURL(url);
   }
 
+  async function printReport(name: string) {
+    if (!businessId) return;
+    try {
+      await logPrintEvent(businessId, "reports", name, {
+        range: range.label,
+        from: range.from,
+        to: range.to,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not log the print event");
+      return;
+    }
+    window.print();
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Reports"
-        description="Board-ready summaries you can export in one click."
+        description={`Board-ready summaries for ${range.label}. Point-in-time reports are labeled as of today.`}
       />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <DateRangePicker
+          selection={selection}
+          range={range}
+          timezone={timezone}
+          onChange={setSelection}
+        />
+        {isFetching && <span className="text-xs text-muted-foreground">Updating reports…</span>}
+      </div>
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -468,6 +635,14 @@ function Reports() {
                 onClick={() => exportRows(r.title, r.rows)}
               >
                 <Download className="size-4" /> Export CSV
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-4 ml-2"
+                onClick={() => printReport(r.title)}
+              >
+                <Printer className="size-4" /> Print / PDF
               </Button>
             </CardContent>
           </Card>

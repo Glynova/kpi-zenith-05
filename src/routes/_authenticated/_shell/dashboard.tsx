@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -30,7 +30,13 @@ import {
 
 import { db, type Row } from "@/lib/db";
 import { useBusiness } from "@/lib/business-context";
-import { formatCurrency, formatNumber, formatDate, daysAgoISO, todayISO } from "@/lib/format";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
+import {
+  addCalendarDays,
+  buildDateBuckets,
+  dateInTimeZone,
+  useBusinessDateRange,
+} from "@/lib/date-range";
 import {
   salesMetrics,
   saleNetRevenue,
@@ -42,19 +48,13 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BusinessHealthCard } from "@/components/business-health-card";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { StatCard } from "@/components/stat-card";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
@@ -78,13 +78,6 @@ export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   component: Dashboard,
 });
 
-const RANGES = [
-  { value: "7", label: "Last 7 days" },
-  { value: "30", label: "Last 30 days" },
-  { value: "90", label: "Last 90 days" },
-  { value: "365", label: "Last 12 months" },
-];
-
 /** Percent change vs. the previous period; null when there is no baseline. */
 function pctChange(current: number, previous: number): number | null {
   if (!Number.isFinite(previous) || previous === 0) return null;
@@ -93,18 +86,21 @@ function pctChange(current: number, previous: number): number | null {
 
 function Dashboard() {
   const { businessId, currency, role, business } = useBusiness();
-  const [range, setRange] = useState("30");
-  const days = Number(range);
-  const from = daysAgoISO(days);
-  // Same-length window immediately before the selected one, used purely for
-  // period-over-period comparison. Business calculations are unchanged.
-  const prevFrom = daysAgoISO(days * 2);
-  const today = todayISO();
-  const inventoryFrom = daysAgoISO(180);
+  const timezone = String(business?.timezone ?? "Asia/Manila");
+  const { selection, range, setSelection, isResolvingAllTime, rangeError } = useBusinessDateRange(
+    businessId,
+    timezone,
+  );
+  const today = dateInTimeZone(new Date(), timezone);
+  const inventoryFrom = addCalendarDays(today, -180);
+  const healthSalesFrom = addCalendarDays(today, -90);
+  const previousOrCurrentFrom = range.previousFromDate ?? range.fromDate;
+  const aggregateRange = range.bucket === "month" || range.preset === "all";
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["dashboard", businessId, range],
-    enabled: !!businessId,
+    queryKey: ["dashboard", businessId, range.from, range.to, range.previousFrom],
+    enabled: !!businessId && !isResolvingAllTime && !rangeError,
+    placeholderData: (previous) => previous,
     queryFn: async () => {
       const loadRows = async (
         name: string,
@@ -125,6 +121,28 @@ function Dashboard() {
           };
         }
       };
+      const loadAggregate = async (name: string, from: string, to: string) => {
+        try {
+          const result = await db.rpc("get_business_period_aggregate", {
+            _business_id: businessId,
+            _from: from,
+            _to: to,
+            _timezone: timezone,
+            _bucket: range.bucket,
+          });
+          if (result.error) {
+            console.error(`[Dashboard] Failed to load ${name}`, result.error);
+            return { value: null as Row | null, error: result.error.message as string | null };
+          }
+          return { value: (result.data ?? null) as Row | null, error: null as string | null };
+        } catch (loadError) {
+          console.error(`[Dashboard] Failed to load ${name}`, loadError);
+          return {
+            value: null as Row | null,
+            error: loadError instanceof Error ? loadError.message : String(loadError),
+          };
+        }
+      };
       const [
         sales,
         expenses,
@@ -135,13 +153,39 @@ function Dashboard() {
         cash,
         saleItems,
         healthSaleItems,
+        healthSales,
+        salesHistory,
         movements,
         batches,
         customers,
         logs,
+        summary,
+        previousSummary,
       ] = await Promise.all([
-        loadRows("sales", db.from("sales").select("*").eq("business_id", businessId)),
-        loadRows("expenses", db.from("expenses").select("*").eq("business_id", businessId)),
+        loadRows(
+          "sales",
+          aggregateRange
+            ? db.from("sales").select("id").eq("business_id", businessId).limit(0)
+            : db
+            .from("sales")
+            .select("*")
+            .eq("business_id", businessId)
+            .gte("sale_date", previousOrCurrentFrom)
+            .lte("sale_date", range.toDate)
+            .limit(5000),
+        ),
+        loadRows(
+          "expenses",
+          aggregateRange
+            ? db.from("expenses").select("id").eq("business_id", businessId).limit(0)
+            : db
+            .from("expenses")
+            .select("*")
+            .eq("business_id", businessId)
+            .gte("expense_date", previousOrCurrentFrom)
+            .lte("expense_date", range.toDate)
+            .limit(5000),
+        ),
         loadRows("products", db.from("products").select("*").eq("business_id", businessId)),
         loadRows(
           "product variants",
@@ -161,7 +205,15 @@ function Dashboard() {
         ),
         loadRows(
           "sale items",
-          db.from("sale_items").select("*").eq("business_id", businessId).limit(5000),
+          aggregateRange
+            ? db.from("sale_items").select("id").eq("business_id", businessId).limit(0)
+            : db
+                .from("sale_items")
+                .select("*,sales!inner(sale_date)")
+                .eq("business_id", businessId)
+                .gte("sales.sale_date", range.fromDate)
+                .lte("sales.sale_date", range.toDate)
+                .limit(5000),
         ),
         loadRows(
           "health score sale items",
@@ -169,9 +221,22 @@ function Dashboard() {
             .from("sale_items")
             .select("*,sales!inner(sale_date)")
             .eq("business_id", businessId)
-            .gte("sales.sale_date", daysAgoISO(90))
+            .gte("sales.sale_date", healthSalesFrom)
             .lte("sales.sale_date", today)
             .limit(10000),
+        ),
+        loadRows(
+          "health score recent sales",
+          db
+            .from("sales")
+            .select("*")
+            .eq("business_id", businessId)
+            .gte("sale_date", healthSalesFrom)
+            .lte("sale_date", today),
+        ),
+        loadRows(
+          "sales history",
+          db.from("sales").select("id").eq("business_id", businessId).limit(1),
         ),
         loadRows(
           "inventory movements",
@@ -198,6 +263,10 @@ function Dashboard() {
             .order("created_at", { ascending: false })
             .limit(8),
         ),
+        loadAggregate("selected-period aggregates", range.from, range.to),
+        range.previousFrom && range.previousTo
+          ? loadAggregate("previous-period aggregates", range.previousFrom, range.previousTo)
+          : Promise.resolve({ value: null as Row | null, error: null as string | null }),
       ]);
       return {
         sales: sales.rows,
@@ -209,10 +278,14 @@ function Dashboard() {
         cash: cash.rows,
         saleItems: saleItems.rows,
         healthSaleItems: healthSaleItems.rows,
+        healthSales: healthSales.rows,
+        salesHistory: salesHistory.rows,
         movements: movements.rows,
         batches: batches.rows,
         customers: customers.rows,
         logs: logs.rows,
+        summary: summary.value,
+        previousSummary: previousSummary.value,
         errors: {
           sales: sales.error,
           expenses: expenses.error,
@@ -223,10 +296,14 @@ function Dashboard() {
           cash: cash.error,
           saleItems: saleItems.error,
           healthSaleItems: healthSaleItems.error,
+          healthSales: healthSales.error,
+          salesHistory: salesHistory.error,
           movements: movements.error,
           batches: batches.error,
           customers: customers.error,
           logs: logs.error,
+          summary: summary.error,
+          previousSummary: previousSummary.error,
         },
       };
     },
@@ -239,24 +316,68 @@ function Dashboard() {
 
     // The query fetches two windows; everything below the split uses the
     // current window only, so no existing calculation changes.
-    const curSales = d.sales.filter((s) => String(s.sale_date) >= from && isPostedSale(s));
+    const curSales = d.sales.filter(
+      (s) =>
+        String(s.sale_date) >= range.fromDate &&
+        String(s.sale_date) <= range.toDate &&
+        isPostedSale(s),
+    );
     const prevSales = d.sales.filter(
-      (s) => String(s.sale_date) >= prevFrom && String(s.sale_date) < from && isPostedSale(s),
+      (s) =>
+        range.previousFromDate &&
+        range.previousToDate &&
+        String(s.sale_date) >= range.previousFromDate &&
+        String(s.sale_date) <= range.previousToDate &&
+        isPostedSale(s),
     );
-    const curExpenses = d.expenses.filter((e) => String(e.expense_date) >= from);
+    const curExpenses = d.expenses.filter(
+      (e) => String(e.expense_date) >= range.fromDate && String(e.expense_date) <= range.toDate,
+    );
     const prevExpenses = d.expenses.filter(
-      (e) => String(e.expense_date) >= prevFrom && String(e.expense_date) < from,
+      (e) =>
+        range.previousFromDate &&
+        range.previousToDate &&
+        String(e.expense_date) >= range.previousFromDate &&
+        String(e.expense_date) <= range.previousToDate,
     );
 
-    const todayRows = curSales.filter((s) => s.sale_date === today);
-    const todayExpenses = curExpenses.filter((e) => e.expense_date === today);
-    const period = salesMetrics(curSales);
-    const prevPeriod = salesMetrics(prevSales);
-    const todayM = salesMetrics(todayRows);
-
+    const periodRaw = salesMetrics(curSales);
+    const previousRaw = salesMetrics(prevSales);
+    const summarySales = d.summary?.sales as Row | undefined;
+    const summaryExpenses = d.summary?.expenses as Row | undefined;
+    const previousSummarySales = d.previousSummary?.sales as Row | undefined;
+    const previousSummaryExpenses = d.previousSummary?.expenses as Row | undefined;
+    const period = {
+      ...periodRaw,
+      revenue: Number(summarySales?.revenue ?? periodRaw.revenue),
+      grossSales: Number(summarySales?.gross_sales ?? periodRaw.grossSales),
+      tax: Number(summarySales?.tax ?? periodRaw.tax),
+      discount: Number(summarySales?.discount ?? periodRaw.discount),
+      cogs: Number(summarySales?.cogs ?? periodRaw.cogs),
+      grossProfit:
+        Number(summarySales?.revenue ?? periodRaw.revenue) -
+        Number(summarySales?.cogs ?? periodRaw.cogs),
+      orders: Number(summarySales?.count ?? periodRaw.orders),
+      aov:
+        Number(summarySales?.count ?? periodRaw.orders) > 0
+          ? Number(summarySales?.revenue ?? periodRaw.revenue) /
+            Number(summarySales?.count ?? periodRaw.orders)
+          : 0,
+    };
+    const prevPeriod = {
+      ...previousRaw,
+      revenue: Number(previousSummarySales?.revenue ?? previousRaw.revenue),
+      cogs: Number(previousSummarySales?.cogs ?? previousRaw.cogs),
+      grossProfit:
+        Number(previousSummarySales?.revenue ?? previousRaw.revenue) -
+        Number(previousSummarySales?.cogs ?? previousRaw.cogs),
+      orders: Number(previousSummarySales?.count ?? previousRaw.orders),
+    };
     const revenue = period.revenue;
-    const expenseTotal = sum(curExpenses, "amount");
-    const prevExpenseTotal = sum(prevExpenses, "amount");
+    const expenseTotal = Number(summaryExpenses?.total ?? sum(curExpenses, "amount"));
+    const prevExpenseTotal = Number(
+      previousSummaryExpenses?.total ?? sum(prevExpenses, "amount"),
+    );
     const grossProfit = period.grossProfit;
     const netProfit = grossProfit - expenseTotal;
     const prevNetProfit = prevPeriod.grossProfit - prevExpenseTotal;
@@ -282,26 +403,58 @@ function Dashboard() {
     const receivables = d.ar.reduce((a, r) => a + (Number(r.amount) - Number(r.paid)), 0);
     const payables = d.ap.reduce((a, r) => a + (Number(r.amount) - Number(r.paid)), 0);
 
-    // time series
+    // Fill missing buckets so the chart axis stays evenly spaced.
     const byDay = new Map<string, { date: string; sales: number; expenses: number }>();
-    for (const s of curSales) {
-      const net = saleNetRevenue(s);
-      if (!net) continue;
-      const k = s.sale_date;
-      const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
-      e.sales += net;
-      byDay.set(k, e);
+    for (const point of (d.summary?.series ?? []) as Row[]) {
+      byDay.set(String(point.date), {
+        date: String(point.date),
+        sales: Number(point.sales ?? 0),
+        expenses: Number(point.expenses ?? 0),
+      });
     }
-    for (const x of curExpenses) {
-      const k = x.expense_date;
-      const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
-      e.expenses += Number(x.amount ?? 0);
-      byDay.set(k, e);
+    if (!d.summary) {
+      for (const s of curSales) {
+        const net = saleNetRevenue(s);
+        if (!net) continue;
+        const k = s.sale_date;
+        const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
+        e.sales += net;
+        byDay.set(k, e);
+      }
+      for (const x of curExpenses) {
+        const k = x.expense_date;
+        const e = byDay.get(k) ?? { date: k, sales: 0, expenses: 0 };
+        e.expenses += Number(x.amount ?? 0);
+        byDay.set(k, e);
+      }
     }
-    const series = Array.from(byDay.values()).sort((a, b) => a.date.localeCompare(b.date));
+    const series = buildDateBuckets(range.fromDate, range.toDate, range.bucket).map((bucket) => {
+      const bucketStart = bucket.key;
+      const matched = Array.from(byDay.values()).filter((point) => {
+        if (range.bucket === "day") return point.date === bucketStart;
+        if (range.bucket === "week") {
+          return point.date >= bucketStart && point.date < addCalendarDays(bucketStart, 7);
+        }
+        return point.date.slice(0, 7) === bucketStart.slice(0, 7);
+      });
+      return {
+        date: bucket.label,
+        sales: matched.reduce((total, point) => total + point.sales, 0),
+        expenses: matched.reduce((total, point) => total + point.expenses, 0),
+      };
+    });
 
     // best sellers
     const byProduct = new Map<string, { name: string; qty: number; revenue: number }>();
+    if (aggregateRange && d.summary) {
+      for (const item of (d.summary.top_items ?? []) as Row[]) {
+        byProduct.set(String(item.item), {
+          name: String(item.item),
+          qty: Number(item.quantity ?? 0),
+          revenue: Number(item.revenue ?? 0),
+        });
+      }
+    }
     for (const it of d.saleItems) {
       const k = it.product_name ?? it.product_id ?? "Unknown";
       const e = byProduct.get(k) ?? { name: k, qty: 0, revenue: 0 };
@@ -309,17 +462,25 @@ function Dashboard() {
       e.revenue += Number(it.total ?? 0);
       byProduct.set(k, e);
     }
-    const bestSellers = Array.from(byProduct.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
+    const bestSellers = (aggregateRange && d.summary
+      ? Array.from(byProduct.values())
+      : Array.from(byProduct.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5));
 
     // expense mix
     const byCat = new Map<string, number>();
-    for (const x of curExpenses) {
-      byCat.set(
-        x.category ?? "other",
-        (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
-      );
+    if (aggregateRange && d.summary) {
+      for (const category of (d.summary.expense_categories ?? []) as Row[]) {
+        byCat.set(String(category.category), Number(category.amount ?? 0));
+      }
+    } else {
+      for (const x of curExpenses) {
+        byCat.set(
+          x.category ?? "other",
+          (byCat.get(x.category ?? "other") ?? 0) + Number(x.amount ?? 0),
+        );
+      }
     }
     const expenseMix = Array.from(byCat.entries()).map(([name, value]) => ({ name, value }));
 
@@ -331,22 +492,68 @@ function Dashboard() {
       if (!net) continue;
       byCustomer.set(s.customer_id, (byCustomer.get(s.customer_id) ?? 0) + net);
     }
-    const topCustomers = Array.from(byCustomer.entries())
+    const topCustomers = (aggregateRange && d.summary
+      ? ((d.summary.top_customers ?? []) as Row[]).map((customer) => ({
+          name: String(customer.name ?? "Unknown"),
+          total: Number(customer.amount ?? 0),
+        }))
+      : Array.from(byCustomer.entries())
       .map(([id, total]) => ({
         name: d.customers.find((c) => c.id === id)?.name ?? "Unknown",
         total,
       }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+      .slice(0, 5));
 
     const margin = marginPercent(netProfit, revenue);
     const expenseRatio = revenue > 0 ? (expenseTotal / revenue) * 100 : 0;
     const aov = period.aov;
+    const makeSummarySale = (summary: Row, id: string, saleDate: string) => ({
+    id,
+    status: "completed",
+    sale_date: saleDate,
+    total: Number(summary.revenue ?? 0) + Number(summary.tax ?? 0),
+    tax: Number(summary.tax ?? 0),
+    shipping: 0,
+    other_charges: 0,
+    cost_total: Number(summary.cogs ?? 0),
+    });
+    const healthPeriodSales =
+    aggregateRange && summarySales
+      ? [
+          makeSummarySale(
+            summarySales,
+            `aggregate-${range.fromDate}-${range.toDate}`,
+            range.toDate,
+          ),
+          ...(range.previousToDate && previousSummarySales
+            ? [
+                makeSummarySale(
+                  previousSummarySales,
+                  `aggregate-${range.previousFromDate}-${range.previousToDate}`,
+                  range.previousToDate,
+                ),
+              ]
+            : []),
+        ]
+      : d.sales;
+    const healthPeriodExpenses =
+    aggregateRange && summaryExpenses
+      ? Number(summaryExpenses.count ?? 0) > 0
+        ? [{ expense_date: range.toDate, amount: Number(summaryExpenses.total ?? 0) }]
+        : []
+      : d.expenses;
 
     const health = healthScoreFromRecords({
-      businessType: business?.type,
-      sales: d.sales,
-      expenses: d.expenses,
+    businessType: business?.type,
+    sales: [
+      ...new Map(
+        [...healthPeriodSales, ...d.healthSales].map((sale) => [sale.id, sale]),
+      ).values(),
+    ],
+    periodSales: healthPeriodSales,
+    cashFlowSales: d.healthSales,
+    expenses: healthPeriodExpenses,
       cashTransactions: d.cash,
       receivables: d.ar,
       payables: d.ap,
@@ -355,6 +562,15 @@ function Dashboard() {
       saleItems: d.healthSaleItems,
       inventoryMovements: d.movements,
       batches: d.batches,
+      salesHistoryExists: d.salesHistory.length > 0,
+      range: {
+        fromDate: range.fromDate,
+        toDate: range.toDate,
+        previousFromDate: range.previousFromDate,
+        previousToDate: range.previousToDate,
+        hasPreviousPeriod: Boolean(range.previousFromDate && range.previousToDate),
+        timezone,
+      },
     });
     const healthError = [
       "sales",
@@ -365,6 +581,9 @@ function Dashboard() {
       "products",
       "variants",
       "healthSaleItems",
+      "healthSales",
+      "salesHistory",
+      ...(aggregateRange ? ["summary"] : []),
       "movements",
       "batches",
     ].some((key) => d.errors[key as keyof typeof d.errors]);
@@ -374,9 +593,6 @@ function Dashboard() {
     const profitTrend = series.map((p) => p.sales - p.expenses);
 
     return {
-      todaySales: todayM.revenue,
-      todayExpenses: sum(todayExpenses, "amount"),
-      todayProfit: todayM.grossProfit - sum(todayExpenses, "amount"),
       revenue,
       netProfit,
       grossProfit,
@@ -395,8 +611,10 @@ function Dashboard() {
       revenueDelta: pctChange(revenue, prevPeriod.revenue),
       profitDelta: pctChange(netProfit, prevNetProfit),
       expenseDelta: pctChange(expenseTotal, prevExpenseTotal),
-      ordersDelta: pctChange(curSales.length, prevSales.length),
-      orders: curSales.length,
+      ordersDelta: range.previousFromDate
+        ? pctChange(period.orders, prevPeriod.orders)
+        : null,
+      orders: period.orders,
       bestSellers,
       expenseMix,
       topCustomers,
@@ -407,8 +625,18 @@ function Dashboard() {
       healthError,
       errors: d.errors,
       logs: d.logs,
+      periodLabel: range.label,
     };
-  }, [business?.type, data, today, from, prevFrom]);
+  }, [business?.type, data, today, range, timezone]);
+
+  if (rangeError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Dashboard" description="Could not resolve the selected date range." />
+        <p className="text-sm text-destructive" role="status">{rangeError.message}</p>
+      </div>
+    );
+  }
 
   if (isError) {
     return (
@@ -429,7 +657,7 @@ function Dashboard() {
     );
   }
 
-  if (isLoading || !m) {
+  if (isLoading || isResolvingAllTime || !m) {
     return (
       <div className="space-y-6">
         <PageHeader title="Dashboard" description="Loading your business performance..." />
@@ -468,18 +696,12 @@ function Dashboard() {
         title="Dashboard"
         description="Smarter decisions start with the numbers that matter."
         actions={
-          <Select value={range} onValueChange={setRange}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RANGES.map((r) => (
-                <SelectItem key={r.value} value={r.value}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DateRangePicker
+            selection={selection}
+            range={range}
+            timezone={timezone}
+            onChange={setSelection}
+          />
         }
       />
 
@@ -521,7 +743,7 @@ function Dashboard() {
             icon={TrendingUp}
             delta={m.revenueDelta}
             series={m.revenueTrend}
-            error={!!m.errors.sales}
+            error={!!(m.errors.sales || (aggregateRange && m.errors.summary))}
           />
           <StatCard
             label="Net Profit (period)"
@@ -538,18 +760,22 @@ function Dashboard() {
             value={formatCurrency(m.cashOnHand, currency)}
             icon={Wallet}
             tone="gold"
-            sub={`${formatNumber(m.orders)} orders this period`}
+            sub="As of today"
             error={!!m.errors.cash}
           />
           <StatCard
-            label="Inventory Value"
+            label="Inventory Value (as of today)"
             value={formatCurrency(m.inventoryValue, currency)}
             icon={Boxes}
             sub={`${formatNumber(m.lowStock.length)} low · ${formatNumber(m.outOfStock.length)} out`}
             error={!!m.errors.products}
           />
         </div>
-        <BusinessHealthCard health={m.health} error={m.healthError} />
+        <BusinessHealthCard
+          health={m.health}
+          error={m.healthError}
+          periodLabel={m.periodLabel}
+        />
       </div>
 
       <Collapsible>
@@ -562,51 +788,57 @@ function Dashboard() {
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <div className="stagger-grid mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
-              label="Today's Sales"
-              value={formatCurrency(m.todaySales, currency)}
+              label={`Revenue (${range.label})`}
+              value={formatCurrency(m.revenue, currency)}
               icon={TrendingUp}
               tone="success"
               error={!!m.errors.sales}
             />
             <StatCard
-              label="Today's Expenses"
-              value={formatCurrency(m.todayExpenses, currency)}
+              label={`Expenses (${range.label})`}
+              value={formatCurrency(m.expenseTotal, currency)}
               icon={TrendingDown}
               tone="warning"
-              error={!!m.errors.expenses}
+              error={!!(m.errors.expenses || (aggregateRange && m.errors.summary))}
             />
             <StatCard
-              label="Today's Profit"
-              value={formatCurrency(m.todayProfit, currency)}
+              label={`Net Profit (${range.label})`}
+              value={formatCurrency(m.netProfit, currency)}
               icon={Activity}
-              error={!!(m.errors.sales || m.errors.expenses)}
+              error={
+                !!(
+                  m.errors.sales ||
+                  m.errors.expenses ||
+                  (aggregateRange && m.errors.summary)
+                )
+              }
             />
             <StatCard
-              label="Expenses (period)"
+              label={`Expenses (${range.label})`}
               value={formatCurrency(m.expenseTotal, currency)}
               icon={TrendingDown}
               tone="warning"
               delta={m.expenseDelta}
               invertDelta
               series={m.expenseTrend}
-              error={!!m.errors.expenses}
+              error={!!(m.errors.expenses || (aggregateRange && m.errors.summary))}
             />
             <StatCard
-              label="Orders (period)"
+              label={`Orders (${range.label})`}
               value={formatNumber(m.orders)}
               icon={Activity}
               delta={m.ordersDelta}
-              error={!!m.errors.sales}
+              error={!!(m.errors.sales || (aggregateRange && m.errors.summary))}
             />
             <StatCard
-              label="Outstanding Receivables"
+              label="Receivables (as of today)"
               value={formatCurrency(m.receivables, currency)}
               icon={ArrowDownLeft}
               tone="warning"
               error={!!m.errors.receivables}
             />
             <StatCard
-              label="Outstanding Payables"
+              label="Payables (as of today)"
               value={formatCurrency(m.payables, currency)}
               icon={ArrowUpRight}
               tone="warning"
@@ -636,11 +868,13 @@ function Dashboard() {
             <CardTitle className="text-base">Sales vs Expenses</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            {m.errors.sales || m.errors.expenses ? (
+            {m.errors.sales ||
+            m.errors.expenses ||
+            (aggregateRange && m.errors.summary) ? (
               <p className="text-sm text-destructive" role="status">
                 Could not load
               </p>
-            ) : m.series.length === 0 ? (
+            ) : !m.hasSeriesData ? (
               <p className="text-sm text-muted-foreground">No transactions in this period yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -681,7 +915,7 @@ function Dashboard() {
             <CardTitle className="text-base">Expense Mix</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
-            {m.errors.expenses ? (
+            {m.errors.expenses || (aggregateRange && m.errors.summary) ? (
               <p className="text-sm text-destructive" role="status">
                 Could not load
               </p>
@@ -721,7 +955,7 @@ function Dashboard() {
             <CardTitle className="text-base">Best Selling Products</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            {m.errors.saleItems ? (
+            {m.errors.saleItems || (aggregateRange && m.errors.summary) ? (
               <p className="text-sm text-destructive" role="status">
                 Could not load
               </p>
@@ -752,7 +986,9 @@ function Dashboard() {
             <CardTitle className="text-base">Top Customers</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {m.errors.sales || m.errors.customers ? (
+            {m.errors.sales ||
+            m.errors.customers ||
+            (aggregateRange && m.errors.summary) ? (
               <p className="text-sm text-destructive" role="status">
                 Could not load
               </p>

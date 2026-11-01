@@ -14,6 +14,7 @@
  *   the entered cost price.
  */
 import type { Row } from "@/lib/db";
+import { addCalendarDays, dateInTimeZone } from "@/lib/date-range";
 
 const EXCLUDED_STATUSES = new Set(["draft", "voided", "cancelled", "rejected", "expired"]);
 const NON_REVENUE_DOCS = new Set(["quote", "sales_order"]);
@@ -572,46 +573,61 @@ export function healthScoreFromRecords(input: {
   inventoryMovements: Row[];
   batches: Row[];
   asOf?: Date;
+  periodSales?: Row[];
+  cashFlowSales?: Row[];
+  range?: {
+    fromDate: string;
+    toDate: string;
+    previousFromDate?: string | null;
+    previousToDate?: string | null;
+    hasPreviousPeriod: boolean;
+    timezone?: string;
+  };
+  salesHistoryExists?: boolean;
 }): BusinessHealthResult {
   const asOf = input.asOf ?? new Date();
-  const asOfDay = asOf.toISOString().slice(0, 10);
-  const daysAgo = (days: number) => {
-    const date = new Date(asOf);
-    date.setUTCDate(date.getUTCDate() - days);
-    return date.toISOString().slice(0, 10);
-  };
+  const timezone = input.range?.timezone ?? "Asia/Manila";
+  const asOfDay = dateInTimeZone(asOf, timezone);
+  const daysAgo = (days: number) => addCalendarDays(asOfDay, -days);
   const profileKey = resolveHealthProfile(input.businessType);
   const cashWindowDays = BUSINESS_HEALTH_CONFIG.cashFlow.rollingProfiles.includes(profileKey)
     ? BUSINESS_HEALTH_CONFIG.periods.growthDays * 3
     : BUSINESS_HEALTH_CONFIG.periods.growthDays;
-  const currentStart = daysAgo(BUSINESS_HEALTH_CONFIG.periods.growthDays);
-  const previousStart = daysAgo(BUSINESS_HEALTH_CONFIG.periods.growthDays * 2);
+  const currentStart = input.range?.fromDate ?? daysAgo(BUSINESS_HEALTH_CONFIG.periods.growthDays);
+  const currentEnd = input.range?.toDate ?? asOfDay;
+  const previousStart =
+    input.range?.previousFromDate ?? daysAgo(BUSINESS_HEALTH_CONFIG.periods.growthDays * 2);
+  const previousEnd =
+    input.range?.previousToDate ?? addCalendarDays(currentStart, -1);
   const cashStart = daysAgo(cashWindowDays);
   const inventoryStart = daysAgo(BUSINESS_HEALTH_CONFIG.periods.inventorySalesDays);
   const postedSales = input.sales.filter(isPostedSale);
-  const currentSales = postedSales.filter(
+  const periodSales = (input.periodSales ?? postedSales).filter(isPostedSale);
+  const currentSales = periodSales.filter(
     (sale) =>
-      String(sale.sale_date ?? "") >= currentStart && String(sale.sale_date ?? "") <= asOfDay,
+      String(sale.sale_date ?? "") >= currentStart && String(sale.sale_date ?? "") <= currentEnd,
   );
-  const previousSales = postedSales.filter(
+  const previousSales = periodSales.filter(
     (sale) =>
-      String(sale.sale_date ?? "") >= previousStart && String(sale.sale_date ?? "") < currentStart,
+      String(sale.sale_date ?? "") >= previousStart && String(sale.sale_date ?? "") <= previousEnd,
   );
   const currentRevenue = salesMetrics(currentSales).revenue;
   const previousRevenue = salesMetrics(previousSales).revenue;
   const periodExpenses = input.expenses.filter(
     (expense) =>
       String(expense.expense_date ?? "") >= currentStart &&
-      String(expense.expense_date ?? "") <= asOfDay,
+      String(expense.expense_date ?? "") <= currentEnd,
   );
   const expenseTotal = periodExpenses.reduce(
     (sum, expense) => sum + Number(expense.amount ?? 0),
     0,
   );
   const netProfit = salesMetrics(currentSales).grossProfit - expenseTotal;
-  const cashWindowSales = postedSales.filter(
+  const cashWindowSales = (input.cashFlowSales ?? postedSales)
+    .filter(isPostedSale)
+    .filter(
     (sale) => String(sale.sale_date ?? "") >= cashStart && String(sale.sale_date ?? "") <= asOfDay,
-  );
+    );
   const cashWindowRevenue = salesMetrics(cashWindowSales).revenue;
   const excludedCashPatterns = BUSINESS_HEALTH_CONFIG.cashFlow.excludedCashPatterns;
   const operatingCashFlow = input.cashTransactions
@@ -731,15 +747,16 @@ export function healthScoreFromRecords(input: {
     netMargin: currentRevenue > 0 ? netProfit / currentRevenue : 0,
     revenue: currentRevenue,
     previousRevenue,
-    hasPreviousPeriod: true,
+    hasPreviousPeriod: input.range?.hasPreviousPeriod ?? true,
     operatingCashFlow,
     cashFlowRevenue: cashWindowRevenue,
     cash,
     receivables,
     payablesDue,
-    hasSalesHistory: postedSales.length > 0,
+    hasSalesHistory: input.salesHistoryExists ?? postedSales.length > 0,
     hasExpensesInPeriod: periodExpenses.length > 0,
     inventory,
+    ...(input.range?.hasPreviousPeriod === false ? { previousRevenue: 0 } : {}),
   });
 }
 
