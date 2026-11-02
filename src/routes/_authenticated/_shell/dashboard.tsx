@@ -605,6 +605,7 @@ function Dashboard() {
       outOfStock,
       negativeStock,
       series,
+      hasSeriesData: series.some((p) => p.sales !== 0 || p.expenses !== 0),
       revenueTrend,
       expenseTrend,
       profitTrend,
