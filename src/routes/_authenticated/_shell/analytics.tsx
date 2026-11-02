@@ -63,7 +63,6 @@ function Analytics() {
         healthSales,
         summary,
         previousSales,
-        previousSummary,
       ] = await Promise.all([
         aggregateRange
           ? db.from("sales").select("id").eq("business_id", businessId).limit(0)

@@ -564,7 +564,7 @@ function Reports() {
       toast.error(error instanceof Error ? error.message : "Could not log the export");
       return;
     }
-    const exportRowsWithRange = rows.map((row) => ({ report_range: range.label, ...row }));
+    const exportRowsWithRange: Record<string, unknown>[] = rows.map((row) => ({ report_range: range.label, ...row }));
     const keys = Object.keys(exportRowsWithRange[0]);
     const csv = [
       keys.join(","),
