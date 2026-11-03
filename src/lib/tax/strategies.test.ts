@@ -38,3 +38,23 @@ describe("PH tax strategies", () => {
     expect(s.vat_amount).toBe(12);
   });
 });
+
+import { orderVatBreakdown } from "@/lib/sales";
+describe("orderVatBreakdown", () => {
+  it("splits VAT and exempt lines and reconciles to totals", () => {
+    const b = orderVatBreakdown(
+      [
+        { quantity: 1, unit_price: 112, tax_type: "VAT", tax_rate: 12 } as never,
+        { quantity: 1, unit_price: 50, tax_type: "VAT_EXEMPT", tax_rate: 0 } as never,
+      ],
+      { taxInclusive: true },
+    );
+    expect(b).toEqual({ vatable: 100, vat: 12, exempt: 50, zeroRated: 0 });
+  });
+  it("SC/PWD reclassified lines carry no VAT", () => {
+    const b = orderVatBreakdown([{ quantity: 1, unit_price: 35, tax_type: "VAT_EXEMPT", tax_rate: 0 } as never], {
+      orderDiscount: 20, orderDiscountType: "percent",
+    });
+    expect(b).toEqual({ vatable: 0, vat: 0, exempt: 28, zeroRated: 0 });
+  });
+});

@@ -188,12 +188,12 @@ function TaxPage() {
     const { data, error } = await db
       .from("sales")
       .select(
-        "sale_date,sale_number,status,subtotal,discount,statutory_discount_type,statutory_discount_amount,statutory_buyer_name,statutory_buyer_id,vatable_amount,vat_amount,vat_exempt_amount,zero_rated_amount,total,buyer_name,buyer_tin,customers(name,tax_id)",
+        "sale_date,sale_number,status,subtotal,discount,statutory_discount_type,statutory_discount_amount,statutory_buyer_name,statutory_buyer_id,vatable_amount,vat_amount,vat_exempt_amount,zero_rated_amount,total,customer_tin_snapshot,statutory_buyer_tin,customers(name,tax_id)",
       )
       .eq("business_id", businessId)
       .gte("sale_date", from)
       .lte("sale_date", to)
-      .in("status", ["completed", "posted", "partially_refunded", "refunded", "voided", "cancelled"])
+      .neq("status", "draft")
       .order("sale_date")
       .order("sale_number")
       .limit(10000);
@@ -207,7 +207,7 @@ function TaxPage() {
       const stat = Number(s.statutory_discount_amount ?? 0);
       return [
         s.sale_date, s.sale_number, s.status,
-        s.buyer_name ?? s.customers?.name ?? "Walk-in", s.buyer_tin ?? s.customers?.tax_id ?? "",
+        s.customers?.name ?? "Walk-in", s.customer_tin_snapshot ?? s.statutory_buyer_tin ?? s.customers?.tax_id ?? "",
         Number(s.subtotal ?? 0), Number((Number(s.discount ?? 0) - stat).toFixed(2)),
         s.statutory_discount_type ?? "", stat, s.statutory_buyer_name ?? "", s.statutory_buyer_id ?? "",
         Number(s.vatable_amount ?? 0), Number(s.vat_amount ?? 0), Number(s.vat_exempt_amount ?? 0),
@@ -221,7 +221,6 @@ function TaxPage() {
     a.download = `sales-journal-${from}-to-${to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    void db.rpc("log_document_event" as never, {} as never).then(() => undefined, () => undefined);
   }
 
   return (
