@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
 import { csvCell } from "@/lib/csv";
+import { buildSlsDat } from "@/lib/tax/slsp";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, todayISO, titleCase } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
@@ -223,6 +224,36 @@ function TaxPage() {
     URL.revokeObjectURL(url);
   }
 
+  // BIR Summary List of Sales (.DAT) for buyers with a TIN in the period.
+  async function exportSlsDat() {
+    const comp = await db.from("business_compliance").select("tin,legal_name,trade_name,business_address,rdo_code").eq("business_id", businessId).maybeSingle();
+    const c = comp.data as Row | null;
+    if (!c?.tin || !c?.legal_name) return toast.error("Add your TIN and registered name in Business Settings first.");
+    const { data, error } = await db
+      .from("sales")
+      .select("vatable_amount,vat_amount,vat_exempt_amount,zero_rated_amount,customer_tin_snapshot,statutory_buyer_tin,status,customers(name,tax_id,address)")
+      .eq("business_id", businessId).gte("sale_date", from).lte("sale_date", to)
+      .not("status", "in", "(draft,cancelled,voided)").limit(10000);
+    if (error) return toast.error(error.message);
+    const r = buildSlsDat(
+      { tin: c.tin, registered_name: c.legal_name, trade_name: c.trade_name, address: c.business_address, rdo_code: c.rdo_code },
+      ((data ?? []) as Row[]).map((s) => ({
+        buyer_tin: s.customer_tin_snapshot ?? s.customers?.tax_id ?? s.statutory_buyer_tin,
+        buyer_name: s.customers?.name, buyer_address: s.customers?.address,
+        vatable_amount: s.vatable_amount, vat_amount: s.vat_amount,
+        vat_exempt_amount: s.vat_exempt_amount, zero_rated_amount: s.zero_rated_amount,
+      })),
+      to,
+    );
+    const url = URL.createObjectURL(new Blob([r.content], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${String(c.tin).replace(/\D/g, "").slice(0, 9)}S${to.slice(5, 7)}${to.slice(0, 4)}.DAT`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`SLS file: ${r.buyers} buyer(s)` + (r.skipped ? `, ${r.skipped} sale(s) without TIN left out` : ""));
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -232,6 +263,9 @@ function TaxPage() {
           <div className="page-actions">
             <Button variant="outline" onClick={() => void exportSalesJournal()}>
               <Download className="size-4" /> Sales journal (CSV)
+            </Button>
+            <Button variant="outline" onClick={() => void exportSlsDat()}>
+              <Download className="size-4" /> BIR SLS (.DAT)
             </Button>
             {canWrite && (
               <Button onClick={() => setOpen(true)}>
