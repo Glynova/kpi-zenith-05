@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Printer } from "lucide-react";
+import { Download, Plus, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 import { db, type Row } from "@/lib/db";
+import { csvCell } from "@/lib/csv";
 import { useBusiness } from "@/lib/business-context";
 import { formatCurrency, todayISO, titleCase } from "@/lib/format";
 import { PageHeader } from "@/components/page-header";
@@ -181,17 +182,63 @@ function TaxPage() {
     </div>
   );
 
+  // BIR-style sales journal for the selected period: one row per posted sale,
+  // using the VAT breakdown stored on each sale at checkout.
+  async function exportSalesJournal() {
+    const { data, error } = await db
+      .from("sales")
+      .select(
+        "sale_date,sale_number,status,subtotal,discount,statutory_discount_type,statutory_discount_amount,statutory_buyer_name,statutory_buyer_id,vatable_amount,vat_amount,vat_exempt_amount,zero_rated_amount,total,customer_tin_snapshot,statutory_buyer_tin,customers(name,tax_id)",
+      )
+      .eq("business_id", businessId)
+      .gte("sale_date", from)
+      .lte("sale_date", to)
+      .neq("status", "draft")
+      .order("sale_date")
+      .order("sale_number")
+      .limit(10000);
+    if (error) return toast.error(error.message);
+    const header = [
+      "Date", "Sale No.", "Status", "Customer", "Customer TIN", "Gross Sales", "Regular Discount",
+      "SC/PWD Discount Type", "SC/PWD Discount", "SC/PWD Name", "SC/PWD ID", "VATable Sales",
+      "VAT Amount", "VAT-Exempt Sales", "Zero-Rated Sales", "Net Payable",
+    ];
+    const rows = ((data ?? []) as Row[]).map((s) => {
+      const stat = Number(s.statutory_discount_amount ?? 0);
+      return [
+        s.sale_date, s.sale_number, s.status,
+        s.customers?.name ?? "Walk-in", s.customer_tin_snapshot ?? s.statutory_buyer_tin ?? s.customers?.tax_id ?? "",
+        Number(s.subtotal ?? 0), Number((Number(s.discount ?? 0) - stat).toFixed(2)),
+        s.statutory_discount_type ?? "", stat, s.statutory_buyer_name ?? "", s.statutory_buyer_id ?? "",
+        Number(s.vatable_amount ?? 0), Number(s.vat_amount ?? 0), Number(s.vat_exempt_amount ?? 0),
+        Number(s.zero_rated_amount ?? 0), Number(s.total ?? 0),
+      ];
+    });
+    const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n");
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sales-journal-${from}-to-${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Tax Records"
         description="Tax recorded automatically when sales post, plus tax your customers withheld."
         actions={
-          canWrite && (
-            <Button onClick={() => setOpen(true)}>
-              <Plus className="size-4" /> Record withholding
+          <div className="page-actions">
+            <Button variant="outline" onClick={() => void exportSalesJournal()}>
+              <Download className="size-4" /> Sales journal (CSV)
             </Button>
-          )
+            {canWrite && (
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="size-4" /> Record withholding
+              </Button>
+            )}
+          </div>
         }
       />
       <div className="page-toolbar">

@@ -268,6 +268,42 @@ export function orderTotals(
   };
 }
 
+export type VatBreakdown = {
+  vatable: number;
+  vat: number;
+  exempt: number;
+  zeroRated: number;
+};
+
+/**
+ * BIR receipt classification of an order: net sales split by line tax type,
+ * scaled by the order discount exactly like orderTotals so the parts add up
+ * to the header subtotal − order discount and VAT equals the header tax.
+ */
+export function orderVatBreakdown(
+  lines: CartLine[],
+  opts: { taxInclusive?: boolean; orderDiscount?: number; orderDiscountType?: "amount" | "percent" } = {},
+): VatBreakdown {
+  const totals = orderTotals(lines, opts);
+  const scale = totals.subtotal > 0 ? (totals.subtotal - totals.orderDiscount) / totals.subtotal : 1;
+  let vatable = 0;
+  let exempt = 0;
+  let zeroRated = 0;
+  for (const l of lines) {
+    const t = lineTotals(l, !!opts.taxInclusive);
+    const type = (l.tax_type ?? "VAT").toUpperCase();
+    if (type === "ZERO_RATED") zeroRated += t.net;
+    else if (type === "VAT_EXEMPT" || type === "EXEMPT") exempt += t.net;
+    else if (t.tax > 0) vatable += t.net;
+    else exempt += t.net;
+  }
+  const z = round2(zeroRated * scale);
+  const e = round2(exempt * scale);
+  // Vatable absorbs rounding so the parts always reconcile to the header.
+  const v = round2(totals.subtotal - totals.orderDiscount - z - e);
+  return { vatable: vatable > 0 || v > 0.02 ? Math.max(v, 0) : 0, vat: totals.tax, exempt: e, zeroRated: z };
+}
+
 export function paymentStatusFor(total: number, paid: number, refunded = 0) {
   if (refunded > 0 && paid <= 0.009) return "refunded";
   if (refunded > 0) return "partially_refunded";

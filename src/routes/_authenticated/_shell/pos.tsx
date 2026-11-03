@@ -13,6 +13,7 @@ import {
   createAndCompletePosSale,
   fetchAvailability,
   orderTotals,
+  orderVatBreakdown,
   resolvePrice,
   stockLabel,
   round2,
@@ -392,6 +393,7 @@ function POSPage() {
     orderDiscount,
     orderDiscountType,
   });
+  const vatBreakdown = orderVatBreakdown(cart, { taxInclusive, orderDiscount, orderDiscountType });
 
   function openAddons(product: Row, variant: Row | null) {
     // Single-choice groups preselect their first option.
@@ -1149,6 +1151,14 @@ function POSPage() {
               label={`${settings.tax_name ?? "Tax"}${taxInclusive ? " (incl.)" : ""}`}
               value={formatCurrency(totals.tax, currency)}
             />
+            {isPhilippines && cart.length > 0 && (
+              <div className="space-y-0.5 rounded-md border border-border/60 p-2 text-xs text-muted-foreground">
+                <Row label="VATable sales" value={formatCurrency(vatBreakdown.vatable, currency)} />
+                <Row label="VAT amount" value={formatCurrency(vatBreakdown.vat, currency)} />
+                <Row label="VAT-exempt sales" value={formatCurrency(vatBreakdown.exempt, currency)} />
+                <Row label="Zero-rated sales" value={formatCurrency(vatBreakdown.zeroRated, currency)} />
+              </div>
+            )}
             <div className="flex items-center justify-between border-t pt-2 text-lg font-semibold">
               <span>Total</span>
               <span>{formatCurrency(totals.total, currency)}</span>
@@ -1336,6 +1346,17 @@ function POSPage() {
                   ) {
                     setOrderDiscountType("percent");
                     setOrderDiscount(Number(configured.rate));
+                    // SC/PWD sales are VAT-exempt: reclassify VAT lines so the
+                    // receipt shows them as VAT-exempt sales with no VAT.
+                    if (configured.vat_treatment === "eligible_items_exempt") {
+                      setCart((c) =>
+                        c.map((line) =>
+                          (line.tax_type ?? "VAT") === "VAT"
+                            ? { ...line, tax_type: "VAT_EXEMPT", tax_rate: 0 }
+                            : line,
+                        ),
+                      );
+                    }
                   }
                 }}
               >
