@@ -41,9 +41,13 @@ const sections: LegalSection[] = [
         <p>
           For your account data and for the operation of the Service, the personal information
           controller is <Placeholder>registered legal entity name</Placeholder>, with principal
-          address at <Placeholder>registered business address</Placeholder>. You may reach our
-          data protection contact at <Placeholder>privacy/DPO email address</Placeholder>.{" "}
-          <Placeholder>Data Protection Officer name and contact, if designated</Placeholder>
+          address at Km. 6 Orchids Street, Buhangin, Davao City 8000, Philippines. You may reach
+          our data protection contact at{" "}
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>
+          . We have not designated a separate Data Protection Officer; privacy concerns are
+          handled directly by our data protection contact above.
         </p>
         <p>
           We handle personal data in accordance with the Philippine Data Privacy Act of 2012
@@ -242,7 +246,10 @@ const sections: LegalSection[] = [
         </p>
         <p>
           To exercise any of these rights, contact us at{" "}
-          <Placeholder>privacy/DPO email address</Placeholder>. We may need to verify your
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>
+          . We may need to verify your
           identity before acting on a request, and we will respond within a reasonable period
           consistent with NPC requirements. If your request concerns business data controlled by
           a business you transact with (for example your employer's payroll records), please
@@ -259,7 +266,7 @@ const sections: LegalSection[] = [
       <>
         <p>
           If you have concerns about how we handle your personal data, please contact us first
-          at <Placeholder>privacy/DPO email address</Placeholder> so we can address them.
+          at <a href="mailto:support@daraven.com" className="underline hover:text-foreground">support@daraven.com</a> so we can address them.
         </p>
         <p>
           You also have the right to lodge a complaint with the National Privacy Commission

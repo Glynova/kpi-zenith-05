@@ -42,8 +42,11 @@ const sections: LegalSection[] = [
         <p>
           The Service is provided by <Placeholder>registered legal entity name</Placeholder>
           ("we", "us", "our"), with principal address at{" "}
-          <Placeholder>registered business address</Placeholder>. You can contact us at{" "}
-          <Placeholder>legal/contact email address</Placeholder>.
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>
+          , with principal address at Km. 6 Orchids Street, Buhangin, Davao City 8000,
+          Philippines. You can contact us at support@daraven.com.
         </p>
         <p>
           By creating an account, clicking to accept these Terms, or using the Service, you agree
@@ -292,7 +295,10 @@ const sections: LegalSection[] = [
         </p>
         <p>
           We encourage you to contact us first at{" "}
-          <Placeholder>legal/contact email address</Placeholder> to resolve any dispute
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>{" "}
+          to resolve any dispute
           informally. If a dispute cannot be resolved informally, it shall be brought before the
           competent courts of <Placeholder>city/province of venue</Placeholder>, Philippines, to
           the extent permitted by applicable law. Nothing in this section limits any mandatory
