@@ -246,7 +246,10 @@ const sections: LegalSection[] = [
         </p>
         <p>
           To exercise any of these rights, contact us at{" "}
-          <Placeholder>privacy/DPO email address</Placeholder>. We may need to verify your
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>
+          . We may need to verify your
           identity before acting on a request, and we will respond within a reasonable period
           consistent with NPC requirements. If your request concerns business data controlled by
           a business you transact with (for example your employer's payroll records), please
@@ -263,7 +266,7 @@ const sections: LegalSection[] = [
       <>
         <p>
           If you have concerns about how we handle your personal data, please contact us first
-          at <Placeholder>privacy/DPO email address</Placeholder> so we can address them.
+          at <a href="mailto:support@daraven.com" className="underline hover:text-foreground">support@daraven.com</a> so we can address them.
         </p>
         <p>
           You also have the right to lodge a complaint with the National Privacy Commission
