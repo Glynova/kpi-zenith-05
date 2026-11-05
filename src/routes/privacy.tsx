@@ -41,9 +41,13 @@ const sections: LegalSection[] = [
         <p>
           For your account data and for the operation of the Service, the personal information
           controller is <Placeholder>registered legal entity name</Placeholder>, with principal
-          address at <Placeholder>registered business address</Placeholder>. You may reach our
-          data protection contact at <Placeholder>privacy/DPO email address</Placeholder>.{" "}
-          <Placeholder>Data Protection Officer name and contact, if designated</Placeholder>
+          address at Km. 6 Orchids Street, Buhangin, Davao City 8000, Philippines. You may reach
+          our data protection contact at{" "}
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>
+          . We have not designated a separate Data Protection Officer; privacy concerns are
+          handled directly by our data protection contact above.
         </p>
         <p>
           We handle personal data in accordance with the Philippine Data Privacy Act of 2012
