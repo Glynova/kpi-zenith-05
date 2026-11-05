@@ -295,7 +295,10 @@ const sections: LegalSection[] = [
         </p>
         <p>
           We encourage you to contact us first at{" "}
-          <Placeholder>legal/contact email address</Placeholder> to resolve any dispute
+          <a href="mailto:support@daraven.com" className="underline hover:text-foreground">
+            support@daraven.com
+          </a>{" "}
+          to resolve any dispute
           informally. If a dispute cannot be resolved informally, it shall be brought before the
           competent courts of <Placeholder>city/province of venue</Placeholder>, Philippines, to
           the extent permitted by applicable law. Nothing in this section limits any mandatory
