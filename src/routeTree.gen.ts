@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as InventoryManagementSoftwarePhilippinesRouteImport } from './routes/inventory-management-software-philippines'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -99,6 +100,12 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InventoryManagementSoftwarePhilippinesRoute =
+  InventoryManagementSoftwarePhilippinesRouteImport.update({
+    id: '/inventory-management-software-philippines',
+    path: '/inventory-management-software-philippines',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -514,6 +521,7 @@ const ApiPublicWebhooksPaymongoRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inventory-management-software-philippines': typeof InventoryManagementSoftwarePhilippinesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -589,6 +597,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/inventory-management-software-philippines': typeof InventoryManagementSoftwarePhilippinesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -664,6 +673,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/inventory-management-software-philippines': typeof InventoryManagementSoftwarePhilippinesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -742,6 +752,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/inventory-management-software-philippines'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -817,6 +828,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/inventory-management-software-philippines'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -891,6 +903,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/inventory-management-software-philippines'
     | '/pricing'
     | '/privacy'
     | '/reset-password'
@@ -969,6 +982,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  InventoryManagementSoftwarePhilippinesRoute: typeof InventoryManagementSoftwarePhilippinesRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1003,6 +1017,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory-management-software-philippines': {
+      id: '/inventory-management-software-philippines'
+      path: '/inventory-management-software-philippines'
+      fullPath: '/inventory-management-software-philippines'
+      preLoaderRoute: typeof InventoryManagementSoftwarePhilippinesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1690,6 +1711,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  InventoryManagementSoftwarePhilippinesRoute:
+    InventoryManagementSoftwarePhilippinesRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
