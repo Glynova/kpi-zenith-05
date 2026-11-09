@@ -33,3 +33,4 @@
 - [x] BIR CAS Phase 1 tax engine: `src/lib/tax/strategies.ts` (VAT-inclusive/exclusive, exempt, zero-rated, SC/PWD = gross/1.12 then 20% off, no VAT) with 6 passing tests.
 - [x] BIR CAS Phase 2 (partial): POS checkout shows VATable/VAT/VAT-exempt/zero-rated breakdown (PH businesses); choosing SC/PWD with a VAT-exempt rule reclassifies VAT lines as VAT-exempt; Tax Records exports a BIR-style sales journal CSV for the selected period. Tests pass.
 - [ ] BIR CAS Phase 3: SLSP/.DAT export files; live browser checkout test of SC/PWD flow.
+- [ ] Global/jurisdiction architecture + PH CAS evidence pack: baseline doc and readiness matrix in docs/global-tax-architecture-and-ph-cas-readiness.md; implementation not started.
